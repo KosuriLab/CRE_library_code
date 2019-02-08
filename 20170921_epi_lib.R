@@ -10,9 +10,9 @@
 #files" to "Median BC expression"
 
 #Most figures require both genomic and episomal MPRAs, the genomic MPRA data
-#processing is performed in 20171129_intLib.R and imported here in section
+#processing is performed in 20171129_genlib.R and imported here in section
 #"Import genomic MPRA and combine with episomal" and is used for figures 1E, 2, 
-#and 4 and supplemental figures 2B, 3, and 4.
+#4 and supplemental figures 2B, 3, and 4.
 
 #Establish workspace------------------------------------------------------------
 
@@ -312,7 +312,7 @@ p_fig1_epi_med_rep <- med_rep_0_22_A_B %>%
         axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
   figurefont_theme
 
-ggsave('plots/p_fig1_epi_med_rep.png', p_fig1_epi_med_rep,
+ggsave('../plots/p_fig1_epi_med_rep.png', p_fig1_epi_med_rep,
        width = 2, height = 2, units = 'in')
 
 log10_med_rep_0_22_A_B <- var_log10(med_rep_0_22_A_B)
@@ -339,7 +339,7 @@ pearsons <- tibble(
 
 #Import plate reader luminescence readings
 
-titration_luc <- read_csv("plate_reader/170726_trans_int_R.csv") %>%
+titration_luc <- read_csv("plate_reader/170726_epi_gen_R.csv") %>%
   mutate(RLU_epi = luciferase_epi/renilla_epi) %>%
   mutate(forskolin = log2(forskolin))
 
@@ -361,10 +361,10 @@ p_epi_titration_luc <- titration_luc %>%
   annotation_logticks(sides = 'b') +
   figurefont_theme
 
-ggsave('plots/p_gen_titration_luc.pdf', p_gen_titration_luc, width = 3.75, 
+ggsave('../plots/p_gen_titration_luc.pdf', p_gen_titration_luc, width = 3.75, 
        height = 2.1, units = 'in')
 
-ggsave('plots/p_epi_titration_luc.pdf', p_epi_titration_luc, width = 3.75, 
+ggsave('../plots/p_epi_titration_luc.pdf', p_epi_titration_luc, width = 3.75, 
        height = 2.1, units = 'in')
 
 #Supplemental Figure 1B, subfigure C
@@ -440,7 +440,7 @@ back_norm <- function(df1) {
 
 #Add back in control that can be normalized to a background for plotting
 
-trans_back_norm_pc_spGl4 <- med_rep_0_22_A_B %>%
+epi_back_norm_pc_spGl4 <- med_rep_0_22_A_B %>%
   filter(name == 'pGL4.29 Promega 1-63 + 1-87') %>%
   mutate(name = str_c(name, '_scramble pGL4.29 Promega 1-63 + 1-87')) %>%
   mutate(subpool = 'subpool3') %>%
@@ -514,7 +514,7 @@ var_conc_exp <- function(df) {
 
 #Subtract expression at 0 µM forskolin for expression at each concentration
 
-trans_back_0_norm_conc <- trans_back_norm_pc_spGl4 %>%
+epi_back_0_norm_conc <- epi_back_norm_pc_spGl4 %>%
   mutate(ave_ratio_2_5_norm = ave_ratio_2_5_norm - ave_ratio_0_norm) %>%
   mutate(ave_ratio_2_4_norm = ave_ratio_2_4_norm - ave_ratio_0_norm) %>%
   mutate(ave_ratio_2_3_norm = ave_ratio_2_3_norm - ave_ratio_0_norm) %>%
@@ -528,22 +528,22 @@ trans_back_0_norm_conc <- trans_back_norm_pc_spGl4 %>%
 #Plot subfigure C, normalized variant expression curves across forskolin
 #concentrations. Expression curves for backgrounds and control overlayed
 
-p_titr_pc_back <- trans_back_0_norm_conc %>%
+p_titr_pc_back <- epi_back_0_norm_conc %>%
   ggplot(aes(conc, ave_ratio_norm)) +
   geom_line(aes(group = name), alpha = 0.1) +
-  geom_point(data = filter(trans_back_0_norm_conc, 
+  geom_point(data = filter(epi_back_0_norm_conc, 
                            startsWith(name, 
                                       'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')),
              color = 'darkgoldenrod1', shape = 19, stroke = 0.75) +
-  geom_line(data = filter(trans_back_0_norm_conc, 
+  geom_line(data = filter(epi_back_0_norm_conc, 
                           startsWith(name, 
                                      'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')),
             color = 'darkgoldenrod1', size = 1) +
-  geom_point(data = filter(trans_back_0_norm_conc, 
+  geom_point(data = filter(epi_back_0_norm_conc, 
                            startsWith(name, 
                                       'pGL4.29 Promega 1-63 + 1-87')),
              color = 'firebrick2', shape = 19, stroke = 0.75) +
-  geom_line(data = filter(trans_back_0_norm_conc, 
+  geom_line(data = filter(epi_back_0_norm_conc, 
                           startsWith(name, 
                                      'pGL4.29 Promega 1-63 + 1-87')),
             color = 'firebrick2', size = 1) +
@@ -553,24 +553,35 @@ p_titr_pc_back <- trans_back_0_norm_conc %>%
   scale_x_continuous(breaks = (-7:2), 'log2 forskolin (µM)') +
   figurefont_theme
 
-ggsave('plots/p_titr_pc_back.pdf', p_titr_pc_back, width = 3.6, height = 2,
+ggsave('../plots/p_titr_pc_back.pdf', p_titr_pc_back, width = 3.6, height = 2,
        units = 'in')
 
 #Import genomic MPRA and combine with episomal----------------------------------
 
+#Genomic MPRA expression determination and data processing performed in
+#"20171129_genlib_analysis/20171129_genlib.R". Processed df with expression
+#values is exported from there and imported here to plot together
 
-
-
-int_rep_1_2 <- read_tsv('../20171129_intLib/rep_1_2.txt') %>%
+gen_rep_1_2 <- read_tsv('../20171129_genlib_analysis/rep_1_2.txt') %>%
   mutate(ave_med_ratio = (med_ratio_br1 + med_ratio_br2)/2)
 
-int_trans <- med_rep_0_22_A_B %>%
+#Combine genomic and episomal dfs, only comparing to expression at 2^2 µM 
+#forskolin in the episomal dataset. Here med_ratio_br# and ave_med_ratio refers 
+#to genomic expression, either across biological replicates or averaged.
+#Episomal expression is represented by the annotation <name>_22 as representing
+#the forskolin concentration the sample was incubated with
+
+gen_epi <- med_rep_0_22_A_B %>%
   select(subpool, name, most_common, barcodes_DNA, med_ratio_22A, 
          barcodes_RNA_22A, med_ratio_22B, barcodes_RNA_22B) %>%
   mutate(ave_ratio_22 = (med_ratio_22A + med_ratio_22B)/2) %>%
-  inner_join(int_rep_1_2, by = c('subpool', 'name', 'most_common'))
+  inner_join(gen_rep_1_2, by = c('subpool', 'name', 'most_common'))
 
-MPRA_ave <- int_trans %>%
+#Make untidy df where MPRA format is a variable according to average variant
+#expression and average #barcodes per variant in the RNA samples, also create 
+#a background column
+
+MPRA_ave <- gen_epi %>%
   ungroup() %>%
   filter(subpool != 'control') %>%
   mutate(
@@ -585,13 +596,171 @@ MPRA_ave <- int_trans %>%
   select(subpool, name, most_common, background, barcodes_RNA_br1, barcodes_RNA_br2, 
          med_ratio_br1, med_ratio_br2, ave_med_ratio, barcodes_RNA_22A, 
          barcodes_RNA_22B, med_ratio_22A, med_ratio_22B, ave_ratio_22) %>%
-  mutate(integrated = (barcodes_RNA_br1 + barcodes_RNA_br2)/2) %>%
+  mutate(genomic = (barcodes_RNA_br1 + barcodes_RNA_br2)/2) %>%
   mutate(episomal = (barcodes_RNA_22A + barcodes_RNA_22B)/2) %>%
   select(-barcodes_RNA_br1, -barcodes_RNA_br2, -barcodes_RNA_22A, 
          -barcodes_RNA_22B) %>%
-  gather(integrated, episomal, key = 'MPRA', value = 'barcodes') %>%
-  mutate(integrated = ave_med_ratio) %>%
+  gather(genomic, episomal, key = 'MPRA', value = 'barcodes') %>%
+  mutate(genomic = ave_med_ratio) %>%
   mutate(episomal = ave_ratio_22) %>%
-  gather(integrated, episomal, key = 'MPRA2', value = 'ave_ratio') %>%
-  filter((MPRA == 'integrated' & MPRA2 == 'integrated') | (MPRA == 'episomal' & MPRA2 == 'episomal')) %>%
+  gather(genomic, episomal, key = 'MPRA2', value = 'ave_ratio') %>%
+  filter((MPRA == 'genomic' & MPRA2 == 'genomic') | (MPRA == 'episomal' & MPRA2 == 'episomal')) %>%
   select(-MPRA2)
+
+#Figure 1E----------------------------------------------------------------------
+
+#Plot correlation between MPRAs with backgrounds in orange and positive control 
+#in red
+
+p_gen_epi_rep <- gen_epi %>%
+  ggplot(aes(ave_med_ratio, ave_ratio_22)) +
+  geom_point(alpha = 0.1, size = 0.75) +
+  geom_point(data = filter(gen_epi, 
+                           grepl(
+                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.75) +
+  geom_point(data = filter(gen_epi, 
+                           name == 'pGL4.29 Promega 1-63 + 1-87'), 
+             fill = 'red', shape = 21, size = 1.75) +
+  xlab("Average genomic expression (a.u.)") +
+  ylab("Average episomal expression (a.u.)") +
+  scale_x_log10(limits = c(0.01, 20), breaks = c(0.01, 0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
+  annotation_logticks(scaled = TRUE) +
+  figurefont_theme
+
+ggsave('../plots/p_gen_epi_rep.png', p_gen_epi_rep, width = 2, height = 2, 
+       units = 'in')
+
+gen_epi_log10 <- var_log10(gen_epi)
+
+gen_epi_pearsons <- tibble(
+  sample = c('all', 'subpool3', 'subpool5'),
+  pearsons = c(round(cor(gen_epi_log10$ave_med_ratio, 
+                         gen_epi_log10$ave_ratio_22, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(filter(gen_epi_log10, 
+                                subpool == 'subpool3')$ave_med_ratio,
+                         filter(gen_epi_log10, 
+                                subpool == 'subpool3')$ave_ratio_22,
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(filter(gen_epi_log10, 
+                                subpool == 'subpool5')$ave_med_ratio,
+                         filter(gen_epi_log10, 
+                                subpool == 'subpool5')$ave_ratio_22,
+                         use = "pairwise.complete.obs", method = "pearson"), 
+                     3)))
+
+#Separate into sublibraries-----------------------------------------------------
+
+#Subpool 3 corresponds to the CRE Spacing and Distance Library. This library
+#contains 2 consensus CRE sites with flanks (ATTGACGTCAGC) that vary in 
+#CRE Spacing from one another by 0 (no inner flanks), 5, 10, 15, 20 and 
+#70 bp (all but 0 appear as spacing - 4 bp). Both CREs are then moved along the 
+#backgrounds at 1 bp increments starting from closest to the minimal promoter. 
+#Separation lists the CRE spacing between sites and CRE distance. Distances
+#measured from the end of the background to the CRE proximal to the promoter.
+#Added 2 bp to all distances here to measure to start of CRE without the flanks
+#and then added 64 bp to measure to the minimal promoter. Added 4 to all 
+#spacings but 0 to measure difference between start of sites without flanks
+
+
+
+
+subpool3 <- function(df) {
+  df <- df %>%
+    filter(subpool == "subpool3") %>%
+    ungroup() %>%
+    select(-subpool) %>%
+    mutate(name = gsub('2BS ', '', name), 
+           name = gsub(' bp spacing ', '_', name)) %>%
+    separate(name, 
+             into = c("subpool", "spacing", "fluff2", "fluff3", "dist", "fluff4"),
+             sep = "_", convert = TRUE) %>%
+    select(-subpool, -fluff2, -fluff3, -fluff4) %>%
+    mutate(dist = as.integer(dist + 2 + 64)) %>%
+    mutate(spacing = 
+             ifelse(spacing != as.integer(0), 
+                    as.integer(spacing + 4), as.integer(spacing)))
+}
+
+s3_tidy <- rep_0_22_A_B %>%
+  ungroup() %>%
+  mutate(
+    name = gsub('Smith R. Vista chr9:83712599-83712766', 'v chr9', name),
+    name = gsub('Vista Chr5:88673410-88674494', 'v chr5', name),
+    name = gsub('scramble pGL4.29 Promega 1-63 \\+ 1-87', 's pGl4', name)
+  ) %>%
+  mutate(background = name) %>%
+  mutate(background = str_sub(background, 
+                              nchar(background)-5,
+                              nchar(background))) %>%
+  subpool3()
+
+s3_untidy <- subpool3(trans_back_norm_conc)
+
+
+#Subpool 5 contains 6 equally spaced sites spaced 13 bp apart and starting from 
+#furthest to the minP. These sites are filled with sites of either the consensus
+#site, a weak site or no site. Both the weak and consensus sites are flanked by 
+#the same flanking sequence. It's too complicated now to rename these sites 
+#instead of the 1 -> 6 system and instead with actual distance to the minimal 
+#promoter (site 1, 2, 3, 4, 5, 6 equate to -191, -166, -141, -116, -91 and -66 
+#respectively)
+
+subpool5 <- function(df) {
+  df <- df %>%
+    filter(subpool == "subpool5") %>%
+    ungroup() %>%
+    select(-subpool) %>%
+    mutate(name = gsub('no_site', 'nosite', name)) %>%
+    separate(name, into = c("subpool", "site1", "site2", "site3", "site4", 
+                            "site5", "site6", "fluff"), sep = "_") %>%
+    select(-subpool, -fluff) %>%
+    mutate(consensus = str_detect(site1, "consensus") + 
+             str_detect(site2, "consensus") + 
+             str_detect(site3, "consensus") + 
+             str_detect(site4, "consensus") + 
+             str_detect(site5, "consensus") + 
+             str_detect(site6, "consensus")) %>%
+    mutate(weak = str_detect(site1, "weak") +
+             str_detect(site2, "weak") +
+             str_detect(site3, "weak") +
+             str_detect(site4, "weak") +
+             str_detect(site5, "weak") +
+             str_detect(site6, "weak")) %>%
+    mutate(nosite = str_detect(site1, "nosite") +
+             str_detect(site2, "nosite") +
+             str_detect(site3, "nosite") +
+             str_detect(site4, "nosite") +
+             str_detect(site5, "nosite") +
+             str_detect(site6, "nosite")) %>%
+    mutate(total_sites = consensus + weak) %>%
+    mutate(site_combo = 
+             ifelse(weak == 0 & consensus > 0, 
+                    'consensus', 'mixed')) %>%
+    mutate(site_combo = 
+             ifelse(consensus == 0 & weak > 0, 
+                    'weak', site_combo)) %>%
+    mutate(site_combo = 
+             ifelse(consensus == 0 & weak == 0, 
+                    'none', site_combo)) 
+}
+
+s5_tidy <- rep_0_22_A_B %>%
+  ungroup() %>%
+  mutate(
+    name = gsub('Smith R. Vista chr9:83712599-83712766', 'v chr9', name),
+    name = gsub('Vista Chr5:88673410-88674494', 'v chr5', name),
+    name = gsub('scramble pGL4.29 Promega 1-63 \\+ 1-87', 's pGl4', name)
+  ) %>%
+  mutate(background = name) %>%
+  mutate(background = str_sub(background, 
+                              nchar(background)-5,
+                              nchar(background))) %>%
+  subpool5()
+
+s5_untidy <- subpool5(trans_back_norm_conc)
+
+
