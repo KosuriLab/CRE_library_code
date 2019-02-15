@@ -45,7 +45,7 @@ spacing_5_20_palette <- c('gray20', 'dodgerblue3', 'indianred2', '#55C667FF')
 
 figurefont_theme <- theme(text = element_text(size = 8)) +
   theme(axis.title = element_text(size = 8)) +
-  theme(legend.title = element_text(size = 9)) +
+  theme(legend.title = element_text(size = 8)) +
   theme(axis.text = element_text(size = 8))
 
 #General functions
@@ -585,13 +585,13 @@ MPRA_ave <- gen_epi %>%
   ungroup() %>%
   filter(subpool != 'control') %>%
   mutate(
-    name = gsub('Smith R. Vista chr9:83712599-83712766', 'v chr9', name),
-    name = gsub('Vista Chr5:88673410-88674494', 'v chr5', name),
-    name = gsub('scramble pGL4.29 Promega 1-63 \\+ 1-87', 's pGl4', name)
+    name = gsub('Smith R. Vista chr9:83712599-83712766', 'back_41', name),
+    name = gsub('Vista Chr5:88673410-88674494', 'back_52', name),
+    name = gsub('scramble pGL4.29 Promega 1-63 \\+ 1-87', 'back_55', name)
   ) %>%
   mutate(background = name) %>%
   mutate(background = str_sub(background, 
-                              nchar(background)-5,
+                              nchar(background)-1,
                               nchar(background))) %>%
   select(subpool, name, most_common, background, barcodes_RNA_br1, barcodes_RNA_br2, 
          med_ratio_br1, med_ratio_br2, ave_med_ratio, barcodes_RNA_22A, 
@@ -656,17 +656,14 @@ gen_epi_pearsons <- tibble(
 
 #Subpool 3 corresponds to the CRE Spacing and Distance Library. This library
 #contains 2 consensus CRE sites with flanks (ATTGACGTCAGC) that vary in 
-#CRE Spacing from one another by 0 (no inner flanks), 5, 10, 15, 20 and 
-#70 bp (all but 0 appear as spacing - 4 bp). Both CREs are then moved along the 
-#backgrounds at 1 bp increments starting from closest to the minimal promoter. 
-#Separation lists the CRE spacing between sites and CRE distance. Distances
-#measured from the end of the background to the CRE proximal to the promoter.
-#Added 2 bp to all distances here to measure to start of CRE without the flanks
-#and then added 64 bp to measure to the minimal promoter. Added 4 to all 
-#spacings but 0 to measure difference between start of sites without flanks
-
-
-
+#CRE Spacing from one another by 0 (no inner flanks), 5, 10, 15, 20, and 
+#70 bp (all but 0 appear as spacing - 4 bp due to 4 bp of sequence flanking both
+#CREs). Both CREs are then placed at variable distances to the 3' end of the 
+#backgrounds. Separation lists the CRE spacing between sites and CRE distance. 
+#Distances measured from the end of the background to the CRE proximal to the 
+#promoter. Added 2 bp to all distances here to measure to start of CRE without 
+#the flanks and then added 64 bp to measure to the minimal promoter. Added 4 to 
+#all spacings but 0 to measure difference between start of sites without flanks.
 
 subpool3 <- function(df) {
   df <- df %>%
@@ -676,38 +673,28 @@ subpool3 <- function(df) {
     mutate(name = gsub('2BS ', '', name), 
            name = gsub(' bp spacing ', '_', name)) %>%
     separate(name, 
-             into = c("subpool", "spacing", "fluff2", "fluff3", "dist", "fluff4"),
+             into = c("subpool", "spacing", "fluff1", "fluff2", "dist", "fluff3", "fluff4"),
              sep = "_", convert = TRUE) %>%
-    select(-subpool, -fluff2, -fluff3, -fluff4) %>%
+    select(-subpool, -fluff1, -fluff2, -fluff3, -fluff4) %>%
     mutate(dist = as.integer(dist + 2 + 64)) %>%
     mutate(spacing = 
              ifelse(spacing != as.integer(0), 
                     as.integer(spacing + 4), as.integer(spacing)))
 }
 
-s3_tidy <- rep_0_22_A_B %>%
-  ungroup() %>%
-  mutate(
-    name = gsub('Smith R. Vista chr9:83712599-83712766', 'v chr9', name),
-    name = gsub('Vista Chr5:88673410-88674494', 'v chr5', name),
-    name = gsub('scramble pGL4.29 Promega 1-63 \\+ 1-87', 's pGl4', name)
-  ) %>%
-  mutate(background = name) %>%
-  mutate(background = str_sub(background, 
-                              nchar(background)-5,
-                              nchar(background))) %>%
+s3_gen_epi <- MPRA_ave %>%
+  filter(subpool == 'subpool3') %>%
   subpool3()
 
-s3_untidy <- subpool3(trans_back_norm_conc)
 
-
-#Subpool 5 contains 6 equally spaced sites spaced 13 bp apart and starting from 
-#furthest to the minP. These sites are filled with sites of either the consensus
-#site, a weak site or no site. Both the weak and consensus sites are flanked by 
-#the same flanking sequence. It's too complicated now to rename these sites 
-#instead of the 1 -> 6 system and instead with actual distance to the minimal 
-#promoter (site 1, 2, 3, 4, 5, 6 equate to -191, -166, -141, -116, -91 and -66 
-#respectively)
+#Subpool 5 corresponds to the CRE Number and Affinity Library. This library
+#contains 6 equally spaced sites with 17 bp CRE Spacing. Per variant, each sites
+#is one of: the consensus CRE, the weak CRE, or no CRE. Both the weak and 
+#consensus CREs have the same flanking sequence. Here site 1, 2, 3, 4, 5, and 6 
+#equate to -191, -166, -141, -116, -91 and -66 site distances to the downstream
+#promoter. Separation lists identity of CRE per site, the total CRE sites per
+#variants (consensus + weak), and if variants contain only consenus CREs, 
+#mixed consensus and weak, or no CREs.
 
 subpool5 <- function(df) {
   df <- df %>%
@@ -716,8 +703,8 @@ subpool5 <- function(df) {
     select(-subpool) %>%
     mutate(name = gsub('no_site', 'nosite', name)) %>%
     separate(name, into = c("subpool", "site1", "site2", "site3", "site4", 
-                            "site5", "site6", "fluff"), sep = "_") %>%
-    select(-subpool, -fluff) %>%
+                            "site5", "site6", "fluff", "fluff2"), sep = "_") %>%
+    select(-subpool, -fluff, -fluff2) %>%
     mutate(consensus = str_detect(site1, "consensus") + 
              str_detect(site2, "consensus") + 
              str_detect(site3, "consensus") + 
@@ -748,19 +735,133 @@ subpool5 <- function(df) {
                     'none', site_combo)) 
 }
 
-s5_tidy <- rep_0_22_A_B %>%
-  ungroup() %>%
-  mutate(
-    name = gsub('Smith R. Vista chr9:83712599-83712766', 'v chr9', name),
-    name = gsub('Vista Chr5:88673410-88674494', 'v chr5', name),
-    name = gsub('scramble pGL4.29 Promega 1-63 \\+ 1-87', 's pGl4', name)
-  ) %>%
-  mutate(background = name) %>%
-  mutate(background = str_sub(background, 
-                              nchar(background)-5,
-                              nchar(background))) %>%
+s5_gen_epi <- MPRA_ave %>%
+  filter(subpool == 'subpool5') %>%
   subpool5()
 
-s5_untidy <- subpool5(trans_back_norm_conc)
+#Figure 2A----------------------------------------------------------------------
+
+#Plot CRE distance vs. variant expression in the CRE Spacing and Distance 
+#Library. Distance is binned in 22 bp intervals and plotted per MPRA and
+#background, colored according to CRE Spacing.
+
+s3_gen_epi_bin20bp <- s3_gen_epi %>%
+  filter(dist <= 176) %>%
+  mutate(bin = cut(dist, seq(from = 66, to = 176, by = 22),
+                   labels = c('67-88', '89-110', '111-132', '133-154',
+                              '155-176')))
+
+p_s3_dist_gen_bin20bp <- s3_gen_epi_bin20bp %>%
+  mutate(background = factor(background, levels = c('55', '52', '41'))) %>%
+  filter(spacing != 0 & spacing != 70 & background != '41' & MPRA == 'genomic') %>%
+  ggplot(aes(bin, ave_ratio)) +
+  geom_signif(comparisons = list(c('67-88', '89-110')), y_position = log10(5),
+              textsize = 2.4) +
+  geom_signif(comparisons = list(c('67-88', '111-132')), y_position = log10(15),
+              textsize = 2.4) +
+  facet_grid(. ~ background) +
+  geom_jitter(aes(color = as.factor(spacing)), 
+              position=position_jitter(width=0.3, height=0), alpha = 0.75,
+              size = 0.5) +
+  geom_boxplot(outlier.shape=NA, size = 0.3, position = position_dodge(1),
+               show.legend = FALSE, alpha = 0) +
+  scale_color_manual(values = spacing_5_20_palette, name = 'CRE spacing (bp)') +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(), 
+        strip.background = element_rect(colour="black", fill="white"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_y_log10(limits = c(0.015, 30)) +
+  annotation_logticks(sides = 'l') +
+  panel_border(colour = 'black') +
+  ylab('Average expression (a.u.)') +
+  xlab('Distance to minimal promoter (bp)') +
+  figurefont_theme
+
+p_s3_dist_epi_bin20bp <- s3_gen_epi_bin20bp %>%
+  mutate(background = factor(background, levels = c('55', '52', '41'))) %>%
+  filter(spacing != 0 & spacing != 70 & background != '41' & MPRA == 'episomal') %>%
+  ggplot(aes(bin, ave_ratio)) +
+  geom_signif(comparisons = list(c('67-88', '89-110')), y_position = log10(6),
+              textsize = 2.4) +
+  geom_signif(comparisons = list(c('67-88', '111-132')), y_position = log10(15),
+              textsize = 2.4) +
+  facet_grid(. ~ background) +
+  geom_jitter(aes(color = as.factor(spacing)), 
+              position=position_jitter(width=0.3, height=0), alpha = 0.75,
+              size = 0.5) +
+  geom_boxplot(outlier.shape=NA, size = 0.3, position = position_dodge(1),
+               show.legend = FALSE, alpha = 0) +
+  scale_color_manual(values = spacing_5_20_palette, name = 'CRE spacing (bp)') +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(), 
+        strip.background = element_rect(colour="black", fill="white"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_y_log10(limits = c(0.1, 30)) +
+  annotation_logticks(sides = 'l') +
+  panel_border(colour = 'black') +
+  ylab('Average expression (a.u.)') +
+  xlab('Distance to minimal promoter (bp)') +
+  figurefont_theme
+
+ggsave('../plots/p_s3_dist_gen_bin20bp.pdf', p_s3_dist_gen_bin20bp,
+       width = 3.375, height = 1.75, unit = 'in')
+
+ggsave('../plots/p_s3_dist_epi_bin20bp.pdf', p_s3_dist_epi_bin20bp,
+       width = 3.375, height = 1.75, unit = 'in')
+
+#Figure 2B----------------------------------------------------------------------
+
+#Take median expression of variants with a certain background, MPRA format,
+#CRE Spacing per 10 bp CRE Distance increment. Plot change in median expression
+#between 67-76 and 167-176 bp CRE Distance increments.
+
+bin_10bp_change_dist <- function(df) {
+  df <- df %>%
+    filter(dist <= 176) %>%
+    mutate(bin = cut(dist, seq(from = 66, to = 177, by = 10),
+                     labels = c('67-76', '77-86', '87-96', '97-106', '107-116',
+                                '117-126', '127-136', '137-146', '147-156', 
+                                '157-166', '167-176'))) %>%
+    group_by(background, MPRA, bin, spacing) %>%
+    summarize(median_bin = median(ave_ratio)) %>%
+    ungroup()
+  df_6776 <- df %>%
+    filter(bin == '67-76') %>%
+    mutate(median_6776 = median_bin) %>%
+    select(-bin, -median_bin)
+  df_167176 <- df %>%
+    filter(bin == '167-176') %>%
+    mutate(median_167176 = median_bin) %>%
+    select(-bin, -median_bin)
+  bin_change <- left_join(df_6776, df_167176, by = c('background', 'MPRA',
+                                                     'spacing')) %>%
+    mutate(bin_change = median_6776/median_167176)
+  return(bin_change)
+}
+  
+s3_gen_epi_bin_10bp_change_dist <- bin_10bp_change_dist(s3_gen_epi)
+  
+p_s3_gen_epi_bin10bp_med_change <- s3_gen_epi_bin_10bp_change_dist %>%
+  mutate(background = factor(background, levels = c('55', '52', '41'))) %>%
+  filter(spacing != 0 & spacing != 70 & background != '41') %>%
+  ggplot(aes(MPRA, bin_change)) +
+  facet_grid(. ~ background) +
+  geom_jitter(aes(color = as.factor(spacing)), 
+              position=position_jitter(width=0.3, height=0), alpha = 0.75,
+              size = 1) +
+  geom_boxplot(outlier.shape=NA, size = 0.3, position = position_dodge(1),
+               show.legend = FALSE, alpha = 0) +
+  scale_color_manual(values = spacing_5_20_palette, name = 'CRE spacing (bp)') +
+  theme(legend.position = 'top', axis.ticks.x = element_blank(), 
+        strip.background = element_rect(colour="black", fill="white"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  panel_border(colour = 'black') +
+  scale_y_continuous(limits = c(1, 6), breaks = c(1:6)) +
+  ylab('Change in median\nexpression from\n167-176 to 67-76 bp') +
+  xlab('MPRA') +
+  figurefont_theme
+
+ggsave('../plots/p_s3_gen_epi_bin10bp_med_change.pdf', 
+       p_s3_gen_epi_bin10bp_med_change, width = 3.25, height = 2.75, unit = 'in')
+
+
 
 
