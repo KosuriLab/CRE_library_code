@@ -32,6 +32,8 @@ library(lemon)
 library(devtools)
 library(updateR)
 library(ggsignif)
+library(caTools)
+library(reshape2)
 
 #General figure customizations
 
@@ -81,7 +83,7 @@ bc_R22B <- read_tsv('BCreads_txts/R22B_BC.txt')
 #format. Pick out controls, SP3, and SP5 in the bcmap that were used in this 
 #assay
 
-SP3_SP5_map <- read_tsv('BCMap/uniqueSP2345.txt', 
+SP3_SP5_map <- read_tsv('../BCMap/uniqueSP2345.txt', 
                         col_names = c(
                           'fluff', 'barcode', 'name', 'most_common'), 
                         skip = 1) %>%
@@ -378,13 +380,13 @@ back_norm <- function(df1) {
     ungroup () %>%
     filter(subpool != 'control') %>%
     mutate(
-      name = gsub('Smith R. Vista chr9:83712599-83712766', 'v chr9', name),
-      name = gsub('Vista Chr5:88673410-88674494', 'v chr5', name),
-      name = gsub('scramble pGL4.29 Promega 1-63 \\+ 1-87', 's pGl4', name)
+      name = gsub('Smith R. Vista chr9:83712599-83712766', 'back_41', name),
+      name = gsub('Vista Chr5:88673410-88674494', 'back_52', name),
+      name = gsub('scramble pGL4.29 Promega 1-63 \\+ 1-87', 'back_55', name)
     ) %>%
     mutate(background = name) %>%
     mutate(background = str_sub(background, 
-                                nchar(background)-5, 
+                                nchar(background)-1, 
                                 nchar(background)))
   backgrounds <- gsub_0_22 %>%
     filter(startsWith(name, 
@@ -652,6 +654,21 @@ gen_epi_pearsons <- tibble(
                          use = "pairwise.complete.obs", method = "pearson"), 
                      3)))
 
+#Landing pad orientation--------------------------------------------------------
+
+pos_neg <- read_csv("../plate_reader/20160602_pos_neg_R.csv")
+
+pos_neg_sep <- pos_neg %>%
+  melt(id = 'forskolin') %>%
+  rename(luminescence = value) %>%
+  separate(variable, into = c('orientation', 'control', 'fluff', 'replicate'),
+         sep = "_", convert = TRUE) %>%
+  select(-fluff)
+
+p_pos_neg <- pos_neg_sep %>%
+  ggplot(aes(forskolin, luminescence, color = control, group = )) +
+  geom_point()
+
 #Separate into sublibraries-----------------------------------------------------
 
 #Subpool 3 corresponds to the CRE Spacing and Distance Library. This library
@@ -683,6 +700,12 @@ subpool3 <- function(df) {
 }
 
 s3_gen_epi <- MPRA_ave %>%
+  filter(subpool == 'subpool3') %>%
+  subpool3()
+
+s3_gen_epi_back_norm_conc <- med_rep_0_22_A_B %>%
+  back_norm() %>%
+  var_conc_exp() %>%
   filter(subpool == 'subpool3') %>%
   subpool3()
 
@@ -740,6 +763,33 @@ s5_gen_epi <- MPRA_ave %>%
   subpool5()
 
 #Figure 2A----------------------------------------------------------------------
+
+#New figure with different concentrations, distance effects with background 41,
+#5 bp CRE Spacing, episomal MPRA
+
+moveavg_dist3 <- function(df) {
+  df <- df %>%
+    mutate(ave_3 = runmean(ave_ratio_norm, 3, alg = 'R', endrule = 'NA'))
+}
+
+s3_tidy_moveavg3 <- s3_gen_epi_back_norm_conc %>%
+  select(background, spacing, dist, conc, ave_ratio_norm) %>%
+  group_by(background, spacing, conc) %>%
+  arrange(dist, .by_group = TRUE) %>%
+  nest() %>%
+  mutate(ave_3 = map(.$data, moveavg_dist3)) %>%
+  unnest() %>%
+  select(-dist1, -ave_ratio_norm1)
+
+p_test <- s3_tidy_moveavg3 %>%
+  filter(background == '55' & spacing == 5) %>%
+  ggplot(aes(dist, ave_ratio_norm)) +
+  geom_point(aes(color = as.factor(conc))) +
+  geom_line(aes(dist, ave_3, color = as.factor(conc)))
+
+
+
+
 
 #Plot CRE distance vs. variant expression in the CRE Spacing and Distance 
 #Library. Distance is binned in 22 bp intervals and plotted per MPRA and
@@ -847,7 +897,7 @@ p_s3_gen_epi_bin10bp_med_change <- s3_gen_epi_bin_10bp_change_dist %>%
   geom_jitter(aes(color = as.factor(spacing)), 
               position=position_jitter(width=0.3, height=0), alpha = 0.75,
               size = 1) +
-  geom_boxplot(outlier.shape=NA, size = 0.3, position = position_dodge(1),
+  geom_boxplot(outlier.shape=NA, size = 0.2, position = position_dodge(1),
                show.legend = FALSE, alpha = 0) +
   scale_color_manual(values = spacing_5_20_palette, name = 'CRE spacing (bp)') +
   theme(legend.position = 'top', axis.ticks.x = element_blank(), 
@@ -860,7 +910,7 @@ p_s3_gen_epi_bin10bp_med_change <- s3_gen_epi_bin_10bp_change_dist %>%
   figurefont_theme
 
 ggsave('../plots/p_s3_gen_epi_bin10bp_med_change.pdf', 
-       p_s3_gen_epi_bin10bp_med_change, width = 3.25, height = 2.75, unit = 'in')
+       p_s3_gen_epi_bin10bp_med_change, width = 3, height = 2.5, unit = 'in')
 
 
 
