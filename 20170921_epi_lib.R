@@ -21,21 +21,23 @@
 #import necessary libraries
 
 library(tidyverse)
-library(stringr)
+library(lemon)
 library(viridis)
 library(cowplot)
+
+
+library(reshape2)
+library(stringr)
 library(ggExtra)
 library(modelr)
 library(lazyeval)
 library(splines)
 library(broom)
 library(GGally)
-library(lemon)
 library(devtools)
 library(updateR)
 library(ggsignif)
 library(caTools)
-library(reshape2)
 
 #General figure customizations
 
@@ -79,7 +81,6 @@ bc_R20A <- read_tsv('BCreads_txts/R20A_BC.txt')
 bc_R20B <- read_tsv('BCreads_txts/R20B_BC.txt')
 bc_R22A <- read_tsv('BCreads_txts/R22A_BC.txt')
 bc_R22B <- read_tsv('BCreads_txts/R22B_BC.txt')
-
 
 #Load barcode mapping table, sequences (most_common) are rcomp due to sequencing
 #format. Pick out controls, SP3, and SP5 in the bcmap that were used in this 
@@ -746,6 +747,136 @@ pearsons_epi_conc <- tibble(
                          log10_epi_back_norm_pc_spGl4$ratio_22B_norm, 
                          use = "pairwise.complete.obs", method = "pearson"), 3))
 )
+
+#Replicability beyond 4 µM------------------------------------------------------
+
+#Import expression from MPRA done across 0-64 µM forskolin concentrations
+
+epi_rep_0_64 <- read_tsv('../20170631_epilib_analysis_0_64/rep_0_64_med.txt')
+epi_rep_0_64_back <- read_tsv(
+  '../20170631_epilib_analysis_0_64/rep_0_64_med_back.txt'
+  )
+epi_rep_0_64_conc <- read_tsv(
+  '../20170631_epilib_analysis_0_64/rep_0_64_med_norm.txt'
+  ) %>%
+  mutate(conc = log2(conc))
+
+#plot background-normalized replicability similar to Supplemental figure 1E
+
+p_var_epi_all_0_64 <- ggplot(epi_rep_0_64_conc, 
+                        aes(ratio_A_norm, ratio_B_norm)) +
+  facet_rep_wrap(~ conc, nrow = 2) +
+  geom_point(alpha = 0.1, size = 0.5) +
+  geom_point(data = filter(epi_rep_0_64_conc, 
+                           grepl(
+                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.25) + 
+  geom_point(data = filter(epi_rep_0_64_conc, name == 'pGL4.29 Promega 1-63 + 1-87_back_55'), 
+             fill = 'red', shape = 21, size = 1.25) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Normalized expression (a.u.) replicate 1") +
+  ylab("Normalized expression (a.u.) replicate 2") +
+  scale_x_log10(limits = c(0.1, 200), breaks = c(0.1, 1, 10, 100)) + 
+  scale_y_log10(limits = c(0.1, 200), breaks = c(0.1, 1, 10, 100)) +
+  background_grid(major = 'xy', minor = 'none') + 
+  panel_border(colour = 'black') +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+
+ggsave('../plots/p_var_epi_all_0_64.png', p_var_epi_all_0_64, 
+       width = 6.5, height = 3.1, units = 'in')
+
+log10_epi_rep_0_64_back <- var_log10(epi_rep_0_64_back)
+
+pearsons_epi_conc_0_64 <- tibble(
+  conc = c(0, 1, 2, 4, 8, 16, 25, 32, 64),
+  pearsons = c(round(cor(log10_epi_rep_0_64_back$ratio_0A_norm, 
+                         log10_epi_rep_0_64_back$ratio_0B_norm, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(log10_epi_rep_0_64_back$ratio_1A_norm, 
+                         log10_epi_rep_0_64_back$ratio_1B_norm, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(log10_epi_rep_0_64_back$ratio_2A_norm, 
+                         log10_epi_rep_0_64_back$ratio_2B_norm, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(log10_epi_rep_0_64_back$ratio_4A_norm, 
+                         log10_epi_rep_0_64_back$ratio_4B_norm, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(log10_epi_rep_0_64_back$ratio_8A_norm, 
+                         log10_epi_rep_0_64_back$ratio_8B_norm, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(log10_epi_rep_0_64_back$ratio_16A_norm, 
+                         log10_epi_rep_0_64_back$ratio_16B_norm, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(log10_epi_rep_0_64_back$ratio_25A_norm, 
+                         log10_epi_rep_0_64_back$ratio_25B_norm, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(log10_epi_rep_0_64_back$ratio_32A_norm, 
+                         log10_epi_rep_0_64_back$ratio_32B_norm, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(log10_epi_rep_0_64_back$ratio_64A_norm, 
+                         log10_epi_rep_0_64_back$ratio_64B_norm, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3))
+)
+
+#Plot titration similar to Figure 1D
+
+p_titr_pc_back_0_64 <- epi_rep_0_64_conc %>%
+  ggplot(aes(conc, ave_ratio_norm)) +
+  geom_line(aes(group = name), alpha = 0.1) +
+  geom_point(data = filter(epi_rep_0_64_conc, 
+                           startsWith(name, 
+                                      'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')),
+             color = 'darkgoldenrod1', shape = 19, stroke = 0.75) +
+  geom_line(data = filter(epi_rep_0_64_conc, 
+                          startsWith(name, 
+                                     'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')),
+            color = 'darkgoldenrod1', size = 1) +
+  geom_point(data = filter(epi_rep_0_64_conc, 
+                           startsWith(name, 
+                                      'pGL4.29 Promega 1-63 + 1-87')),
+             color = 'firebrick2', shape = 19, stroke = 0.75) +
+  geom_line(data = filter(epi_rep_0_64_conc, 
+                          startsWith(name, 
+                                     'pGL4.29 Promega 1-63 + 1-87')),
+            color = 'firebrick2', size = 1) +
+  ylab('Average normalized\nexpression (a.u.)') +
+  annotation_logticks(sides = 'b', short = unit(0.05, 'cm'), 
+                      mid = unit(0.1, 'cm'), long = unit(0.15, 'cm')) +
+  scale_x_continuous(breaks = (-2:6), 'log2 forskolin (µM)') +
+  figurefont_theme
+
+ggsave('../plots/p_titr_pc_back_0_64.pdf', p_titr_pc_back_0_64, 
+       width = 2.8, height = 2, units = 'in')
+
+#Compare between episomal MPRAs between repeated concentrations 0, 1 and 4 µM
+#forskolin
+
+#Fix this join........
+
+join_epi <- function(df_0_22, df_0_64) {
+  df_0_22 <- df_0_22 %>%
+    rename(med_ratio_1A = med_ratio_20A)%>%
+    rename(med_ratio_1B = med_ratio_20B) %>%
+    rename(med_ratio_4A = med_ratio_22A) %>%
+    rename(med_ratio_4B = med_ratio_22B)
+  join <- inner_join(df_0_22, df_0_64, by = c('subpool', 'name', 'most_common'),
+                     suffices = c('_0_22', '_0_64'))
+  return(join)
+}
+
+epi_epi <- med_rep_0_22_A_B %>%
+  rename(med_ratio_1A = med_ratio_20A)%>%
+  rename(med_ratio_1B = med_ratio_20B) %>%
+  rename(med_ratio_4A = med_ratio_22A) %>%
+  rename(med_ratio_4B = med_ratio_22B) %>%
+  inner_join(epi_rep_0_64, by = c('subpool', 'name', 'most_common'),
+             suffices = c('_0_22', '_0_64'))
+
+epi_epi <- join_epi(med_rep_0_22_A_B, epi_rep_0_64)
+
 
 #Separate into sublibraries-----------------------------------------------------
 
