@@ -750,7 +750,8 @@ pearsons_epi_conc <- tibble(
 
 #Replicability beyond 4 µM------------------------------------------------------
 
-#Import expression from MPRA done across 0-64 µM forskolin concentrations
+#Import expression from MPRA done across 0-64 µM forskolin concentrations,
+#concentrations given in powers of 2
 
 epi_rep_0_64 <- read_tsv('../20170631_epilib_analysis_0_64/rep_0_64_med.txt')
 epi_rep_0_64_back <- read_tsv(
@@ -765,7 +766,7 @@ epi_rep_0_64_conc <- read_tsv(
 
 p_var_epi_all_0_64 <- ggplot(epi_rep_0_64_conc, 
                         aes(ratio_A_norm, ratio_B_norm)) +
-  facet_rep_wrap(~ conc, nrow = 2) +
+  facet_rep_wrap(~ conc, nrow = 3) +
   geom_point(alpha = 0.1, size = 0.5) +
   geom_point(data = filter(epi_rep_0_64_conc, 
                            grepl(
@@ -786,7 +787,7 @@ p_var_epi_all_0_64 <- ggplot(epi_rep_0_64_conc,
   figurefont_theme
 
 ggsave('../plots/p_var_epi_all_0_64.png', p_var_epi_all_0_64, 
-       width = 6.5, height = 3.1, units = 'in')
+       width = 4, height = 4.3, units = 'in')
 
 log10_epi_rep_0_64_back <- var_log10(epi_rep_0_64_back)
 
@@ -851,31 +852,43 @@ p_titr_pc_back_0_64 <- epi_rep_0_64_conc %>%
 ggsave('../plots/p_titr_pc_back_0_64.pdf', p_titr_pc_back_0_64, 
        width = 2.8, height = 2, units = 'in')
 
-#Compare between episomal MPRAs between repeated concentrations 0, 1 and 4 µM
-#forskolin
-
-#Fix this join........
+#Compare average expression between episomal MPRAs between repeated 
+#concentrations 0, 1 and 4 µM forskolin
 
 join_epi <- function(df_0_22, df_0_64) {
   df_0_22 <- df_0_22 %>%
-    rename(med_ratio_1A = med_ratio_20A)%>%
-    rename(med_ratio_1B = med_ratio_20B) %>%
-    rename(med_ratio_4A = med_ratio_22A) %>%
-    rename(med_ratio_4B = med_ratio_22B)
+    mutate(ave_med_ratio_0 = (med_ratio_0A + med_ratio_0B)/2) %>%
+    mutate(ave_med_ratio_1 = (med_ratio_20A + med_ratio_20B)/2) %>%
+    mutate(ave_med_ratio_4 = (med_ratio_22A + med_ratio_22B)/2) %>%
+    select(subpool, name, most_common, ave_med_ratio_0, ave_med_ratio_1, 
+           ave_med_ratio_4)
+  df_0_64 <- df_0_64 %>%
+    mutate(ave_med_ratio_0 = (med_ratio_0A + med_ratio_0B)/2) %>%
+    mutate(ave_med_ratio_1 = (med_ratio_1A + med_ratio_1B)/2) %>%
+    mutate(ave_med_ratio_4 = (med_ratio_4A + med_ratio_4B)/2) %>%
+    select(subpool, name, most_common, ave_med_ratio_0, ave_med_ratio_1, 
+           ave_med_ratio_4)
   join <- inner_join(df_0_22, df_0_64, by = c('subpool', 'name', 'most_common'),
-                     suffices = c('_0_22', '_0_64'))
+                     suffix = c('_0_22', '_0_64'))
   return(join)
 }
 
-epi_epi <- med_rep_0_22_A_B %>%
-  rename(med_ratio_1A = med_ratio_20A)%>%
-  rename(med_ratio_1B = med_ratio_20B) %>%
-  rename(med_ratio_4A = med_ratio_22A) %>%
-  rename(med_ratio_4B = med_ratio_22B) %>%
-  inner_join(epi_rep_0_64, by = c('subpool', 'name', 'most_common'),
-             suffices = c('_0_22', '_0_64'))
-
 epi_epi <- join_epi(med_rep_0_22_A_B, epi_rep_0_64)
+
+log10_epi_epi <- var_log10(epi_epi)
+
+pearsons_epi_epi <- tibble(
+  conc = c(0, 1, 4),
+  pearsons = c(round(cor(log10_epi_epi$ave_med_ratio_0_0_22, 
+                         log10_epi_epi$ave_med_ratio_0_0_64, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(log10_epi_epi$ave_med_ratio_1_0_22, 
+                         log10_epi_epi$ave_med_ratio_1_0_64, 
+                         use = "pairwise.complete.obs", method = "pearson"), 3),
+               round(cor(log10_epi_epi$ave_med_ratio_4_0_22, 
+                         log10_epi_epi$ave_med_ratio_4_0_64,
+                         use = "pairwise.complete.obs", method = "pearson"), 3))
+)
 
 
 #Separate into sublibraries-----------------------------------------------------
