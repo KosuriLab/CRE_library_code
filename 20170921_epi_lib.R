@@ -875,6 +875,78 @@ join_epi <- function(df_0_22, df_0_64) {
 
 epi_epi <- join_epi(med_rep_0_22_A_B, epi_rep_0_64)
 
+p_epi_epi_0 <- ggplot(epi_epi, 
+                      aes(ave_med_ratio_0_0_22, ave_med_ratio_0_0_64)) +
+  geom_point(alpha = 0.1, size = 0.5) +
+  geom_point(data = filter(epi_epi, 
+                           grepl(
+                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.25) + 
+  geom_point(data = filter(epi_epi, name == 'pGL4.29 Promega 1-63 + 1-87'), 
+             fill = 'red', shape = 21, size = 1.25) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Average expression (a.u.)\n0-4 µM forskolin MPRA") +
+  ylab("Average expression (a.u.)\n0-64 µM forskolin MPRA") +
+  scale_x_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
+  background_grid(major = 'xy', minor = 'none') + 
+  panel_border(colour = 'black') +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+
+p_epi_epi_1 <- ggplot(epi_epi, 
+                      aes(ave_med_ratio_1_0_22, ave_med_ratio_1_0_64)) +
+  geom_point(alpha = 0.1, size = 0.5) +
+  geom_point(data = filter(epi_epi, 
+                           grepl(
+                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.25) + 
+  geom_point(data = filter(epi_epi, name == 'pGL4.29 Promega 1-63 + 1-87'), 
+             fill = 'red', shape = 21, size = 1.25) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Average expression (a.u.)\n0-4 µM forskolin MPRA") +
+  ylab("Average expression (a.u.)\n0-64 µM forskolin MPRA") +
+  scale_x_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
+  background_grid(major = 'xy', minor = 'none') + 
+  panel_border(colour = 'black') +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+
+p_epi_epi_4 <- ggplot(epi_epi, 
+                      aes(ave_med_ratio_4_0_22, ave_med_ratio_4_0_64)) +
+  geom_point(alpha = 0.1, size = 0.5) +
+  geom_point(data = filter(epi_epi, 
+                           grepl(
+                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.25) + 
+  geom_point(data = filter(epi_epi, name == 'pGL4.29 Promega 1-63 + 1-87'), 
+             fill = 'red', shape = 21, size = 1.25) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Average expression (a.u.)\n0-4 µM forskolin MPRA") +
+  ylab("Average expression (a.u.)\n0-64 µM forskolin MPRA") +
+  scale_x_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
+  background_grid(major = 'xy', minor = 'none') + 
+  panel_border(colour = 'black') +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+
+ggsave('../plots/p_epi_epi_0.png', p_epi_epi_0, width = 1.75, height = 1.6, 
+       units = 'in')
+
+ggsave('../plots/p_epi_epi_1.png', p_epi_epi_1, width = 1.75, height = 1.6, 
+       units = 'in')
+
+ggsave('../plots/p_epi_epi_4.png', p_epi_epi_4, width = 1.75, height = 1.6, 
+       units = 'in')
+
 log10_epi_epi <- var_log10(epi_epi)
 
 pearsons_epi_epi <- tibble(
