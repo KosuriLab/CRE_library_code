@@ -84,8 +84,8 @@ bc_join_64B <- bc_map_join_bc(SP3_SP5_map, bc_64B)
 
 #Median BC expression-----------------------------------------------------------
 
-#Join DNA BC reads > 6 reads and join to RNA. Take ratio of RNA/DNA normalized
-#reads per million
+#Retain BCs with > 6 reads in DNA sample, left-join RNA to DNA BCs. Take ratio 
+#of RNA/DNA normalizedreads per million
 
 dna7_join_rna_rep <- function(df1, df2) {
   filter_DNA <- filter(df1, num_reads > 6)
