@@ -24,6 +24,7 @@ library(tidyverse)
 library(lemon)
 library(viridis)
 library(cowplot)
+library(caTools)
 
 
 library(reshape2)
@@ -37,7 +38,6 @@ library(GGally)
 library(devtools)
 library(updateR)
 library(ggsignif)
-library(caTools)
 
 #General figure customizations
 
@@ -134,8 +134,8 @@ bc_join_R22B <- bc_map_join_bc(SP3_SP5_map, bc_R22B)
 
 #Median BC expression-----------------------------------------------------------
 
-#Join DNA BC reads > 6 reads and join to RNA. Take ratio of RNA/DNA normalized
-#reads per million
+#Retain BCs with > 6 reads in DNA sample, left-join RNA to DNA BCs. Take ratio 
+#of RNA/DNA normalizedreads per million
 
 dna7_join_rna_rep <- function(df1, df2) {
   filter_DNA <- filter(df1, num_reads > 6)
@@ -605,7 +605,7 @@ pearsons_epi <- tibble(
                    filter(log10_gen_epi, subpool == 'subpool5')$med_ratio_22B,
                    use = "pairwise.complete.obs", method = "pearson")))
 
-pearsons_int <- tibble(
+pearsons_gen <- tibble(
   sample = c('all', 'subpool3', 'subpool5'),
   pearsons = c(cor(log10_gen_epi$med_ratio_br1, log10_gen_epi$med_ratio_br2, 
                    use = "pairwise.complete.obs", method = "pearson"),
@@ -997,7 +997,7 @@ s3_gen_epi <- MPRA_ave %>%
   filter(subpool == 'subpool3') %>%
   subpool3()
 
-s3_gen_epi_back_norm_conc <- med_rep_0_22_A_B %>%
+s3_epi_back_norm_conc <- med_rep_0_22_A_B %>%
   back_norm() %>%
   var_conc_exp() %>%
   filter(subpool == 'subpool3') %>%
@@ -1066,7 +1066,7 @@ moveavg_dist3 <- function(df) {
     mutate(ave_3 = runmean(ave_ratio_norm, 3, alg = 'R', endrule = 'NA'))
 }
 
-s3_tidy_moveavg3 <- s3_gen_epi_back_norm_conc %>%
+s3_tidy_moveavg3 <- s3_epi_back_norm_conc %>%
   select(background, spacing, dist, conc, ave_ratio_norm) %>%
   group_by(background, spacing, conc) %>%
   arrange(dist, .by_group = TRUE) %>%
