@@ -26,7 +26,7 @@ library(viridis)
 library(cowplot)
 library(caTools)
 
-
+#install packages again below this
 library(reshape2)
 library(stringr)
 library(ggExtra)
@@ -109,7 +109,7 @@ bc_map_join_bc <- function(df1, df2) {
                                 0, 
                                 normalized)) %>%
     mutate(num_reads = if_else(is.na(num_reads), 
-                               as.integer(0), 
+                               0, 
                                num_reads))
   return(keep_bc)
 }
@@ -580,8 +580,8 @@ p_fig1_int_med_rep <- gen_epi %>%
   annotation_logticks(scaled = TRUE) +
   xlab("Expression (a.u.) replicate 1") +
   ylab("Expression (a.u.) replicate 2") +
-  scale_x_log10(limits = c(0.001, 15)) + 
-  scale_y_log10(limits = c(0.001, 15)) +
+  scale_x_log10(limits = c(0.001, 15), breaks = c(0.01, 0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.001, 15), breaks = c(0.01, 0.1, 1, 10)) +
   background_grid(major = 'xy', minor = 'none') + 
   theme(strip.background = element_rect(colour="black", fill="white"),
         axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) 
@@ -1075,11 +1075,37 @@ s3_tidy_moveavg3 <- s3_epi_back_norm_conc %>%
   unnest() %>%
   select(-dist1, -ave_ratio_norm1)
 
-p_test <- s3_tidy_moveavg3 %>%
-  filter(background == '55' & spacing == 5) %>%
+p_induction_spacing_10_back_55 <- s3_tidy_moveavg3 %>%
+  filter(background == '55' & spacing == 10) %>%
   ggplot(aes(dist, ave_ratio_norm)) +
-  geom_point(aes(color = as.factor(conc))) +
-  geom_line(aes(dist, ave_3, color = as.factor(conc)))
+  geom_point(aes(color = conc), size = 1, alpha = 0.5) +
+  geom_line(aes(dist, ave_3, color = conc, group = conc), size = 0.5) +
+  geom_line(data = filter(s3_tidy_moveavg3, conc == -7 & background == '55' & spacing == 10), 
+            aes(dist, ave_3), color = '#FDE725FF', size = 0.75) +
+  scale_x_continuous("Distance to minimal promoter (bp)",
+                     breaks = c(seq(from = 60, to = 190, by = 10))) +
+  scale_y_continuous("Average normalized\nexpression (a.u.)") +
+  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') + 
+  scale_color_viridis(name = 'log2 forskolin (µM)', begin = 1, end = 0,
+                      breaks = c(-7, -5, -4, -3, -2, -1, 0, 2)) + 
+  guides(color = guide_colorbar(frame.colour = 'black', ticks.colour = 'black')) +
+  panel_border(colour = 'black') +
+  figurefont_theme 
+
+ggsave('../plots/p_induction_spacing_10_back_55.pdf', 
+       p_induction_spacing_10_back_55, width = 5.5, height = 1.75, 
+       units = 'in')
+
+p_test <- s3_tidy_moveavg3 %>%
+  filter(conc == 2) %>%
+  ggplot(aes(dist, ave_ratio_norm)) +
+  geom_point() +
+  geom_line(aes(dist, ave_3)) +
+  facet_grid(spacing ~ background) +
+  scale_y_log10() +
+  annotation_logticks(sides = 'l')
+  
+  
 
 
 
