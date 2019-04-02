@@ -47,7 +47,7 @@ cbPalette7 <- c('#440154FF', '#39568CFF', '#287D8EFF', '#20A387FF', '#73D055FF',
 cbPalette7_grad_light <- c('white', '#FDE725FF', '#B8DE29FF', '#55C667FF', 
                            '#1F968BFF', '#39568CFF', '#482677FF')
 
-spacing_5_20_palette <- c('gray20', 'dodgerblue3', 'indianred2', '#55C667FF')
+spacing_5_20_cbpalette <- c('gray20', 'orangered3', 'deepskyblue2', 'sandybrown')
 
 figurefont_theme <- theme(text = element_text(size = 8)) +
   theme(axis.title = element_text(size = 8)) +
@@ -294,9 +294,8 @@ med_rep_0_22_A_B <- var_conc_rep_med(med_ratio_R0A, med_ratio_R0B,
 
 #Background-normalize expression------------------------------------------------
 
-#Normalize MPRA expression of all variants and 1 control to variant without CRE
-#sites (backgrounds). Each variant normalized to the background used in its 
-#design.
+#Normalize MPRA expression of all variants to variant without CRE sites 
+#(backgrounds). Each variant normalized to the background used in its design.
 
 back_norm <- function(df1) {
   gsub_0_22 <- df1 %>%
@@ -465,8 +464,7 @@ epi_back_norm_conc <- epi_back_norm_pc_spGl4 %>%
 #"20171129_genlib_analysis/20171129_genlib.R". Processed df with expression
 #values is exported from there and imported here to plot together
 
-gen_rep_1_2 <- read_tsv('../20171129_genlib_analysis/rep_1_2.txt') %>%
-  mutate(ave_med_ratio = (med_ratio_br1 + med_ratio_br2)/2)
+gen_rep_1_2 <- read_tsv('../20171129_genlib_analysis/rep_1_2.txt')
 
 #Combine genomic and episomal dfs, only comparing to expression at 2^2 µM 
 #forskolin in the episomal dataset. Here med_ratio_br# and ave_med_ratio refers 
@@ -474,10 +472,11 @@ gen_rep_1_2 <- read_tsv('../20171129_genlib_analysis/rep_1_2.txt') %>%
 #Episomal expression is represented by the annotation <name>_22 as representing
 #the forskolin concentration the sample was incubated with
 
-gen_epi <- med_rep_0_22_A_B %>%
-  select(subpool, name, most_common, barcodes_DNA, med_ratio_22A, 
-         barcodes_RNA_22A, med_ratio_22B, barcodes_RNA_22B) %>%
+gen_epi <- epi_back_norm_pc_spGl4 %>%
   mutate(ave_ratio_22 = (med_ratio_22A + med_ratio_22B)/2) %>%
+  select(subpool, name, most_common, barcodes_DNA, med_ratio_22A,
+         barcodes_RNA_22A, ratio_22A_norm, med_ratio_22B, barcodes_RNA_22B, 
+         ratio_22B_norm, ave_ratio_22, ave_ratio_22_norm) %>%
   inner_join(gen_rep_1_2, by = c('subpool', 'name', 'most_common'))
 
 #Make untidy df where MPRA format is a variable according to average variant
@@ -497,8 +496,8 @@ MPRA_ave <- gen_epi %>%
                               nchar(background)-1,
                               nchar(background))) %>%
   select(subpool, name, most_common, background, barcodes_RNA_br1, barcodes_RNA_br2, 
-         med_ratio_br1, med_ratio_br2, ave_med_ratio, barcodes_RNA_22A, 
-         barcodes_RNA_22B, med_ratio_22A, med_ratio_22B, ave_ratio_22) %>%
+         ave_med_ratio, ave_med_ratio_norm, barcodes_RNA_22A, barcodes_RNA_22B, 
+         ave_ratio_22, ave_ratio_22_norm) %>%
   mutate(genomic = (barcodes_RNA_br1 + barcodes_RNA_br2)/2) %>%
   mutate(episomal = (barcodes_RNA_22A + barcodes_RNA_22B)/2) %>%
   select(-barcodes_RNA_br1, -barcodes_RNA_br2, -barcodes_RNA_22A, 
@@ -508,7 +507,13 @@ MPRA_ave <- gen_epi %>%
   mutate(episomal = ave_ratio_22) %>%
   gather(genomic, episomal, key = 'MPRA2', value = 'ave_ratio') %>%
   filter((MPRA == 'genomic' & MPRA2 == 'genomic') | (MPRA == 'episomal' & MPRA2 == 'episomal')) %>%
-  select(-MPRA2)
+  select(-MPRA2) %>%
+  mutate() %>%
+  mutate(genomic = ave_med_ratio_norm) %>%
+  mutate(episomal = ave_ratio_22_norm) %>%
+  gather(genomic, episomal, key = 'MPRA3', value = 'ave_ratio_norm') %>%
+  filter((MPRA == 'genomic' & MPRA3 == 'genomic') | (MPRA == 'episomal' & MPRA3 == 'episomal')) %>%
+  select(-MPRA3)
 
 #Figure 1D----------------------------------------------------------------------
 
@@ -1056,24 +1061,23 @@ s5_gen_epi <- MPRA_ave %>%
   filter(subpool == 'subpool5') %>%
   subpool5()
 
-#Figure 2A----------------------------------------------------------------------
-
-#New figure with different concentrations, distance effects with background 41,
-#5 bp CRE Spacing, episomal MPRA
+#Figure 2----------------------------------------------------------------------
 
 moveavg_dist3 <- function(df) {
   df <- df %>%
     mutate(ave_3 = runmean(ave_ratio_norm, 3, alg = 'R', endrule = 'NA'))
 }
 
+#Figure 2A
+
+#Episomal MPRA, effect of CRE distance on expression across forskolin 
+#concentrations. Using Background 55, 10 bp CRE spacing as an example
+
 s3_tidy_moveavg3 <- s3_epi_back_norm_conc %>%
   select(background, spacing, dist, conc, ave_ratio_norm) %>%
   group_by(background, spacing, conc) %>%
   arrange(dist, .by_group = TRUE) %>%
-  nest() %>%
-  mutate(ave_3 = map(.$data, moveavg_dist3)) %>%
-  unnest() %>%
-  select(-dist1, -ave_ratio_norm1)
+  moveavg_dist3()
 
 p_induction_spacing_10_back_55 <- s3_tidy_moveavg3 %>%
   filter(background == '55' & spacing == 10) %>%
@@ -1096,141 +1100,130 @@ ggsave('../plots/p_induction_spacing_10_back_55.pdf',
        p_induction_spacing_10_back_55, width = 5.5, height = 1.75, 
        units = 'in')
 
-p_test <- s3_tidy_moveavg3 %>%
-  filter(conc == 2) %>%
+#Figure 2B
+
+#Both MPRAs, effect of CRE distance on expression across spacings, using 
+#background 55 as an example
+
+s3_tidy_moveavg3_MPRA <- s3_gen_epi %>%
+  select(background, spacing, dist, MPRA, ave_ratio_norm) %>%
+  group_by(background, spacing, MPRA) %>%
+  arrange(dist, .by_group = TRUE) %>%
+  moveavg_dist3()
+
+p_MPRA_dist_back_55 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 55, spacing != 0, spacing != 70) %>%
   ggplot(aes(dist, ave_ratio_norm)) +
-  geom_point() +
-  geom_line(aes(dist, ave_3)) +
-  facet_grid(spacing ~ background) +
-  scale_y_log10() +
-  annotation_logticks(sides = 'l')
-  
-  
-
-
-
-
-
-#Plot CRE distance vs. variant expression in the CRE Spacing and Distance 
-#Library. Distance is binned in 22 bp intervals and plotted per MPRA and
-#background, colored according to CRE Spacing.
-
-s3_gen_epi_bin20bp <- s3_gen_epi %>%
-  filter(dist <= 176) %>%
-  mutate(bin = cut(dist, seq(from = 66, to = 176, by = 22),
-                   labels = c('67-88', '89-110', '111-132', '133-154',
-                              '155-176')))
-
-p_s3_dist_gen_bin20bp <- s3_gen_epi_bin20bp %>%
-  mutate(background = factor(background, levels = c('55', '52', '41'))) %>%
-  filter(spacing != 0 & spacing != 70 & background != '41' & MPRA == 'genomic') %>%
-  ggplot(aes(bin, ave_ratio)) +
-  geom_signif(comparisons = list(c('67-88', '89-110')), y_position = log10(5),
-              textsize = 2.4) +
-  geom_signif(comparisons = list(c('67-88', '111-132')), y_position = log10(15),
-              textsize = 2.4) +
-  facet_grid(. ~ background) +
-  geom_jitter(aes(color = as.factor(spacing)), 
-              position=position_jitter(width=0.3, height=0), alpha = 0.75,
-              size = 0.5) +
-  geom_boxplot(outlier.shape=NA, size = 0.3, position = position_dodge(1),
-               show.legend = FALSE, alpha = 0) +
-  scale_color_manual(values = spacing_5_20_palette, name = 'CRE spacing (bp)') +
-  theme(legend.position = 'right', axis.ticks.x = element_blank(), 
-        strip.background = element_rect(colour="black", fill="white"),
-        axis.text.x = element_text(angle = 45, hjust = 1)) + 
-  scale_y_log10(limits = c(0.015, 30)) +
-  annotation_logticks(sides = 'l') +
+  facet_grid(MPRA ~ .) +
+  geom_rect(aes(xmin = 67, xmax = 96, ymin = 0, ymax = 10.25), 
+            color = 'black', fill = 'grey95', size = 0.2) +
+  geom_rect(aes(xmin = 147, xmax = 176, ymin = 0, ymax = 10.25), 
+            color = 'black', fill = 'grey95', size = 0.2) +
+  geom_point(aes(color = as.factor(spacing)), size = 1, alpha = 0.6) +
+  geom_line(aes(dist, ave_3, color = as.factor(spacing), group = spacing), 
+            size = 0.5) +
+  scale_color_manual(values = spacing_5_20_cbpalette, name = 'CRE spacing (bp)') +
+  scale_x_continuous("Distance to minimal promoter (bp)",
+                     breaks = c(seq(from = 60, to = 190, by = 10))) +
+  scale_y_continuous("Average normalized expression (a.u.)") +
+  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') + 
   panel_border(colour = 'black') +
-  ylab('Average expression (a.u.)') +
-  xlab('Distance to minimal promoter (bp)') +
-  figurefont_theme
-
-p_s3_dist_epi_bin20bp <- s3_gen_epi_bin20bp %>%
-  mutate(background = factor(background, levels = c('55', '52', '41'))) %>%
-  filter(spacing != 0 & spacing != 70 & background != '41' & MPRA == 'episomal') %>%
-  ggplot(aes(bin, ave_ratio)) +
-  geom_signif(comparisons = list(c('67-88', '89-110')), y_position = log10(6),
-              textsize = 2.4) +
-  geom_signif(comparisons = list(c('67-88', '111-132')), y_position = log10(15),
-              textsize = 2.4) +
-  facet_grid(. ~ background) +
-  geom_jitter(aes(color = as.factor(spacing)), 
-              position=position_jitter(width=0.3, height=0), alpha = 0.75,
-              size = 0.5) +
-  geom_boxplot(outlier.shape=NA, size = 0.3, position = position_dodge(1),
-               show.legend = FALSE, alpha = 0) +
-  scale_color_manual(values = spacing_5_20_palette, name = 'CRE spacing (bp)') +
-  theme(legend.position = 'right', axis.ticks.x = element_blank(), 
-        strip.background = element_rect(colour="black", fill="white"),
-        axis.text.x = element_text(angle = 45, hjust = 1)) + 
-  scale_y_log10(limits = c(0.1, 30)) +
-  annotation_logticks(sides = 'l') +
-  panel_border(colour = 'black') +
-  ylab('Average expression (a.u.)') +
-  xlab('Distance to minimal promoter (bp)') +
-  figurefont_theme
-
-ggsave('../plots/p_s3_dist_gen_bin20bp.pdf', p_s3_dist_gen_bin20bp,
-       width = 3.375, height = 1.75, unit = 'in')
-
-ggsave('../plots/p_s3_dist_epi_bin20bp.pdf', p_s3_dist_epi_bin20bp,
-       width = 3.375, height = 1.75, unit = 'in')
-
-#Figure 2B----------------------------------------------------------------------
+  figurefont_theme  +
+  theme(strip.background = element_rect(colour="black", fill="white"))
+  
+ggsave('../plots/p_MPRA_dist_back_55.pdf', 
+       p_MPRA_dist_back_55, width = 5.625, height = 2.75, units = 'in')
 
 #Take median expression of variants with a certain background, MPRA format,
-#CRE Spacing per 10 bp CRE Distance increment. Plot change in median expression
-#between 67-76 and 167-176 bp CRE Distance increments.
+#and CRE spacing across CRE distances 67-96 and 147-176 bp. Then divide median
+#expression 147-176 bp over median expression 67-96 bp.
 
-bin_10bp_change_dist <- function(df) {
-  df <- df %>%
-    filter(dist <= 176) %>%
-    mutate(bin = cut(dist, seq(from = 66, to = 177, by = 10),
-                     labels = c('67-76', '77-86', '87-96', '97-106', '107-116',
-                                '117-126', '127-136', '137-146', '147-156', 
-                                '157-166', '167-176'))) %>%
-    group_by(background, MPRA, bin, spacing) %>%
-    summarize(median_bin = median(ave_ratio)) %>%
+med_range_dist <- function(df) {
+  low <- df %>%
+    filter(dist >= 67 & dist <= 96) %>%
+    mutate(range = '67-96')
+  high <- df %>%
+    filter(dist >= 147 & dist <= 176) %>%
+    mutate(range = '147-176')
+  range <- rbind(low, high) %>%
+    group_by(range, spacing, background, MPRA) %>%
+    summarize(median_range = median(ave_ratio_norm)) %>%
     ungroup()
-  df_6776 <- df %>%
-    filter(bin == '67-76') %>%
-    mutate(median_6776 = median_bin) %>%
-    select(-bin, -median_bin)
-  df_167176 <- df %>%
-    filter(bin == '167-176') %>%
-    mutate(median_167176 = median_bin) %>%
-    select(-bin, -median_bin)
-  bin_change <- left_join(df_6776, df_167176, by = c('background', 'MPRA',
-                                                     'spacing')) %>%
-    mutate(bin_change = median_6776/median_167176)
-  return(bin_change)
+  return(range)
+}
+
+fold_change_range <- function(df) {
+  med_low <- df %>%
+    filter(range == '67-96') %>%
+    mutate(median_6796 = median_range) %>%
+    select(-range, -median_range)
+  med_high <- df %>%
+    filter(range == '147-176') %>%
+    mutate(median_147176 = median_range) %>%
+    select(-range, -median_range)
+  range_change <- left_join(med_low, med_high, 
+                            by = c('spacing', 'background', 'MPRA')) %>%
+    mutate(range_change = median_6796/median_147176) %>%
+    filter(spacing != 0, spacing != 70) %>%
+    group_by(background, MPRA) %>%
+    summarize(med_fold_change = median(range_change))
+  return(range_change)
 }
   
-s3_gen_epi_bin_10bp_change_dist <- bin_10bp_change_dist(s3_gen_epi)
+s3_gen_epi_med_range <- med_range_dist(s3_gen_epi)
+
+s3_gen_epi_med_change_dist <- fold_change_range(s3_gen_epi_med_range) %>%
+  filter(background != 41)
   
-p_s3_gen_epi_bin10bp_med_change <- s3_gen_epi_bin_10bp_change_dist %>%
-  mutate(background = factor(background, levels = c('55', '52', '41'))) %>%
-  filter(spacing != 0 & spacing != 70 & background != '41') %>%
-  ggplot(aes(MPRA, bin_change)) +
-  facet_grid(. ~ background) +
+p_s3_gen_epi_med_change_dist_55 <- s3_gen_epi_med_range %>%
+  filter(spacing != 0 & spacing != 70 & background == '55') %>%
+  mutate(range = factor(range, levels = c('67-96', '147-176'))) %>%
+  ggplot(aes(range, median_range)) +
+  facet_grid(. ~ MPRA) +
   geom_jitter(aes(color = as.factor(spacing)), 
               position=position_jitter(width=0.3, height=0), alpha = 0.75,
-              size = 1) +
+              size = 1, show.legend = FALSE) +
   geom_boxplot(outlier.shape=NA, size = 0.2, position = position_dodge(1),
                show.legend = FALSE, alpha = 0) +
-  scale_color_manual(values = spacing_5_20_palette, name = 'CRE spacing (bp)') +
-  theme(legend.position = 'top', axis.ticks.x = element_blank(), 
-        strip.background = element_rect(colour="black", fill="white"),
-        axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_color_manual(values = spacing_5_20_cbpalette, 
+                     name = 'CRE spacing (bp)') +
+  scale_y_continuous(limits = c(0, 13), 
+                     breaks = c(seq(from = 0, to = 13, by = 3))) + 
   panel_border(colour = 'black') +
-  scale_y_continuous(limits = c(1, 6), breaks = c(1:6)) +
-  ylab('Change in median\nexpression from\n167-176 to 67-76 bp') +
-  xlab('MPRA') +
-  figurefont_theme
+  ylab('Median normalized\nexpression (a.u)') +
+  xlab('CRE distance range (bp)') +
+  figurefont_theme +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.ticks.x = element_blank())
 
-ggsave('../plots/p_s3_gen_epi_bin10bp_med_change.pdf', 
-       p_s3_gen_epi_bin10bp_med_change, width = 3, height = 2.5, unit = 'in')
+p_s3_gen_epi_med_change_dist_52 <- s3_gen_epi_med_range %>%
+  filter(spacing != 0 & spacing != 70 & background == '52') %>%
+  mutate(range = factor(range, levels = c('67-96', '147-176'))) %>%
+  ggplot(aes(range, median_range)) +
+  facet_grid(. ~ MPRA) +
+  geom_jitter(aes(color = as.factor(spacing)), 
+              position=position_jitter(width=0.3, height=0), alpha = 0.75,
+              size = 1, show.legend = FALSE) +
+  geom_boxplot(outlier.shape=NA, size = 0.2, position = position_dodge(1),
+               show.legend = FALSE, alpha = 0) +
+  scale_color_manual(values = spacing_5_20_cbpalette, 
+                     name = 'CRE spacing (bp)') +
+  scale_y_continuous(limits = c(0, 13), 
+                     breaks = c(seq(from = 0, to = 13, by = 3))) + 
+  panel_border(colour = 'black') +
+  ylab('Median normalized\nexpression (a.u)') +
+  xlab('CRE distance range (bp)') +
+  figurefont_theme +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.ticks.x = element_blank())
+
+ggsave('../plots/p_s3_gen_epi_med_change_dist_55.pdf', 
+       p_s3_gen_epi_med_change_dist_55, width = 2.78, height = 2, unit = 'in')
+
+ggsave('../plots/p_s3_gen_epi_med_change_dist_52.pdf', 
+       p_s3_gen_epi_med_change_dist_52, width = 2.78, height = 2, unit = 'in')
 
 
 
