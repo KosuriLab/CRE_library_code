@@ -759,7 +759,7 @@ pearsons_epi_conc <- tibble(
                          use = "pairwise.complete.obs", method = "pearson"), 3))
 )
 
-#Replicability beyond 4 µM------------------------------------------------------
+#Replicability beyond 4 µM and Supp. Fig. 2-------------------------------------
 
 #Import expression from MPRA done across 0-64 µM forskolin concentrations,
 #concentrations given in powers of 2
@@ -1232,7 +1232,7 @@ ggsave('../plots/p_s3_gen_epi_med_change_dist_52.pdf',
        p_s3_gen_epi_med_change_dist_52, width = 2.7, height = 2.3, unit = 'in')
 
 
-#Supplemental Figure 2A---------------------------------------------------------
+#Supplemental Figure 3----------------------------------------------------------
 
 #Import background-normalized expression table following first MPRA performed.
 #MPRA performed at 0 and 25 µM forskolin with library designs corresponding to 
@@ -1296,7 +1296,7 @@ p_subpool2_dist_0_25 <- s2_untidy_moveavg3 %>%
 ggsave('../plots/subpool2_dist_0_25.pdf', p_subpool2_dist_0_25, units = 'in',
        width = 5, height = 2.66)
 
-#Supplemental Figure 2B and Figure 3--------------------------------------------
+#Supp. Fig, 4, Figure 3 and Supp. Fig. 5----------------------------------------
 
 #Plot average background-normalized expression per MPRA, CRE Spacing, and CRE
 #background acros CRE Distances. Because so few variants were retained in this 
@@ -1328,7 +1328,7 @@ s3_tidy_moveavg3_MPRA <- s3_gen_epi_rbind41 %>%
   arrange(dist, .by_group = TRUE) %>%
   moveavg_dist3()
 
-#plot figure 2B
+#plot supplemental figure 4
 
 p_space_dist_gen_epi <- s3_tidy_moveavg3_MPRA %>%
   ggplot(aes(x = dist, y = ave_ratio_norm, color = MPRA)) + 
@@ -1398,6 +1398,9 @@ p_subpool3_spa_4_vchr9_5_15 <- s3_tidy_moveavg3_MPRA %>%
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
+#10 and 20 bp spacing do not have a data point at 66 bp CRE Distance, which 
+#makes plotting similar-sized graphs difficult, add "data" at 66 with alpha = 1
+
 dumbdata <- tibble(dist = 66, ave_ratio_norm = 0.5)
 
 p_subpool3_spa_4_vchr9_10_20 <- s3_tidy_moveavg3_MPRA %>%
@@ -1431,6 +1434,286 @@ ggsave('../plots/p_subpool3_med_spa_4_vchr9_5_15.pdf',
 
 ggsave('../plots/p_subpool3_med_spa_4_vchr9_10_20.pdf', 
        p_subpool3_spa_4_vchr9_10_20, height = 1.5, width = 4.9, units = 'in')
+
+#Supplemental Figure 5
+
+#Overlay of CRE expression profiles following CRE Distance and between the CRE 
+#Spacings 5 and 10, 5 and 15, and 10 and 20 bp. Plots similar to figure 3A are
+#shown with back 52 and back 55 and across both MPRAs.
+
+p_subpool3_spa_spgl4_trans_5_10 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 55 & (spacing == 5 | spacing == 10) & MPRA == 'episomal') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  geom_vline(xintercept = c(94, 104.5), color = 'gray20', linetype = 2, 
+             alpha = 0.5) +
+  geom_vline(xintercept = c(99, 109), color = 'dodgerblue2', linetype = 2, 
+             alpha = 0.5) +
+  scale_color_manual(values = c('gray20', 'dodgerblue2'), name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(1, 6), breaks = c(1,5)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_subpool3_spa_spgl4_trans_5_15 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 55 & (spacing == 5 | spacing == 15) & MPRA == 'episomal') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  geom_vline(xintercept = c(94, 104.5), color = 'gray20', linetype = 2, 
+             alpha = 0.5) +
+  scale_color_manual(values = c('gray20', 'orangered3'), 
+                     name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(1, 6), breaks = c(1,5)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_subpool3_spa_spgl4_trans_10_20 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 55 & (spacing == 10 | spacing == 20) & MPRA == 'episomal') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  geom_vline(xintercept = c(99, 109), color = 'dodgerblue2', linetype = 2, 
+             alpha = 0.5) +
+  scale_color_manual(values = c('dodgerblue2', 'sandybrown'),
+                     name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(1, 6), breaks = c(1,5)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10),
+                     limits = c(67, 191)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_subpool3_spa_spgl4_trans_5_10.pdf', 
+       p_subpool3_spa_spgl4_trans_5_10, 
+       height = 1.25, width = 4.4, units = 'in')
+
+ggsave('../plots/p_subpool3_spa_spgl4_trans_5_15.pdf', 
+       p_subpool3_spa_spgl4_trans_5_15, 
+       height = 1.25, width = 4.4, units = 'in')
+
+ggsave('../plots/p_subpool3_spa_spgl4_trans_10_20.pdf', 
+       p_subpool3_spa_spgl4_trans_10_20, 
+       height = 1.25, width = 4.4, units = 'in')
+
+p_subpool3_spa_spgl4_int_5_10 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 55 & (spacing == 5 | spacing == 10) & MPRA == 'genomic') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  scale_color_manual(values = c('gray20', 'dodgerblue2'), name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(0.5, 20), breaks = c(1,10)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_subpool3_spa_spgl4_int_5_15 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 55 & (spacing == 5 | spacing == 15) & MPRA == 'genomic') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  scale_color_manual(values = c('gray20', 'orangered3'), 
+                     name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(0.5, 20), breaks = c(1,10)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_subpool3_spa_spgl4_int_10_20 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 55 & (spacing == 10 | spacing == 20) & MPRA == 'genomic') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  scale_color_manual(values = c('dodgerblue2', 'sandybrown'),
+                     name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(0.5, 20), breaks = c(1,10)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10),
+                     limits = c(67, 191)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_subpool3_spa_spgl4_int_5_10.pdf', 
+       p_subpool3_spa_spgl4_int_5_10, 
+       height = 1.25, width = 4.4, units = 'in')
+
+ggsave('../plots/p_subpool3_spa_spgl4_int_5_15.pdf', 
+       p_subpool3_spa_spgl4_int_5_15, 
+       height = 1.25, width = 4.4, units = 'in')
+
+ggsave('../plots/p_subpool3_spa_spgl4_int_10_20.pdf', 
+       p_subpool3_spa_spgl4_int_10_20, 
+       height = 1.25, width = 4.4, units = 'in')
+
+
+p_subpool3_spa_vchr5_trans_5_10 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 52 & (spacing == 5 | spacing == 10) & MPRA == 'episomal') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  scale_color_manual(values = c('gray20', 'dodgerblue2'), name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(2, 30), breaks = c(10)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_subpool3_spa_vchr5_trans_5_15 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 52 & (spacing == 5 | spacing == 15) & MPRA == 'episomal') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  scale_color_manual(values = c('gray20', 'orangered3'), 
+                     name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(2, 30), breaks = c(10)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_subpool3_spa_vchr5_trans_10_20 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 52 & (spacing == 10 | spacing == 20) & MPRA == 'episomal') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  scale_color_manual(values = c('dodgerblue2', 'sandybrown'),
+                     name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(2, 30), breaks = c(10)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10),
+                     limits = c(67, 191)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_subpool3_spa_vchr5_trans_5_10.pdf', 
+       p_subpool3_spa_vchr5_trans_5_10, 
+       height = 1.25, width = 4.4, units = 'in')
+
+ggsave('../plots/p_subpool3_spa_vchr5_trans_5_15.pdf', 
+       p_subpool3_spa_vchr5_trans_5_15, 
+       height = 1.25, width = 4.4, units = 'in')
+
+ggsave('../plots/p_subpool3_spa_vchr5_trans_10_20.pdf', 
+       p_subpool3_spa_vchr5_trans_10_20, 
+       height = 1.25, width = 4.4, units = 'in')
+
+
+p_subpool3_spa_vchr5_int_5_10 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 52 & (spacing == 5 | spacing == 10) & MPRA == 'genomic') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  scale_color_manual(values = c('gray20', 'dodgerblue2'), name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(1, 40), breaks = c(1, 10)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_subpool3_spa_vchr5_int_5_15 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 52 & (spacing == 5 | spacing == 15) & MPRA == 'genomic') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  scale_color_manual(values = c('gray20', 'orangered3'), 
+                     name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(1, 40), breaks = c(1, 10)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_subpool3_spa_vchr5_int_10_20 <- s3_tidy_moveavg3_MPRA %>%
+  filter(background == 52 & (spacing == 10 | spacing == 20) & MPRA == 'genomic') %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  scale_color_manual(values = c('dodgerblue2', 'sandybrown'),
+                     name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  scale_y_log10(limits = c(1, 40), breaks = c(1, 10)) +
+  annotation_logticks(sides = 'l') +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_continuous("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 64, to = 194, by = 10),
+                     limits = c(67, 191)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_subpool3_spa_vchr5_int_5_10.pdf', 
+       p_subpool3_spa_vchr5_int_5_10, 
+       height = 1.25, width = 4.4, units = 'in')
+
+ggsave('../plots/p_subpool3_spa_vchr5_int_5_15.pdf', 
+       p_subpool3_spa_vchr5_int_5_15, 
+       height = 1.25, width = 4.4, units = 'in')
+
+ggsave('../plots/p_subpool3_spa_vchr5_int_10_20.pdf', 
+       p_subpool3_spa_vchr5_int_10_20, 
+       height = 1.25, width = 4.4, units = 'in')
 
 #Figure 4-----------------------------------------------------------------------
 
@@ -1546,13 +1829,13 @@ p_ind_site_ind_back_anova_epi <- ind_site_ind_back_anova_epi %>%
         axis.ticks.x = element_blank(), axis.title.x = element_blank())
 
 ggsave('plots/p_ind_site_ind_back_epi.pdf', p_ind_site_ind_back_epi, 
-       scale = 1.3, width = 2.3, height = 2.3, units = 'in')
+       width = 2.3, height = 2.3, units = 'in')
 
 ggsave('plots/p_ind_site_ind_back_sum_epi.pdf', p_ind_site_ind_back_sum_epi,
-       scale = 1.3, width = 3, height = 2.5, units = 'in')
+       width = 3, height = 2.5, units = 'in')
 
 ggsave('plots/p_ind_site_ind_back_anova_epi.pdf', p_ind_site_ind_back_anova_epi,
-       scale = 1.3, width = 2.5, height = 2.5)
+       width = 2.5, height = 2.5)
 
 
 
