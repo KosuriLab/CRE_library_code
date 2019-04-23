@@ -42,7 +42,7 @@ bc_map_join_bc <- function(df1, df2) {
                                 0, 
                                 norm)) %>%
     mutate(num_reads = if_else(is.na(num_reads), 
-                               as.integer(0), 
+                               0, 
                                num_reads))
   return(keep_bc)
 }
@@ -135,7 +135,45 @@ rep_1_2 <- inner_join(med_ratio_1, med_ratio_2,
              by = c("name", "subpool", "most_common"),
              suffix = c('_br1', '_br2'))
 
-output_int <- rep_1_2 %>%
+#After combining rename backgrounds to simplified names, make background column. 
+#Separate out background values in each dataset and left join to original 
+#dataset. Normalize expression of each variant to its background in that 
+#biological replicate. Determine average expression and average 
+#background-normalized expression across biological replicates.
+
+back_norm <- function(df1) {
+  gsub_1_2 <- df1 %>%
+    ungroup() %>%
+    filter(subpool != 'control') %>%
+    mutate(
+      name = gsub('Smith R. Vista chr9:83712599-83712766', 'back_41', name),
+      name = gsub('Vista Chr5:88673410-88674494', 'back_52', name),
+      name = gsub('scramble pGL4.29 Promega 1-63 \\+ 1-87', 'back_55', name)
+    ) %>%
+    mutate(background = name) %>%
+    mutate(background = str_sub(background, 
+                                nchar(background)-1, 
+                                nchar(background)))
+  backgrounds <- gsub_1_2 %>%
+    filter(startsWith(name, 'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')) %>%
+    select(background, med_ratio_br1, med_ratio_br2) %>%
+    rename(med_ratio_br1_back = med_ratio_br1) %>%
+    rename(med_ratio_br2_back = med_ratio_br2) 
+  back_join_norm <- left_join(gsub_1_2, backgrounds, by = 'background') %>%
+    mutate(ave_med_ratio = (med_ratio_br1 + med_ratio_br2)/2) %>%
+    mutate(med_ratio_br1_norm = med_ratio_br1/med_ratio_br1_back) %>%
+    mutate(med_ratio_br2_norm = med_ratio_br2/med_ratio_br2_back) %>%
+    mutate(ave_med_ratio_norm = (med_ratio_br1_norm + med_ratio_br2_norm)/2)
+}
+
+rep_1_2_back_norm <- rep_1_2 %>%
+  filter(name == 'pGL4.29 Promega 1-63 + 1-87') %>%
+  mutate(name = str_c(name, '_scramble pGL4.29 Promega 1-63 + 1-87')) %>%
+  mutate(subpool = 'subpool3') %>%
+  rbind(rep_1_2) %>%
+  back_norm()
+
+output_int <- rep_1_2_back_norm %>%
   write.table(
     "rep_1_2.txt", 
     sep = '\t', row.names = FALSE)

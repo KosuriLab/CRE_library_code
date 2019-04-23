@@ -9,13 +9,13 @@
 #All figures made with this dataset require sections "Load index and bcmap 
 #files" to "Median BC expression".
 
-#Some figures require section "Background-normalize expression" and it is
+#Most figures require section "Background-normalize expression" and it is
 #recommended to run this section before plotting any figure
 
 #Most figures require both genomic and episomal MPRAs, the genomic MPRA data
 #processing is performed in 20171129_genlib.R and imported here in section
 #"Import genomic MPRA and combine with episomal". Other episomal MPRAs used in
-#supplemental figures are perfomred in 20170320_epilib_analysis_0_25 and 
+#supplemental figures are performed in 20170320_epilib_analysis_0_25 and 
 #20170631_epilib_analysis_0_64 and are imported per supplemental figure section.
 
 #In all but figure 1, the section "Separate into sublibraries" is required for
@@ -141,7 +141,7 @@ bc_join_R22B <- bc_map_join_bc(SP3_SP5_map, bc_R22B)
 #Median BC expression-----------------------------------------------------------
 
 #Retain BCs with > 6 reads in DNA sample, left-join RNA to DNA BCs. Take ratio 
-#of RNA/DNA normalizedreads per million
+#of RNA/DNA normalized reads per million
 
 dna7_join_rna_rep <- function(df1, df2) {
   filter_DNA <- filter(df1, num_reads > 6)
@@ -172,7 +172,8 @@ bc_DNA_RNA_22B <- dna7_join_rna_rep(bc_join_DNA, bc_join_R22B)
 
 #Count barcodes per variant per DNA and RNA sample, set minimum of 8 BC's per 
 #variant in DNA sample, take median BC RNA/DNA per variant, then per variant 
-#determine the median absolute deviation of all barcode ratios. 
+#determine the median absolute deviation of all barcode ratios. Only look at 
+#variants with greater than 0 median expression
 
 ratio_bc_med_var <- function(df) {
   bc_count_DNA <- df %>%
@@ -567,7 +568,7 @@ p_fig1_epi_med_rep <- gen_epi %>%
                              name)), 
              fill = 'orange', shape = 21, size = 1.75) + 
   geom_point(data = filter(gen_epi, 
-                           name == 'pGL4.29 Promega 1-63 + 1-87'), 
+                           name == 'pGL4.29 Promega 1-63 + 1-87_back_55'), 
              fill = 'red', shape = 21, size = 1.75) +
   annotation_logticks(scaled = TRUE) +
   xlab("Expression (a.u.) replicate 1") +
@@ -586,7 +587,7 @@ p_fig1_int_med_rep <- gen_epi %>%
                              'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
                              name)), 
              fill = 'orange', shape = 21, size = 1.75) + 
-  geom_point(data = filter(gen_epi, name == 'pGL4.29 Promega 1-63 + 1-87'), 
+  geom_point(data = filter(gen_epi, name == 'pGL4.29 Promega 1-63 + 1-87_back_55'), 
              fill = 'red', shape = 21, size = 1.75) +
   annotation_logticks(scaled = TRUE) +
   xlab("Expression (a.u.) replicate 1") +
@@ -833,35 +834,6 @@ pearsons_epi_conc_0_64 <- tibble(
                          use = "pairwise.complete.obs", method = "pearson"), 3))
 )
 
-#Plot titration similar to Figure 1D
-
-p_titr_pc_back_0_64 <- epi_rep_0_64_conc %>%
-  ggplot(aes(conc, ave_ratio_norm)) +
-  geom_line(aes(group = name), alpha = 0.1) +
-  geom_point(data = filter(epi_rep_0_64_conc, 
-                           startsWith(name, 
-                                      'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')),
-             color = 'darkgoldenrod1', shape = 19, stroke = 0.75) +
-  geom_line(data = filter(epi_rep_0_64_conc, 
-                          startsWith(name, 
-                                     'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')),
-            color = 'darkgoldenrod1', size = 1) +
-  geom_point(data = filter(epi_rep_0_64_conc, 
-                           startsWith(name, 
-                                      'pGL4.29 Promega 1-63 + 1-87')),
-             color = 'firebrick2', shape = 19, stroke = 0.75) +
-  geom_line(data = filter(epi_rep_0_64_conc, 
-                          startsWith(name, 
-                                     'pGL4.29 Promega 1-63 + 1-87')),
-            color = 'firebrick2', size = 1) +
-  ylab('Average normalized\nexpression (a.u.)') +
-  annotation_logticks(sides = 'b', short = unit(0.05, 'cm'), 
-                      mid = unit(0.1, 'cm'), long = unit(0.15, 'cm')) +
-  scale_x_continuous(breaks = (-2:6), 'log2 forskolin (µM)') +
-  figurefont_theme
-
-ggsave('../plots/p_titr_pc_back_0_64.pdf', p_titr_pc_back_0_64, 
-       width = 2.8, height = 2, units = 'in')
 
 #Compare average expression between episomal MPRAs between repeated 
 #concentrations 0, 1 and 4 µM forskolin
@@ -1715,10 +1687,96 @@ ggsave('../plots/p_subpool3_spa_vchr5_int_10_20.pdf',
        p_subpool3_spa_vchr5_int_10_20, 
        height = 1.25, width = 4.4, units = 'in')
 
-#Figure 4-----------------------------------------------------------------------
+#Figure 4 and Supplemental Figure 6---------------------------------------------
 
-#Fit linear model to the different locations of CRE (site 1-6), allowing weight
-#per weak and consensus CRE per site, and to the different background.
+#Figure 4A
+
+p_s5_num_cons_num_weak_back55 <- s5_gen_epi %>%
+  filter(background == '55') %>%
+  ggplot(aes(as.factor(consensus), ave_ratio_norm)) +
+  facet_grid(MPRA ~ .) +
+  geom_boxplot(aes(fill = as.factor(weak)), outlier.size = 0.75, size = 0.3, 
+               outlier.shape = 21, outlier.alpha = 1, 
+               position = position_dodge(0.75)) +
+  scale_y_log10() + 
+  panel_border(colour = 'black') +
+  annotation_logticks(sides = 'l') +
+  scale_fill_manual(name = 'number of\nweak CREs', 
+                    values = cbPalette7_grad_light) +
+  theme(axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white"),
+        legend.position = 'top') +
+  ylab('Average normalized expression (a.u.)') +
+  xlab('Number of consensus CREs') +
+  figurefont_theme
+
+ggsave('../plots/p_s5_num_cons_num_weak_back55.pdf', 
+       p_s5_num_cons_num_weak_back55, width = 4.5, height = 3.75, units = 'in')
+
+#Determine median expression of variants with one consensus CRE in background 55
+
+med_change_weak1 <- s5_gen_epi %>%
+  filter(background == '55' & consensus == 1) %>%
+  group_by(MPRA, consensus, weak) %>%
+  summarize(median(ave_ratio_norm))
+
+#Supplemental Figure 6
+
+p_s5_num_cons_num_weak_back41 <- s5_gen_epi %>%
+  filter(background == 41) %>%
+  ggplot(aes(as.factor(consensus), ave_ratio_norm)) +
+  facet_grid(MPRA ~ .) +
+  geom_boxplot(aes(fill = as.factor(weak)), outlier.size = 0.75, size = 0.3, 
+               outlier.shape = 21, outlier.alpha = 1, 
+               position = position_dodge(0.75)) +
+  scale_y_log10() + 
+  panel_border(colour = 'black') +
+  annotation_logticks(sides = 'l') +
+  scale_fill_manual(name = 'number of\nweak CREs', 
+                    values = cbPalette7_grad_light) +
+  theme(axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white"),
+        legend.position = 'top') +
+  ylab('Average normalized expression (a.u.)') +
+  xlab('Number of consensus CREs') +
+  figurefont_theme
+
+ggsave('../plots/p_s5_num_cons_num_weak_back41.pdf', 
+       p_s5_num_cons_num_weak_back41, width = 4.5, height = 3.75, units = 'in')
+
+p_s5_num_cons_num_weak_back52 <- s5_gen_epi %>%
+  filter(background == 52) %>%
+  ggplot(aes(as.factor(consensus), ave_ratio_norm)) +
+  facet_grid(MPRA ~ .) +
+  geom_boxplot(aes(fill = as.factor(weak)), outlier.size = 0.75, size = 0.3, 
+               outlier.shape = 21, outlier.alpha = 1, 
+               position = position_dodge(0.75)) +
+  scale_y_log10() + 
+  panel_border(colour = 'black') +
+  annotation_logticks(sides = 'l') +
+  scale_fill_manual(name = 'number of\nweak CREs', 
+                    values = cbPalette7_grad_light) +
+  theme(axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white"),
+        legend.position = 'top') +
+  ylab('Average normalized expression (a.u.)') +
+  xlab('Number of consensus CREs') +
+  figurefont_theme
+
+ggsave('../plots/p_s5_num_cons_num_weak_back52.pdf', 
+       p_s5_num_cons_num_weak_back52, width = 4.5, height = 3.75, units = 'in')
+
+#Figure 4B
+
+#Fit log-linear model to the different locations of CRE (site 1-6), allowing 
+#weights per weak and consensus CRE per site, and to the different backgrounds
+
+ind_site_ind_back <- function(df) {
+  model <- lm(ave_ratio ~ background + site1 + site2 + site3 + site4 + site5 + site6, 
+              data = df)
+}
+
+#Attach model predictions to original df
 
 pred_resid <- function(df1, x) {
   df2 <- df1 %>%
@@ -1726,31 +1784,12 @@ pred_resid <- function(df1, x) {
   df3 <- df2 %>%
     add_residuals(x)
   return(df3)
-  print('processed pre_res_trans_int(df1, df2) in order of (data, model)')
+  print('processed pred_resid(df1, df2) in order of (data, model)')
 }
 
-ind_site_ind_back <- function(df) {
-  model <- lm(ave_ratio ~ background + site1 + site2 + site3 + site4 + site5 + site6 + 1, 
-              data = df)
-}
+#Make model weights output plottable
 
-#change order of site types to fit consensus and weak CRE expression relative to
-#no site and the weakest-expressing background
-
-subpool5_ncw <- s5_gen_epi %>%
-  mutate(site1 = gsub('nosite', 'anosite', site1)) %>%
-  mutate(site2 = gsub('nosite', 'anosite', site2)) %>%
-  mutate(site3 = gsub('nosite', 'anosite', site3)) %>%
-  mutate(site4 = gsub('nosite', 'anosite', site4)) %>%
-  mutate(site5 = gsub('nosite', 'anosite', site5)) %>%
-  mutate(site6 = gsub('nosite', 'anosite', site6)) %>%
-  mutate(background = gsub('v chr9', 'av chr9', background)) %>%
-  var_log10()
-
-#Make sum of errors output plottable, y-intercept represents the model without
-#weights per variable, so the weight for no CRE sites and background 41
-
-ind_site_ind_back_sumtidy <- function(df) {
+ind_site_ind_back_weights <- function(df) {
   df <- tidy(df)
   sites <- df %>%
     filter(str_detect(term, '^site')) %>%
@@ -1761,53 +1800,63 @@ ind_site_ind_back_sumtidy <- function(df) {
     filter(str_detect(term, '^background')) %>%
     mutate(term = gsub('background', 'background_', term)) %>%
     separate(term, into = c('variable', 'type'), sep = '_')
-  back41 <- data.frame()
-  sum <- rbind(sites, background)
-  return(sum)
+  weights <- rbind(sites, background)
+  return(weights)
 }
 
-#Fit linear model to episomal data
+#change order of site types to fit consensus and weak CRE expression relative to
+#no site
+
+subpool5_ncw <- s5_gen_epi %>%
+  mutate(site1 = gsub('nosite', 'anosite', site1)) %>%
+  mutate(site2 = gsub('nosite', 'anosite', site2)) %>%
+  mutate(site3 = gsub('nosite', 'anosite', site3)) %>%
+  mutate(site4 = gsub('nosite', 'anosite', site4)) %>%
+  mutate(site5 = gsub('nosite', 'anosite', site5)) %>%
+  mutate(site6 = gsub('nosite', 'anosite', site6)) %>%
+  var_log10()
+
+#Fit log-linear model to episomal data, join model predictions to df and 
+#determine the proportion of variance explained
 
 ind_site_ind_back_epi <- subpool5_ncw %>%
   filter(MPRA == 'episomal') %>%
   ind_site_ind_back()
 
-ind_site_ind_back_sum_epi <- ind_site_ind_back_sumtidy(ind_site_ind_back_epi)
+ind_site_ind_back_p_r_epi <- pred_resid(filter(subpool5_ncw, MPRA == 'episomal'), 
+                                        ind_site_ind_back_epi)
+
+ind_site_ind_back_weights_epi <- ind_site_ind_back_weights(ind_site_ind_back_epi)
 
 ind_site_ind_back_anova_epi <- tidy(anova(ind_site_ind_back_epi)) %>%
-  mutate(term_fctr = factor(term, levels = term)) %>%
+  mutate(term = factor(term, levels = term)) %>%
   mutate(total_sumsq = sum(sumsq)) %>%
   mutate(per_sumsq = sumsq/total_sumsq)
 
-ind_site_ind_back_p_r_epi <- pred_resid(filter(subpool5_ncw, MPRA == 'episomal'), 
-                                        ind_site_ind_back_epi)
+#Plot
 
 lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
 
 p_ind_site_ind_back_epi <- ggplot(ind_site_ind_back_p_r_epi, 
                                   aes(ave_ratio, pred, 
                                       color = as.factor(consensus))) +
-  geom_point(alpha = 0.2, size = 1, show.legend = FALSE) +
+  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
   scale_color_manual(values = lessthan1_2color) +
-  scale_x_continuous(name = 'Measured expression', breaks = c(-1:1),
-                     limits = c(-1.5, 1.8)) + 
-  scale_y_continuous(name = 'Predicted expression', breaks = c(-1:1),
-                     limits = c(-1.5, 1.8)) +
+  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) + 
+  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) +
   annotation_logticks(sides = 'bl') +
-  annotate("text", x = -0.5, y = 1, 
-           label = paste('r =', 
-                         round(cor(ind_site_ind_back_p_r_epi$pred,
-                                   ind_site_ind_back_p_r_epi$ave_ratio,
-                                   use = "pairwise.complete.obs", 
-                                   method = "pearson"), 2)))
+  figurefont_theme
 
-(cor.test(ind_site_ind_back_p_r_epi$pred,
-          ind_site_ind_back_p_r_epi$ave_ratio)$estimate)^2
+round(cor(ind_site_ind_back_p_r_epi$pred,
+          ind_site_ind_back_p_r_epi$ave_ratio,
+          use = "pairwise.complete.obs", 
+          method = "pearson")^2, 2)
 
-p_ind_site_ind_back_sum_epi <- ind_site_ind_back_sum_epi %>%
+p_ind_site_ind_back_weights_epi <- ind_site_ind_back_weights_epi %>%
   mutate(type = factor(type, 
-                       levels = c('v chr9', 's pGl4', 'v chr5', 'consensus', 
-                                  'weak'))) %>%
+                       levels = c('52', '55', 'consensus', 'weak'))) %>%
   ggplot(aes(variable, estimate, fill = type)) + 
   geom_bar(stat = 'identity', position = 'dodge', color = 'gray60', 
            size = 0.3) + 
@@ -1817,25 +1866,140 @@ p_ind_site_ind_back_sum_epi <- ind_site_ind_back_sum_epi %>%
   theme(axis.ticks.x = element_blank(), legend.position = 'top',
         axis.text.x = element_text(angle = 45, hjust = 1), 
         axis.title.x = element_blank()) +
-  ylab('Weight')
+  ylab('Weight') +
+  figurefont_theme
 
 p_ind_site_ind_back_anova_epi <- ind_site_ind_back_anova_epi %>%
-  ggplot(aes(term_fctr, per_sumsq)) + 
+  ggplot(aes(term, per_sumsq)) + 
   geom_bar(stat = 'identity') + 
   ylab('Proportion of\nvariance explained') +
   scale_y_continuous(limits = c(0, 0.26), 
                      breaks = seq(from = 0, to = 0.25, by = 0.05)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-        axis.ticks.x = element_blank(), axis.title.x = element_blank())
+        axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
+  figurefont_theme
 
-ggsave('plots/p_ind_site_ind_back_epi.pdf', p_ind_site_ind_back_epi, 
-       width = 2.3, height = 2.3, units = 'in')
+ggsave('../plots/p_ind_site_ind_back_epi.png', p_ind_site_ind_back_epi, 
+       width = 2.3, height = 2.2, units = 'in')
 
-ggsave('plots/p_ind_site_ind_back_sum_epi.pdf', p_ind_site_ind_back_sum_epi,
-       width = 3, height = 2.5, units = 'in')
+ggsave('../plots/p_ind_site_ind_back_weights_epi.pdf', 
+       p_ind_site_ind_back_weights_epi,
+       width = 2.75, height = 2.6, units = 'in')
 
-ggsave('plots/p_ind_site_ind_back_anova_epi.pdf', p_ind_site_ind_back_anova_epi,
-       width = 2.5, height = 2.5)
+ggsave('../plots/p_ind_site_ind_back_anova_epi.pdf', 
+       p_ind_site_ind_back_anova_epi,
+       width = 2.5, height = 2.4)
+
+#Fit log-linear model to genomic data, join model predictions to df and 
+#determine the proportion of variance explained
+
+ind_site_ind_back_gen <- subpool5_ncw %>%
+  filter(MPRA == 'genomic') %>%
+  ind_site_ind_back()
+
+ind_site_ind_back_p_r_gen <- pred_resid(filter(subpool5_ncw, MPRA == 'genomic'), 
+                                        ind_site_ind_back_gen)
+
+ind_site_ind_back_weights_gen <- ind_site_ind_back_weights(ind_site_ind_back_gen)
+
+ind_site_ind_back_anova_gen <- tidy(anova(ind_site_ind_back_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq)
+
+#Plot
+
+p_ind_site_ind_back_gen <- ggplot(ind_site_ind_back_p_r_gen, 
+                                  aes(ave_ratio, pred, 
+                                      color = as.factor(consensus))) +
+  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+  scale_color_manual(values = lessthan1_2color) +
+  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2.1, 2)) + 
+  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2.1, 2)) +
+  annotation_logticks(sides = 'bl') +
+  figurefont_theme
+
+round(cor(ind_site_ind_back_p_r_gen$pred,
+          ind_site_ind_back_p_r_gen$ave_ratio,
+          use = "pairwise.complete.obs", 
+          method = "pearson")^2, 2)
+
+p_ind_site_ind_back_weights_gen <- ind_site_ind_back_weights_gen %>%
+  mutate(type = factor(type, 
+                       levels = c('52', '55', 'consensus', 'weak'))) %>%
+  ggplot(aes(variable, estimate, fill = type)) + 
+  geom_bar(stat = 'identity', position = 'dodge', color = 'gray60', 
+           size = 0.3) + 
+  geom_hline(yintercept = 0, size = 0.25) +
+  scale_x_discrete(position = 'bottom') + 
+  scale_fill_viridis(discrete = TRUE) + 
+  theme(axis.ticks.x = element_blank(), legend.position = 'top',
+        axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.title.x = element_blank()) +
+  ylab('Weight') +
+  figurefont_theme
+
+p_ind_site_ind_back_anova_gen <- ind_site_ind_back_anova_gen %>%
+  ggplot(aes(term, per_sumsq)) + 
+  geom_bar(stat = 'identity') + 
+  ylab('Proportion of\nvariance explained') +
+  scale_y_continuous(limits = c(0, 0.26), 
+                     breaks = seq(from = 0, to = 0.25, by = 0.05)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
+  figurefont_theme
+
+ggsave('../plots/p_ind_site_ind_back_gen.png', p_ind_site_ind_back_gen, 
+       width = 2.3, height = 2.2, units = 'in')
+
+ggsave('../plots/p_ind_site_ind_back_weights_gen.pdf', 
+       p_ind_site_ind_back_weights_gen,
+       width = 2.75, height = 2.6, units = 'in')
+
+ggsave('../plots/p_ind_site_ind_back_anova_gen.pdf', 
+       p_ind_site_ind_back_anova_gen,
+       width = 2.5, height = 2.4)
+
+#Figure 5-----------------------------------------------------------------------
+
+#Will add section Tuesday
+
+#Supplemental Figure 7----------------------------------------------------------
+
+p_gen_epi_rep <- gen_epi %>%
+  ggplot(aes(ave_med_ratio, ave_ratio_22)) +
+  geom_point(alpha = 0.1, size = 1) +
+  geom_point(data = filter(gen_epi, 
+                           grepl(
+                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.75) + 
+  geom_point(data = filter(gen_epi, name == 'pGL4.29 Promega 1-63 + 1-87_back_55'), 
+             fill = 'red', shape = 21, size = 1.75) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Average genomic expression (a.u.)") +
+  ylab("Average episomal expression (a.u.)") +
+  scale_x_log10(limits = c(0.01, 20), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
+  background_grid(major = 'xy', minor = 'none') + 
+  annotate("text", x = 0.05, y = 5, 
+           label = paste('r =', 
+                         round(cor(gen_epi$ave_med_ratio,
+                                   gen_epi$ave_ratio_22,
+                                   use = "pairwise.complete.obs", 
+                                   method = "pearson"), 2)),
+           size = 3) +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+  
+ggsave('../plots/p_gen_epi_rep.png', p_gen_epi_rep,
+       width = 2.6, height = 2.2, units = 'in')
+
+
+
 
 
 
