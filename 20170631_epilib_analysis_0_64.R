@@ -57,7 +57,7 @@ bc_map_join_bc <- function(df1, df2) {
                                 0, 
                                 normalized)) %>%
     mutate(num_reads = if_else(is.na(num_reads), 
-                               as.integer(0), 
+                               0, 
                                num_reads))
   return(keep_bc)
 }
