@@ -35,9 +35,8 @@ barcode_map <- read_tsv('../BCMap/uniqueSP2345.txt',
 
 #Join reads---------------------------------------------------------------------
 
-#Join BC reads to barcode map per index pool, only keeping barcodes that appear 
-#in the barcode map, and replacing NA with 0. Then normalizing to reads per 
-#million of total reads per index
+#Determine normalized BC reads per million. Join BC reads to BC mapping, keeping
+#the reads only appearing in BC mapping and replacing na with 0 reads. 
 
 bc_map_join_bc <- function(df1, df2) {
   df2 <- df2 %>%
@@ -64,10 +63,9 @@ bc_join_DNA <- bc_map_join_bc(barcode_map, bc_DNA)
 #of RNA/DNA normalizedreads per million
 
 bc_dna_join_rna <- function(df1, df2) {
-  filter_reads <- filter(df1, num_reads > 5)
-  DNA_RNA_join <- left_join(filter_reads, df2,
-                            by = c("barcode", "name", "subpool", 
-                                   "most_common"), 
+  filter_DNA <- filter(df1, num_reads > 5)
+  DNA_RNA_join <- left_join(filter_DNA, df2,
+                            by = c("barcode", "name", "subpool", "most_common"), 
                             suffix = c('_DNA', '_RNA')) %>%
     mutate(ratio = normalized_RNA/normalized_DNA)
   print('processed dfs in order of (DNA, RNA) in bc_dna_join_rna(df1, df2)')
@@ -79,9 +77,10 @@ RNA_DNA_bc_R0B <- bc_dna_join_rna(bc_join_DNA, bc_join_R0B)
 RNA_DNA_bc_R25A <- bc_dna_join_rna(bc_join_DNA, bc_join_R25A)
 RNA_DNA_bc_R25B <- bc_dna_join_rna(bc_join_DNA, bc_join_R25B)
 
-#Count barcodes per variant per DNA and RNA, set minimum of 8 BC's per variant 
-#in DNA sample, take median RNA/DNA per variant, find absolute deviation for
-#each BC per variant then per variant determine the median absolute deviation.
+#Count barcodes per variant per DNA and RNA sample, set minimum of 8 BC's per 
+#variant in DNA sample, take median BC RNA/DNA per variant, then per variant 
+#determine the median absolute deviation of all barcode ratios. Only look at 
+#variants with greater than 0 median expression
 
 ratio_bc_med_var <- function(df) {
   bc_count_DNA <- df %>%
@@ -100,21 +99,17 @@ ratio_bc_med_var <- function(df) {
     ungroup()
   med_ratio <- bc_min_8_df %>%
     group_by(subpool, name, most_common) %>%
-    summarize(med_ratio = median(ratio))
+    summarize(med_ratio = median(ratio)) %>%
+    filter(med_ratio > 0)
   mad_ratio <- bc_min_8_df %>%
     group_by(subpool, name, most_common) %>%
-    summarize(mad = mad(ratio))
-  med_mad <- inner_join(med_ratio, mad_ratio, 
-                        by = c('subpool', 'name', 'most_common')) %>%
-    mutate(mad_over_med = as.double(mad/med_ratio)) %>%
-    mutate(mad_over_med = if_else(
-      is.na(mad_over_med),
-      as.double(0), 
-      mad_over_med))
+    summarize(mad = mad(ratio, constant = 1))
+  med_mad <- left_join(med_ratio, mad_ratio, 
+                       by = c('subpool', 'name', 'most_common')) %>%
+    mutate(mad_over_med = as.double(mad/med_ratio))
   bc_med <- inner_join(med_mad, bc_DNA_RNA, 
                        by = c('subpool', 'name', 'most_common')) %>%
-    ungroup() %>%
-    filter(med_ratio > 0)
+    ungroup()
   return(bc_med)
 }
 

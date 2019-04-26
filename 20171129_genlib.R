@@ -16,8 +16,8 @@ bc_RNA_1 <- read_tsv('BCreads_txts/R18_BC.txt')
 bc_RNA_2 <- read_tsv('BCreads_txts/R28_BC.txt')
 
 #Load barcode mapping table, sequences (most_common) are rcomp due to sequencing
-#format. Pick out controls, SP3, and SP5 in the bcmap that were used in this 
-#assay
+#format. Pick out controls, subpool 3, and subpool 5 in the bcmap that were used
+#in this assay
 
 SP3_SP5_map <- read_tsv('../BCMap/uniqueSP2345.txt', 
                         col_names = c(
@@ -31,16 +31,16 @@ SP3_SP5_map <- read_tsv('../BCMap/uniqueSP2345.txt',
 
 #Join reads to bcmap------------------------------------------------------------
 
-#Join BC reads to BC mapping, keeping the reads only appearing in barcode 
-#mapping and replacing na with 0 reads.
+#Determine normalized BC reads per million. Join BC reads to BC mapping, keeping
+#the reads only appearing in BC mapping and replacing na with 0 reads. 
 
 bc_map_join_bc <- function(df1, df2) {
   df2 <- df2 %>%
-    mutate(norm = as.numeric((num_reads * 1000000) / (sum(num_reads))))
+    mutate(normalized = as.numeric((num_reads * 1000000) / (sum(num_reads))))
   keep_bc <- left_join(df1, df2, by = 'barcode') %>%
-    mutate(norm = if_else(is.na(norm), 
+    mutate(normalized = if_else(is.na(normalized), 
                                 0, 
-                                norm)) %>%
+                                normalized)) %>%
     mutate(num_reads = if_else(is.na(num_reads), 
                                0, 
                                num_reads))
@@ -67,13 +67,13 @@ ave_dna_join_rna_rep <- function(df1, df2, df3) {
   DNA_join <- inner_join(filter_reads_1, filter_reads_2, 
                          by = c("barcode", "name", "subpool", "most_common"), 
                          suffix = c("_DNA_tr1", "_DNA_tr2")) %>%
-    mutate(ave_norm_DNA = (norm_DNA_tr1 + norm_DNA_tr2)/2)
+    mutate(ave_normalized_DNA = (normalized_DNA_tr1 + normalized_DNA_tr2)/2)
   DNA_RNA_join <- left_join(DNA_join, df3,
                              by = c("barcode", "name", "subpool", 
                                     "most_common")) %>%
     rename(num_reads_RNA = num_reads) %>%
-    rename(norm_RNA = norm) %>%
-    mutate(ratio = norm_RNA/ave_norm_DNA)
+    rename(normalized_RNA = normalized) %>%
+    mutate(ratio = normalized_RNA/ave_normalized_DNA)
   print('processed dfs in order of (DNA tr1, DNA tr2, RNA) in 
         bc_dna_biol_rep(df1, df2, df3)')
   return(DNA_RNA_join)
@@ -107,21 +107,17 @@ ratio_bc_med_var <- function(df) {
     ungroup()
   med_ratio <- bc_min_8_df %>%
     group_by(subpool, name, most_common) %>%
-    summarize(med_ratio = median(ratio))
+    summarize(med_ratio = median(ratio)) %>%
+    filter(med_ratio > 0)
   mad_ratio <- bc_min_8_df %>%
     group_by(subpool, name, most_common) %>%
-    summarize(mad = mad(ratio))
-  med_mad <- inner_join(med_ratio, mad_ratio, 
-                        by = c('subpool', 'name', 'most_common')) %>%
-    mutate(mad_over_med = as.double(mad/med_ratio)) %>%
-    mutate(mad_over_med = if_else(
-      is.na(mad_over_med),
-      as.double(0), 
-      mad_over_med))
+    summarize(mad = mad(ratio, constant = 1))
+  med_mad <- left_join(med_ratio, mad_ratio, 
+                       by = c('subpool', 'name', 'most_common')) %>%
+    mutate(mad_over_med = as.double(mad/med_ratio))
   bc_med <- inner_join(med_mad, bc_DNA_RNA, 
                        by = c('subpool', 'name', 'most_common')) %>%
-    ungroup() %>%
-    filter(med_ratio > 0)
+    ungroup()
   return(bc_med)
 }
 

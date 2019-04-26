@@ -136,21 +136,17 @@ ratio_bc_med_var <- function(df) {
     ungroup()
   med_ratio <- bc_min_8_df %>%
     group_by(subpool, name, most_common) %>%
-    summarize(med_ratio = median(ratio))
+    summarize(med_ratio = median(ratio)) %>%
+    filter(med_ratio > 0)
   mad_ratio <- bc_min_8_df %>%
     group_by(subpool, name, most_common) %>%
-    summarize(mad = mad(ratio))
-  med_mad <- inner_join(med_ratio, mad_ratio, 
-                        by = c('subpool', 'name', 'most_common')) %>%
-    mutate(mad_over_med = as.double(mad/med_ratio)) %>%
-    mutate(mad_over_med = if_else(
-      is.na(mad_over_med),
-      as.double(0), 
-      mad_over_med))
+    summarize(mad = mad(ratio, constant = 1))
+  med_mad <- left_join(med_ratio, mad_ratio, 
+                       by = c('subpool', 'name', 'most_common')) %>%
+    mutate(mad_over_med = as.double(mad/med_ratio))
   bc_med <- inner_join(med_mad, bc_DNA_RNA, 
                        by = c('subpool', 'name', 'most_common')) %>%
-    ungroup() %>%
-    filter(med_ratio > 0)
+    ungroup()
   return(bc_med)
 }
 

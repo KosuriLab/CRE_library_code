@@ -4,10 +4,10 @@
 #R2#A_BC and R2#B_BC: RNA at 2^# µM Forsk replicate A and B, includes negative 
 #and positive #'s
 
-#Tested concentrations: 0, 2^-5, 2^-4, 2^-3, 2^-2, 2^-1, 2^0, 2^2 µM Forsk
+#Tested concentrations: 0, 2^-5, 2^-4, 2^-3, 2^-2, 2^-1, 2^0, 2^2 µM forskolin
 
 #All figures made with this dataset require sections "Load index and bcmap 
-#files" to "Median BC expression".
+#files" through "Median BC expression".
 
 #Most figures require section "Background-normalize expression" and it is
 #recommended to run this section before plotting any figure
@@ -15,11 +15,12 @@
 #Most figures require both genomic and episomal MPRAs, the genomic MPRA data
 #processing is performed in 20171129_genlib.R and imported here in section
 #"Import genomic MPRA and combine with episomal". Other episomal MPRAs used in
-#supplemental figures are performed in 20170320_epilib_analysis_0_25 and 
-#20170631_epilib_analysis_0_64 and are imported per supplemental figure section.
+#supplemental figures are performed in 20170320_epilib_analysis_0_25.R and 
+#20170631_epilib_analysis_0_64.R and are imported per supplemental figure 
+#section.
 
-#In all but figure 1, the section "Separate into sublibraries" is required for
-#figure generation.
+#Beyond figure 1 and associated supplemental figures, the section "Separate into
+#sublibraries" is required for figure generation.
 
 #Establish workspace------------------------------------------------------------
 
@@ -34,16 +35,6 @@ library(cowplot)
 library(caTools)
 library(broom)
 library(modelr)
-
-#install packages again below this
-library(reshape2)
-library(stringr)
-library(ggExtra)
-library(lazyeval)
-library(splines)
-library(GGally)
-library(updateR)
-library(ggsignif)
 
 #General figure customizations
 
@@ -70,6 +61,8 @@ var_log10 <- function(df) {
 
 #Load index and bcmap files-----------------------------------------------------
 
+#Load indexed BC reads
+
 bc_DNA <- read_tsv('BCreads_txts/DNA_BC.txt')
 bc_R0A <- read_tsv('BCreads_txts/R0A_BC.txt')
 bc_R0B <- read_tsv('BCreads_txts/R0B_BC.txt')
@@ -89,8 +82,8 @@ bc_R22A <- read_tsv('BCreads_txts/R22A_BC.txt')
 bc_R22B <- read_tsv('BCreads_txts/R22B_BC.txt')
 
 #Load barcode mapping table, sequences (most_common) are rcomp due to sequencing
-#format. Pick out controls, SP3, and SP5 in the bcmap that were used in this 
-#assay
+#format. Pick out controls, subpool 3, and subpool 5 in the bcmap that were used
+#in this assay
 
 SP3_SP5_map <- read_tsv('../BCMap/uniqueSP2345.txt', 
                         col_names = c(
@@ -104,8 +97,8 @@ SP3_SP5_map <- read_tsv('../BCMap/uniqueSP2345.txt',
 
 #Join reads to bcmap------------------------------------------------------------
 
-#Join BC reads to BC mapping, keeping the reads only appearing in barcode 
-#mapping and replacing na with 0 reads. Determine normalized reads per million
+#Determine normalized BC reads per million. Join BC reads to BC mapping, keeping
+#the reads only appearing in BC mapping and replacing na with 0 reads. 
 
 bc_map_join_bc <- function(df1, df2) {
   df2 <- df2 %>%
@@ -192,21 +185,17 @@ ratio_bc_med_var <- function(df) {
     ungroup()
   med_ratio <- bc_min_8_df %>%
     group_by(subpool, name, most_common) %>%
-    summarize(med_ratio = median(ratio))
+    summarize(med_ratio = median(ratio)) %>%
+    filter(med_ratio > 0)
   mad_ratio <- bc_min_8_df %>%
     group_by(subpool, name, most_common) %>%
-    summarize(mad = mad(ratio))
-  med_mad <- inner_join(med_ratio, mad_ratio, 
+    summarize(mad = mad(ratio, constant = 1))
+  med_mad <- left_join(med_ratio, mad_ratio, 
                         by = c('subpool', 'name', 'most_common')) %>%
-    mutate(mad_over_med = as.double(mad/med_ratio)) %>%
-    mutate(mad_over_med = if_else(
-      is.na(mad_over_med),
-      as.double(0), 
-      mad_over_med))
+    mutate(mad_over_med = as.double(mad/med_ratio))
   bc_med <- inner_join(med_mad, bc_DNA_RNA, 
                        by = c('subpool', 'name', 'most_common')) %>%
-    ungroup() %>%
-    filter(med_ratio > 0)
+    ungroup()
   return(bc_med)
 }
 
@@ -227,7 +216,7 @@ med_ratio_R20B <- ratio_bc_med_var(bc_DNA_RNA_20B)
 med_ratio_R22A <- ratio_bc_med_var(bc_DNA_RNA_22A)
 med_ratio_R22B <- ratio_bc_med_var(bc_DNA_RNA_22B)
 
-#Combine biological replicates
+#Combine biological replicates across concentrations
 
 var_conc_rep_med <- function(df0A, df0B, df2_5A, df2_5B, df2_4A, df2_4B, df2_3A, 
                              df2_3B, df2_2A, df2_2B, df2_1A, df2_1B, df20A, df20B, 
@@ -379,7 +368,7 @@ epi_back_norm_pc_spGl4 <- med_rep_0_22_A_B %>%
   rbind(med_rep_0_22_A_B) %>%
   back_norm()
 
-#Make untidy df with conc as a variable and normalized expressions as single 
+#Make untidy df with conc as a variable and normalized expression as single 
 #columns. Conc is indicated in log2 and 0 µM forskolin concentration is 
 #represented as 2^-7 for plotting on log scales.
 
@@ -1964,7 +1953,93 @@ ggsave('../plots/p_ind_site_ind_back_anova_gen.pdf',
 
 #Figure 5-----------------------------------------------------------------------
 
-#Will add section Tuesday
+#Make linear regression predicting episomal expression from genomic expression
+#using variants containing only consensus CREs. Use this regression to plot 
+#correlation line and determine residuals to relationship
+
+s5_cons_log10 <- s5_gen_epi %>%
+  var_log10() %>%
+  filter(site_combo == 'consensus')
+
+cons_int_epi_lm <- lm(ave_ratio_22 ~ ave_med_ratio, data = s5_cons_log10)
+
+#Add model predictions and residuals to consensus only (R2 value) and to all 
+#variants in library
+
+pred_resid <- function(df1, x) {
+  df2 <- df1 %>%
+    add_predictions(x)
+  df3 <- df2 %>%
+    add_residuals(x)
+  return(df3)
+  print('processed pred_resid(df1, df2) in order of (data, model)')
+}
+
+s5_gen_epi_cons_lm <- pred_resid(s5_cons_log10, cons_int_epi_lm)
+
+round(cor(s5_gen_epi_cons_lm$ave_ratio_22,
+          s5_gen_epi_cons_lm$pred,
+          use = "pairwise.complete.obs", 
+          method = "pearson")^2, 2)
+
+s5_gen_epi_all_lm <- pred_resid(var_log10(s5_gen_epi), cons_int_epi_lm)
+
+#Figure 5A, plot genomic vs. episomal expression and linear regression as
+#reference. Not plotting variants wihtout any CRE (backgrounds) as they do not
+#fall into CRE categories, the three points don't seem biased in expression
+#around line though.
+
+p_s5_int_trans_site_combo <- s5_gen_epi_all_lm %>%
+  filter(site_combo != 'none') %>%
+  mutate(site_combo = factor(site_combo, 
+                             levels = c('consensus', 'weak', 'mixed'))) %>%
+  ggplot(aes(ave_med_ratio, ave_ratio_22)) +
+  facet_grid(. ~ site_combo) +
+  geom_point(alpha = 0.15, size = 0.5) +
+  geom_line(aes(ave_med_ratio, pred), color = 'red', size = 0.5) +
+  annotation_logticks() +
+  scale_y_continuous(breaks = seq(from = -1, to = 1, by =1)) +
+  xlab('Average log10 genomic expression (a.u.)') +
+  ylab('Average episomal\nlog10 expression (a.u.)') +
+  panel_border(colour = 'black') +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_s5_int_trans_site_combo.pdf', p_s5_int_trans_site_combo,
+       width = 4, height = 2.25, units = 'in')
+
+#determine percent below line in mixed
+
+mixed <- s5_gen_epi_all_lm %>%
+  filter(site_combo == 'mixed')
+
+m <- count(mixed)
+n <- count(filter(mixed, resid < 0))
+n/m
+
+#plot 5B. Residual of each combination of CREs per variant to linear
+#relationship between MPRA expression of variants with consensus CREs only.
+#Linear relationship indicated with a red reference line. Negative residuals 
+#indicate higher relative expression of variant in the genomic MPRA and positive
+#indicates higher relative expression in episomal MPRA
+
+p_s5_gen_epi_site_combo_resid <- s5_gen_epi_all_lm %>%
+  ggplot(aes(as.factor(consensus), resid, fill = as.factor(weak))) +
+  geom_boxplot(outlier.size = 1, size = 0.3, 
+               outlier.shape = 21, outlier.alpha = 1, 
+               position = position_dodge(0.75)) +
+  scale_fill_manual(name = 'number of\nweak CREs', 
+                    values = cbPalette7_grad_light) +
+  xlab("consensus CREs") +
+  ylab("residual") +
+  geom_hline(yintercept = 0, linetype = 2, size = 0.5, color = 'red') +
+  theme(legend.position = 'top', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_s5_gen_epi_site_combo_resid.pdf', 
+       p_s5_gen_epi_site_combo_resid, width = 3.75, height = 3, units = 'in')
 
 #Supplemental Figure 7----------------------------------------------------------
 
