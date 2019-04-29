@@ -35,6 +35,7 @@ library(cowplot)
 library(caTools)
 library(broom)
 library(modelr)
+library(reshape2)
 
 #General figure customizations
 
@@ -465,8 +466,8 @@ gen_rep_1_2 <- read_tsv('../20171129_genlib_analysis/rep_1_2.txt')
 #Combine genomic and episomal dfs, only comparing to expression at 2^2 µM 
 #forskolin in the episomal dataset. Here med_ratio_br# and ave_med_ratio refers 
 #to genomic expression, either across biological replicates or averaged.
-#Episomal expression is represented by the annotation <name>_22 as representing
-#the forskolin concentration the sample was incubated with
+#Episomal MPRA columns are represented by the annotation <column>_22 as 
+#representing the forskolin concentration the sample was incubated with (2^2)
 
 gen_epi <- epi_back_norm_pc_spGl4 %>%
   mutate(ave_ratio_22 = (med_ratio_22A + med_ratio_22B)/2) %>%
@@ -476,7 +477,7 @@ gen_epi <- epi_back_norm_pc_spGl4 %>%
   inner_join(gen_rep_1_2, by = c('subpool', 'name', 'most_common'))
 
 #Make untidy df where MPRA format is a variable according to average variant
-#expression and average #barcodes per variant in the RNA samples, also create 
+#expressions and average # barcodes per variant in the RNA samples, also create 
 #a background column
 
 MPRA_ave <- gen_epi %>%
@@ -513,8 +514,8 @@ MPRA_ave <- gen_epi %>%
 
 #Figure 1D----------------------------------------------------------------------
 
-#Plot subfigure C, normalized variant expression curves across forskolin
-#concentrations. Expression curves for backgrounds and control overlayed
+#Plot normalized variant expression curves across forskolin concentrations. 
+#Expression curves for backgrounds and control overlayed
 
 p_titr_pc_back <- epi_back_norm_conc %>%
   ggplot(aes(conc, ave_ratio_norm)) +
@@ -568,7 +569,7 @@ p_fig1_epi_med_rep <- gen_epi %>%
         axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
   figurefont_theme
 
-p_fig1_int_med_rep <- gen_epi %>%
+p_fig1_gen_med_rep <- gen_epi %>%
   ggplot(aes(med_ratio_br1, med_ratio_br2)) +
   geom_point(alpha = 0.1, size = 1) +
   geom_point(data = filter(gen_epi, 
@@ -590,7 +591,7 @@ p_fig1_int_med_rep <- gen_epi %>%
 ggsave('../plots/p_fig1_epi_med_rep.png', p_fig1_epi_med_rep,
        width = 2, height = 2, units = 'in')
 
-ggsave('../plots/p_fig1_int_med_rep.png', p_fig1_int_med_rep, 
+ggsave('../plots/p_fig1_gen_med_rep.png', p_fig1_gen_med_rep, 
        width = 2, height = 2, units = 'in')
 
 log10_gen_epi <- var_log10(gen_epi)
@@ -632,8 +633,8 @@ orientation_lum_sep <- orientation_lum %>%
            sep = "_", convert = TRUE) %>%
   select(-fluff) %>%
   mutate(orientation = ifelse(startsWith(orientation, 'rev'),
-                              'bottom',
-                              'top')) %>%
+                              '- strand',
+                              '+ strand')) %>%
   mutate(control = ifelse(startsWith(control, 'neg'),
                           'background',
                           'CRE control'))
@@ -658,7 +659,7 @@ ggsave('../plots/p_orientation_lum_sep.pdf', p_orientation_lum_sep,
 
 #Import plate reader luminescence readings
 
-titration_luc <- read_csv("plate_reader/170726_epi_gen_R.csv") %>%
+titration_luc <- read_csv("../plate_reader/170726_epi_gen_R.csv") %>%
   mutate(RLU_epi = luciferase_epi/renilla_epi) %>%
   mutate(forskolin = log2(forskolin))
 
@@ -940,26 +941,29 @@ pearsons_epi_epi <- tibble(
 #Subpool 3 corresponds to the CRE Spacing and Distance Library. This library
 #contains 2 consensus CRE sites with flanks (ATTGACGTCAGC) that vary in 
 #CRE Spacing from one another by 0 (no inner flanks), 5, 10, 15, 20, and 
-#70 bp (all but 0 appear as spacing - 4 bp due to 4 bp of sequence flanking both
-#CREs). Both CREs are then placed at variable distances to the 3' end of the 
-#backgrounds. Separation lists the CRE spacing between sites and CRE distance. 
-#Distances measured from the end of the background to the CRE proximal to the 
-#promoter. Added 2 bp to all distances here to measure to start of CRE without 
-#the flanks and then added 64 bp to measure to the minimal promoter. Added 4 to 
-#all spacings but 0 to measure difference between start of sites without flanks.
+#70 bp (all but 0 originally appear as spacing - 4 bp due to 4 bp of sequence 
+#flanking both CREs). Both CREs are then placed at variable distances to the 3' 
+#end of the backgrounds. Separation lists the CRE spacing between sites and CRE 
+#distance. Distances measured from the end of the background to the CRE proximal
+#to the promoter. Added 2 bp to all distances here to measure to start of CRE 
+#without the flanks and then added 64 bp to measure to the minimal promoter. 
+#Added 4 to all spacings but 0 to measure difference between start of CREs 
+#without flanks.
 
 subpool3 <- function(df) {
   df <- df %>%
     filter(subpool == "subpool3") %>%
+    filter(name != 'pGL4.29 Promega 1-63 + 1-87_back_55') %>%
     ungroup() %>%
     select(-subpool) %>%
     mutate(name = gsub('2BS ', '', name), 
            name = gsub(' bp spacing ', '_', name)) %>%
     separate(name, 
-             into = c("subpool", "spacing", "fluff1", "fluff2", "dist", "fluff3", "fluff4"),
+             into = c("subpool", "spacing", "fluff1", "fluff2", "dist", 
+                      "fluff3", "fluff4"),
              sep = "_", convert = TRUE) %>%
     select(-subpool, -fluff1, -fluff2, -fluff3, -fluff4) %>%
-    mutate(dist = as.integer(dist + 2 + 64)) %>%
+    mutate(dist = as.integer(dist + 2 + 64))%>%
     mutate(spacing = 
              ifelse(spacing != as.integer(0), 
                     as.integer(spacing + 4), as.integer(spacing)))
@@ -982,13 +986,13 @@ moveavg_dist3 <- function(df) {
 }
 
 #Subpool 5 corresponds to the CRE Number and Affinity Library. This library
-#contains 6 equally spaced sites with 17 bp CRE Spacing. Per variant, each sites
+#contains 6 equally spaced sites with 17 bp CRE Spacing. Per variant, each site
 #is one of: the consensus CRE, the weak CRE, or no CRE. Both the weak and 
 #consensus CREs have the same flanking sequence. Here site 1, 2, 3, 4, 5, and 6 
 #equate to -191, -166, -141, -116, -91 and -66 site distances to the downstream
 #promoter. Separation lists identity of CRE per site, the total CRE sites per
-#variants (consensus + weak), and if variants contain only consenus CREs, 
-#mixed consensus and weak, or no CREs.
+#variants (consensus + weak), and if variants contain only consenus CREs, only
+#weak CREs, mixed consensus and weak, or no CREs.
 
 subpool5 <- function(df) {
   df <- df %>%
@@ -1128,7 +1132,7 @@ fold_change_range <- function(df) {
     filter(range == '147-176') %>%
     mutate(median_147176 = median_range) %>%
     select(-range, -median_range)
-  range_change <- left_join(med_low, med_high, 
+  range_change <- inner_join(med_low, med_high, 
                             by = c('spacing', 'background', 'MPRA')) %>%
     mutate(range_change = median_6796/median_147176) %>%
     filter(spacing != 0, spacing != 70) %>%
@@ -1139,8 +1143,12 @@ fold_change_range <- function(df) {
   
 s3_gen_epi_med_range <- med_range_dist(s3_gen_epi)
 
+#determine median fold-change between distance ranges
+
 s3_gen_epi_med_change_dist <- fold_change_range(s3_gen_epi_med_range) %>%
   filter(background != 41)
+
+#plot per background
   
 p_s3_gen_epi_med_change_dist_55 <- s3_gen_epi_med_range %>%
   filter(spacing != 0 & spacing != 70 & background == '55') %>%
@@ -1704,10 +1712,25 @@ ggsave('../plots/p_s5_num_cons_num_weak_back55.pdf',
 
 #Determine median expression of variants with one consensus CRE in background 55
 
-med_change_weak1 <- s5_gen_epi %>%
-  filter(background == '55' & consensus == 1) %>%
-  group_by(MPRA, consensus, weak) %>%
+back55_cons_1_weak_1_epi <- s5_gen_epi %>%
+  filter(background == '55' & consensus == 1 & weak == 1 & MPRA == 'episomal') %>%
   summarize(median(ave_ratio_norm))
+
+back55_cons_1_weak_5_epi <- s5_gen_epi %>%
+  filter(background == '55' & consensus == 1 & weak == 5 & MPRA == 'episomal') %>%
+  summarize(median(ave_ratio_norm))
+
+back55_cons_1_weak_5_epi/back55_cons_1_weak_1_epi
+
+back55_cons_1_weak_1_gen <- s5_gen_epi %>%
+  filter(background == '55' & consensus == 1 & weak == 1 & MPRA == 'genomic') %>%
+  summarize(median(ave_ratio_norm))
+
+back55_cons_1_weak_5_gen <- s5_gen_epi %>%
+  filter(background == '55' & consensus == 1 & weak == 5 & MPRA == 'genomic') %>%
+  summarize(median(ave_ratio_norm))
+
+back55_cons_1_weak_5_gen/back55_cons_1_weak_1_gen
 
 #Supplemental Figure 6
 
@@ -1757,8 +1780,8 @@ ggsave('../plots/p_s5_num_cons_num_weak_back52.pdf',
 
 #Figure 4B
 
-#Fit log-linear model to the different locations of CRE (site 1-6), allowing 
-#weights per weak and consensus CRE per site, and to the different backgrounds
+#Fit log-linear model to the different locations of CRE (site 1-6) and to the 
+#different backgrounds, allowing weights per weak and consensus CRE per site
 
 ind_site_ind_back <- function(df) {
   model <- lm(ave_ratio ~ background + site1 + site2 + site3 + site4 + site5 + site6, 
@@ -2018,10 +2041,12 @@ m <- count(mixed)
 n <- count(filter(mixed, resid < 0))
 n/m
 
-#plot 5B. Residual of each combination of CREs per variant to linear
-#relationship between MPRA expression of variants with consensus CREs only.
-#Linear relationship indicated with a red reference line. Negative residuals 
-#indicate higher relative expression of variant in the genomic MPRA and positive
+#Figure 5B
+
+#Plot residual of each combination of CREs per variant to linear relationship 
+#between MPRA expression of variants with consensus CREs only. Linear 
+#relationship indicated with a red reference line. Negative residuals indicate 
+#higher relative expression of variant in the genomic MPRA and positive
 #indicates higher relative expression in episomal MPRA
 
 p_s5_gen_epi_site_combo_resid <- s5_gen_epi_all_lm %>%
