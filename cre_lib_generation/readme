@@ -1,1 +1,7 @@
+Directory contains all materials required to generate the CRE library. 
 
+CRE library generation ran with cre_lib.py using cre_controls, enhancer_templates, fwd_primers_cre, and rev_primers_cre
+
+Output is cre_lib_final.csv, of which was sent for synthesis.
+
+cre_lib_final.csv is used in BCmap for generating BC-variant associations
