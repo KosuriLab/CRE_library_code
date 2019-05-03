@@ -1,3 +1,9 @@
+#Generates the single-CRE, CRE Spacing and Distance, and the CRE Number and
+#Affinity library. Additionally generates a CRE library not analyzed in the 
+#paper based on the CRE Spacing and Distance library but with 8 
+#combinations of site affinities across the two CREs and less Distances 
+#tested.
+
 import re
 
 def fasta_reader(filename):
@@ -39,11 +45,13 @@ def check_REs(lib):
 	# SpeI, ACTAGT
 
 	patterns = [re.compile('CAC[ACTG]{4}GTG'), re.compile('ACGCGT'),
-				re.compile('GGTACC'), re.compile('TCTAGA'), re.compile('ACTAGT')]
+				re.compile('GGTACC'), re.compile('TCTAGA'), 
+                re.compile('ACTAGT')]
 
 
 	for x in lib:
-		# trim sequences so as not to include the KpnI and MluI site that were added in
+		# trim sequences so as not to include the KpnI and MluI site that were 
+        #added in
 		matches = [re.search(pattern, lib[x][25:-25]) for pattern in patterns]
 		match_count = sum([1 for match in matches if match != None])
 		if match_count == 0:
@@ -52,7 +60,8 @@ def check_REs(lib):
 			print(x, "removed")
 
 	print(len(lib) - len(good_seqs), "sequences removed.")
-	print(len(good_seqs), "sequences after removing those with restriction sites.")
+	print(len(good_seqs), 
+       "sequences after removing those with restriction sites.")
 	return good_seqs
 	
 
@@ -108,8 +117,9 @@ if __name__ == '__main__':
 	# dictionary that will hold dictionaries of the subpool libraries
 	# key will be name of subpool, easy to match with primers
 	subpool_libraries = {}
-#-------------------------------------------------------------------------------
-	# subpool 2, distance to promoter
+#------------------------------------------------------------------------------
+	# generate subpool 2, the single-CRE distance library
+	  
 	dist_to_promoter = {}
 	# putting these in lowercase makes it easier to double check work
 	# will convert to all uppercase for final version to be sent to Agilent
@@ -122,7 +132,7 @@ if __name__ == '__main__':
 					for i in range(len(enh)-len(consensus)+1)]
 
 		# add to dictionary with appropriate headers
-		consensus_seqs = {'consensus_dist_' + str(142-i) + '_' + x :  seqs[i] 
+		consensus_seqs = {'subpool2_consensus_dist_' + str(142-i) + '_' + x :  seqs[i] 
 								for i in range(len(seqs))}
 
 		dist_to_promoter.update(consensus_seqs)
@@ -132,7 +142,7 @@ if __name__ == '__main__':
 					for i in range(len(enh)-len(consensus_flank)+1)]
 
 		# add to dictionary with appropriate headers
-		consensus_flank_seqs = {'consensusflank_dist_' + str(138-i) + '_' + x :  seqs[i] 
+		consensus_flank_seqs = {'subpool2_consensusflank_dist_' + str(138-i) + '_' + x :  seqs[i] 
 									for i in range(len(seqs))}
 		
 		dist_to_promoter.update(consensus_flank_seqs)
@@ -141,10 +151,11 @@ if __name__ == '__main__':
 	print(len(dist_to_promoter), "sequences in subpool 2")
 
 #-------------------------------------------------------------------------------
+	#generates subpool 4, the CRE library not analyzed in the paper, consisting
+	#of variable distance between two cre sites using combinations of 
+	#consensus, weak, moderate and half flank sites. 
 	var_cre_sites = {}
 
-	# subpool 4, variable distance between two cre sites using combinations of 
-	# consensus, weak, moderate and half flank sites. 
 	weak = 'ATTGAAGTCAGC'.lower()
 	moderate = 'ATTGACGTCTGC'.lower()
 	half_flank = 'XXXGCCGTCATA'.lower()
@@ -166,17 +177,18 @@ if __name__ == '__main__':
 
 				for space in spacing:
 					# 0 bp spacing, flank + site1 + site2 + flank
-					# trim last two bases from site1 and first two bases from site 2
+					# trim last two bases from site1 and first two bases 
+	                  #from site 2
 					if space == 0:
 						seqs = [ enh[:i] + site1[:-2] + site2[2:] + enh[i+20:]
 							for i in range(0, len(enh)-20 + 1, 5)]
-						var_cre = {names[j]+'_'+names[k]+'0 bp spacing_dist_'+str((150 - 20-(i*5))) + '_' + x : seqs[i]
+						var_cre = {'subpool4_' + names[j]+'_'+names[k]+'0 bp spacing_dist_'+str((150 - 20-(i*5))) + '_' + x : seqs[i]
 									for i in range(len(seqs))}
 					else:
 						seqs = [ enh[:i] + site1 + enh[i+len(site1) : i+len(site1)+space] + site2 + enh[i+2*len(site2)+space:]
 							for i in range(0, len(enh)-(2*len(site1) + space) + 1, 5)]
 
-						var_cre = {names[j]+'_'+names[k]+ '_' + str(space)+ 'bp spacing_dist_'+str((150 - (2*len(consensus_flank)+space)-(i*5))) + '_' + x : seqs[i]
+						var_cre = {'subpool4_' + names[j]+'_'+names[k]+ '_' + str(space)+ 'bp spacing_dist_'+str((150 - (2*len(consensus_flank)+space)-(i*5))) + '_' + x : seqs[i]
 										for i in range(len(seqs))}
 
 					# go through sites and find length of string of x's and
@@ -202,17 +214,17 @@ if __name__ == '__main__':
 	print(len(var_cre_sites), "sequences in subpool 4")
 
 #-------------------------------------------------------------------------------
-
-	# subpool 5, 6 combinations of no addition, consensus and weak site, all with 
-	# flanks
+	#generates subpool 5, the CRE Number and Affinity library, containing 6 
+	#combinations of no addition, consensus and weak site, all with flanks
+	  
 	cre_vars = ['xxxxxxxxxxxx', consensus_flank, weak]
 	names = ['no_site', 'consensus', 'weak']
 	cre_combs = {}
 
 	for x in enhancers:
 		enh = enhancers[x]
-		# the six sites are in a constant position on the template, so parse out
-		# the parts of the template we're going to use now
+		# the six sites are in a constant position on the template, so parse 
+	      #out the parts of the template we're going to use now
 		spacers = [enh[i:i+13] for i in range(0, len(enh), 25)]
 		for i in range(len(cre_vars)):
 			for j in range(len(cre_vars)):
@@ -230,13 +242,15 @@ if __name__ == '__main__':
 									seq = seq[:loc] + enh[loc:loc+12] + seq[loc+12:]
 									loc = seq.find('xxxxxxxxxxxx')
 
-								header = '_'.join([names[i], names[j], names[k], names[l], names[m], names[n], x])
+								header = '_'.join(['subpool5', names[i], names[j], names[k], names[l], names[m], names[n], x])
 								cre_combs[header] = seq
 	subpool_libraries['subpool_5'] = cre_combs
 	print(len(cre_combs), "sequences in subpool 5")
     
-    #-------------------------------------------------------------------------------
-	# subpool 3, variable distance between two consensus-flank sequences
+#-------------------------------------------------------------------------------
+	#generates subpool 3, the CRE Spacing and Distance library, consisting of
+	#variable distance between two consensus-flank sequences
+	  
 	consensus_flank_spacing = {}
 
 	# 0 bp spacing
@@ -245,7 +259,7 @@ if __name__ == '__main__':
 		enh = enhancers[x]
 		seqs = [ enh[:i] + flank_con_con_flank + enh[i+len(flank_con_con_flank):] 
 					for i in range(len(enh)-len(flank_con_con_flank)+1)]
-		twobs_seqs = {'2BS 0 bp spacing flank-con-con-flank_dist_' + str(130-i) + '_' + x : seqs[i]
+		twobs_seqs = {'subpool3_2BS 0 bp spacing flank-con-con-flank_dist_' + str(130-i) + '_' + x : seqs[i]
 							for i in range(len(seqs))}
 		consensus_flank_spacing.update(twobs_seqs)
 
@@ -257,16 +271,17 @@ if __name__ == '__main__':
 			seqs = [ enh[:i] + consensus_flank + enh[i+len(consensus_flank) : i+len(consensus_flank)+space] + consensus_flank + enh[i+2*len(consensus_flank)+space:]
 						for i in range(len(enh)-(2*len(consensus_flank) + space) + 1)]
 
-			twobs_spacing = {'2BS ' + str(space) + ' bp spacing consensus+flank x2_dist_' + str((150 - (2*len(consensus_flank)+space)-i)) + '_' + x : seqs[i]
+			twobs_spacing = {'subpool3_2BS ' + str(space) + ' bp spacing consensus+flank x2_dist_' + str((150 - (2*len(consensus_flank)+space)-i)) + '_' + x : seqs[i]
 								for i in range(len(seqs))}
 			consensus_flank_spacing.update(twobs_spacing)
 
 	subpool_libraries['subpool_3'] = consensus_flank_spacing
 	print(len(consensus_flank_spacing), "sequences in subpool 3")
 
-	#-------------------------------------------------------------------------------
-	# output rough draft of lib to check by eye, templates in upper case and
-	# sites in lower case
+#-------------------------------------------------------------------------------
+# output rough draft of lib to check by eye, templates in upper case and
+# sites in lower case
+    
 	full_lib = {}
 	for x in subpool_libraries:
 		full_lib.update(subpool_libraries[x])
@@ -281,7 +296,10 @@ if __name__ == '__main__':
 	MluI = 'ACGCGT'
 	KpnI = 'GGTACC'
 
-	# add controls to each subpool, then add corresponding primers
+	#add controls to each subpool, then add corresponding primers
+  #this was later found to just add to the last subpool ran which at the time
+  #was subpool 3
+
 	for x in subpool_libraries:
 		subpool = subpool_libraries[x]
 		subpool.update(controls)
@@ -298,7 +316,31 @@ if __name__ == '__main__':
 	print("Selecting strand with lower A content")
 	lib_final = {x : best_A_content(cleaned_lib[x]) for x in cleaned_lib}
 
+  #output final library with primers and restriction sites. Each variant is 
+  #included as either the top or bottom strand depending upon A content. This
+  #library was sent for synthesis
+
 	csv_writer(lib_final, 'cre_lib_final.csv')
+
+	#Barcode-mapping was performed separately on each half of the library. To map
+	#to variants only present in the designated subpools, I've split the sequences
+	#accordingly here.
+
+	outfile1 = open('cre_lib_final_3_5_c.csv', 'w')
+	outfile2 = open('cre_lib_final_2_4.csv', 'w')
+	for x in lib_final:
+				
+		if x.startswith('subpool2') or x.startswith('subpool4'):
+			outfile2.write(x + ',' + lib_final[x] + '\n')
+		else: # controls
+			outfile1.write(x + ',' + lib_final[x] + '\n')
+
+	outfile1.close()
+	outfile2.close()
+
+
+
+
 
 
 
