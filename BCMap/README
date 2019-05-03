@@ -1,0 +1,19 @@
+Directory contains all materials required to associate BCs to variants generated from 2 sequencing runs (SP3_5_barcode_mapping and SP2_4_barcode_mapping). 
+
+Uses cre_lib_final_#_#.csv from ../cre_lib_generation per subpools being mapped (2 and 4 or 3 and 5 and controls). 
+
+Running CREB_barcode_mapping.py per subpool combination requires the arguments in order: 
+<BC read file.txt> <library file.csv> <library file format> <variant length> <primer + RE length> <BC location> <BC length> <levenshtein cut-off> <output file name> 
+
+Thus for bc mapping subpool 3 and 5 with controls the following specifications are given:
+bbmerge_assembled.txt cre_lib_final_3_5_c.csv csv 150 25 start 20 13 CREB_barcode_mapping_3_5.txt
+
+and for subpool 2 and 4:
+bbmerge_assembled.txt cre_lib_final_2_4.csv csv 150 25 start 20 13 CREB_barcode_mapping_2_4.txt
+
+Both barcode mapping outputs are then combined into one file and duplicates are removed using unique_bcs.R
+
+uniquesp2345.txt is used in all MPRA analyses
+
+
+
