@@ -4,7 +4,7 @@ Uses cre_lib_final_#_#.csv from ../cre_lib_generation per subpools being mapped 
 
 Also uses merged reads to be uploaded later on the Gene Expression Omnibus.
 
-Running CREB_barcode_mapping.py per subpool combination requires the arguments in order: 
+Running CREB_barcode_mapping.py per subpool combination requires the arguments in order ran within the relevant folder (SP2_4 and SP3_5): 
 <BC read file.txt> <library file.csv> <library file format> <variant length> <primer + RE length> <BC location> <BC length> <levenshtein cut-off> <output file name> 
 
 Thus for bc mapping subpool 3 and 5 with controls the following specifications are given:
