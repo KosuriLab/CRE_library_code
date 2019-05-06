@@ -60,6 +60,14 @@ var_log10 <- function(df) {
   return(log_ratio_df)
 }
 
+#3bp moving window function used in a lot of the CRE Spacing and Distance
+#library figures
+
+moveavg_dist3 <- function(df) {
+  df <- df %>%
+    mutate(ave_3 = runmean(ave_ratio_norm, 3, alg = 'R', endrule = 'NA'))
+}
+
 #Load index and bcmap files-----------------------------------------------------
 
 #Load indexed BC reads
@@ -976,14 +984,6 @@ s3_epi_back_norm_conc <- med_rep_0_22_A_B %>%
   back_norm() %>%
   var_conc_exp() %>%
   subpool3()
-
-#3bp moving window function used in a lot of the CRE Spacing and Distance
-#library figures
-
-moveavg_dist3 <- function(df) {
-  df <- df %>%
-    mutate(ave_3 = runmean(ave_ratio_norm, 3, alg = 'R', endrule = 'NA'))
-}
 
 #Subpool 5 corresponds to the CRE Number and Affinity Library. This library
 #contains 6 equally spaced sites with 17 bp CRE Spacing. Per variant, each site

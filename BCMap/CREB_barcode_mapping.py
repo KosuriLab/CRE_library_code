@@ -172,12 +172,12 @@ def bootstrap_levenshtein(lib, n):
 		distances.append(Levenshtein.distance(string1, string2))
 	
 	# take cutoff at 1% percentile
-	cutoff = numpy.percentile(distances, 1)
+	cutoff_1percent = numpy.percentile(distances, 1)
 
 	# If the distribution consists of mainly large distances, the 1% percentile
 	# will be large, so readjust the cutoff lower in this case
 		 
-	return cutoff
+	return cutoff_1percent
 
 def filter_barcodes(barcode_map, cutoff, var_length, name='output.txt', lib=None):
 	'''
@@ -238,7 +238,7 @@ def filter_barcodes(barcode_map, cutoff, var_length, name='output.txt', lib=None
 
 	outfile.close()
 
-        print "Percent of library represented by final barcodes:", str(len(covered_sequences)/ (len(lib)/2.0))
+        print "Ratio of library represented by final barcodes:", str(len(covered_sequences)/ (len(lib)/2.0))
 
 	return final_barcodes
 
@@ -285,6 +285,7 @@ if __name__ == '__main__':
 						type = int)
 	parser.add_argument('bc_loc', help='barcode location, specify start or end')
 	parser.add_argument('bc_length', help='length of barcode', type=int)
+	parser.add_argument('cutoff', help='set levenshtein cut-off', type =int)
 	# parser.add_argument('bc_cutoff', help='Throw out barcodes that appear less than n times', type=int)
 	parser.add_argument('output_file', help='Name of output file')
 	args = parser.parse_args()
@@ -295,6 +296,7 @@ if __name__ == '__main__':
 	var_length = args.var_length
 	bc_loc = args.bc_loc
 	bc_length = args.bc_length
+	cutoff = args.cutoff
 
 	num_reads = get_wc(args.reads_file)
 	print "Number of reads:", num_reads
@@ -308,7 +310,7 @@ if __name__ == '__main__':
 									   var_length = var_length)
 									   
 	
-	print "Percent perfect:", len(perfect_reads) / float(num_reads)
+	print "Ratio perfect:", len(perfect_reads) / float(num_reads)
 
 	# grab barcodes that map to a perfect sequence
 	if bc_loc == 'start':
@@ -334,8 +336,8 @@ if __name__ == '__main__':
 	# bootstrap reference sequences to get a reference Levenshtein distribution 
 	# to determine cutoff
 	print "Bootstrapping reference sequences to obtain cutoff..." 
-	cutoff = bootstrap_levenshtein(lib, 10000)
-	print "cutoff is Levenshtein distance ", cutoff
+	cutoff_1percent = bootstrap_levenshtein(lib, 10000)
+	print "1 percent cutoff determined as Levenshtein distance ", cutoff_1percent
 
 	print "Filtering and writing results..."
 	final_barcodes = filter_barcodes(barcode_map, cutoff,
