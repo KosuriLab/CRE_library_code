@@ -1036,6 +1036,11 @@ subpool5 <- function(df) {
 s5_gen_epi <- MPRA_ave %>%
   subpool5()
 
+s5_epi_back_norm_conc <- med_rep_0_22_A_B %>%
+  back_norm() %>%
+  var_conc_exp() %>%
+  subpool5()
+
 #Figure 2----------------------------------------------------------------------
 
 #Figure 2A
@@ -1684,7 +1689,7 @@ ggsave('../plots/p_subpool3_spa_vchr5_int_10_20.pdf',
        p_subpool3_spa_vchr5_int_10_20, 
        height = 1.25, width = 4.4, units = 'in')
 
-#Figure 4 and Supplemental Figure 6---------------------------------------------
+#Figure 4 and Supplemental Figures 7 and 8--------------------------------------
 
 #Figure 4A
 
@@ -1732,7 +1737,7 @@ back55_cons_1_weak_5_gen <- s5_gen_epi %>%
 
 back55_cons_1_weak_5_gen/back55_cons_1_weak_1_gen
 
-#Supplemental Figure 6
+#Supplemental Figure 7
 
 p_s5_num_cons_num_weak_back41 <- s5_gen_epi %>%
   filter(background == 41) %>%
@@ -1777,6 +1782,33 @@ p_s5_num_cons_num_weak_back52 <- s5_gen_epi %>%
 
 ggsave('../plots/p_s5_num_cons_num_weak_back52.pdf', 
        p_s5_num_cons_num_weak_back52, width = 4.5, height = 3.75, units = 'in')
+
+#Supplemental Figure 8
+
+p_s5_num_cons_num_weak_back55_conc <- s5_epi_back_norm_conc %>%
+  filter(background == '55') %>%
+  mutate(conc = factor(conc, 
+                       levels = c(2, 0, -1, -2, -3, -4, -5, -7))) %>%
+  ggplot(aes(as.factor(consensus), ave_ratio_norm)) +
+  facet_grid(conc ~ .) +
+  geom_boxplot(aes(fill = as.factor(weak)), outlier.size = 0.75, size = 0.3, 
+               outlier.shape = 21, outlier.alpha = 1, 
+               position = position_dodge(0.75)) +
+  scale_y_log10() + 
+  panel_border(colour = 'black') +
+  annotation_logticks(sides = 'l') +
+  scale_fill_manual(name = 'number of\nweak CREs', 
+                    values = cbPalette7_grad_light) +
+  theme(axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white"),
+        legend.position = 'top') +
+  ylab('Average normalized expression (a.u.)') +
+  xlab('Number of consensus CREs') +
+  figurefont_theme
+
+ggsave('../plots/p_s5_num_cons_num_weak_back55_conc.pdf', 
+       p_s5_num_cons_num_weak_back55_conc, width = 4.5, height = 8.25, 
+       units = 'in')
 
 #Figure 4B
 
@@ -2066,7 +2098,7 @@ p_s5_gen_epi_site_combo_resid <- s5_gen_epi_all_lm %>%
 ggsave('../plots/p_s5_gen_epi_site_combo_resid.pdf', 
        p_s5_gen_epi_site_combo_resid, width = 3.75, height = 3, units = 'in')
 
-#Supplemental Figure 7----------------------------------------------------------
+#Supplemental Figure 9----------------------------------------------------------
 
 p_gen_epi_rep <- gen_epi %>%
   ggplot(aes(ave_med_ratio, ave_ratio_22)) +
