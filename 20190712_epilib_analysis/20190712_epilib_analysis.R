@@ -13,21 +13,7 @@ options(stringsAsFactors = F)
 #import necessary libraries
 
 library(tidyverse)
-library(viridis)
 library(cowplot)
-
-figurefont_theme <- theme(text = element_text(size = 8)) +
-  theme(axis.title = element_text(size = 8)) +
-  theme(legend.title = element_text(size = 8)) +
-  theme(axis.text = element_text(size = 8))
-
-#General functions
-
-var_log10 <- function(df) {
-  log_ratio_df <- df %>% 
-    mutate_if(is.double, funs(log10(.)))
-  return(log_ratio_df)
-}
 
 #Load index and bcmap files-----------------------------------------------------
 
@@ -312,6 +298,11 @@ twosite_proximal_norm <- back_norm(oldback, twosite_proximal)
 
 #Export dfs---------------------------------------------------------------------
 
+#Export dfs to perform main analysis in 20170921_epi_lib
+
+med_rep_0_4_A_B %>% write.table("med_rep_follow_up.txt", sep = '\t', row.names =
+                                  FALSE)
+
 scramble_newback_norm %>%
   write.table(
     "scramble_newback_norm.txt", 
@@ -347,57 +338,91 @@ twosite_proximal_norm %>%
     "twosite_proximal_norm.txt", 
     sep = '\t', row.names = FALSE)
 
-#plots--------------------------------------------------------------------------
 
-p_rep_0 <- med_rep_0_4_A_B %>%
-  ggplot(aes(med_ratio_0A, med_ratio_0B)) +
-  geom_point(alpha = 0.1, size = 0.75) +
-  geom_point(data = filter(med_rep_0_4_A_B, 
-                           grepl(
-                             'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.5) + 
-  geom_point(data = filter(med_rep_0_4_A_B, 
-                           name == 'control_pGL4.29 Promega 1-63 + 1-87'), 
-             fill = 'red', shape = 21, size = 1.75) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Expression (a.u.) replicate 1") +
-  ylab("Expression (a.u.) replicate 2") +
-  scale_x_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+
+#Determining generated background motif activity--------------------------------
+
+#Visualize effects of scrambles across different backgrounds. Plot expression of
+#each scramble normalized to the backgrounds in both uninduced and induced
+#conditions
+
+p_newback_scramble_4 <- scramble_newback_norm %>%
+  ggplot(aes(background, ave_med_ratio_norm_4, group = background)) +
+  geom_boxplot(size = 0.3, outlier.size = 0.5) + 
+  geom_hline(yintercept = 1, color = 'red') +
+  ylab('Average normalized\nexpression 4 µM forskolin') +
   figurefont_theme
 
-p_rep_4 <- med_rep_0_4_A_B %>%
-  ggplot(aes(med_ratio_4A, med_ratio_4B)) +
-  geom_point(alpha = 0.1, size = 0.75) +
-  geom_point(data = filter(med_rep_0_4_A_B, 
-                           grepl(
-                             'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.5) + 
-  geom_point(data = filter(med_rep_0_4_A_B, 
-                           name == 'control_pGL4.29 Promega 1-63 + 1-87'), 
-             fill = 'red', shape = 21, size = 1.75) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Expression (a.u.) replicate 1") +
-  ylab("Expression (a.u.) replicate 2") +
-  scale_x_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+ggsave('../plots/p_newback_scramble_4.png', p_newback_scramble_4,
+       width = 5, height = 2)
+
+p_newback_scramble_0 <- scramble_newback_norm %>%
+  ggplot(aes(background, ave_med_ratio_norm_0, group = background)) +
+  geom_boxplot(size = 0.3, outlier.size = 0.5) + 
+  geom_hline(yintercept = 1, color = 'red') +
+  ylab('Average normalized\nexpression 0 µM forskolin') +
   figurefont_theme
 
-log10_med_rep_0_4_A_B <- var_log10(med_rep_0_4_A_B)
+ggsave('../plots/p_newback_scramble_0.png', p_newback_scramble_0,
+       width = 5, height = 2)
 
-pearsons_epi <- tibble(
-  sample = c('0 µM', '4 µM'),
-  pearsons = c(cor(log10_med_rep_0_4_A_B$med_ratio_0A, 
-                   log10_med_rep_0_4_A_B$med_ratio_0B, 
-                   use = "pairwise.complete.obs", method = "pearson"),
-               cor(log10_med_rep_0_4_A_B$med_ratio_4A, 
-                   log10_med_rep_0_4_A_B$med_ratio_4B, 
-                   use = "pairwise.complete.obs", method = "pearson")))
+p_oldback_scramble <- scramble_oldback_norm %>%
+  ggplot(aes(background, ave_med_ratio_norm_4, group = background)) +
+  geom_boxplot() + 
+  geom_hline(yintercept = 1, color = 'red')
+
+#output BC dfs of scrambled background expressions and background alone 
+#expressions for t.test analysis of signigicant differences
+
+bc_scramble_sep <- function(df) {
+  df <- df %>%
+    filter(grepl('scramble', name)) %>%
+    filter(grepl('background', name)) %>%
+    mutate(fluff = name) %>%
+    separate(fluff, 
+             into = c("subpool", "fluff1", "dist", "fluff2", "similarity", 
+                      "fluff3", "background"),
+             sep = "_", convert = TRUE) %>%
+    select(barcode, name, background, ratio)
+}
+
+scramble_0A <- bc_scramble_sep(bc_DNA_RNA_0A) %>%
+  mutate(sample = '0A')
+scramble_0B <- bc_scramble_sep(bc_DNA_RNA_0B) %>%
+  mutate(sample = '0B')
+scramble_4A <- bc_scramble_sep(bc_DNA_RNA_4A) %>%
+  mutate(sample = '4A')
+scramble_4B <- bc_scramble_sep(bc_DNA_RNA_4B) %>%
+  mutate(sample = '4B')
+scrambles <- rbind(scramble_0A, scramble_0B, scramble_4A, scramble_4B)
+
+bc_backgrounds_sep <- function(df) {
+  df <- df %>%
+    filter(grepl(
+      'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
+      name)) %>%
+    filter(grepl('background', name)) %>%
+    mutate(fluff = name) %>%
+    separate(fluff, 
+             into = c("subpool", "site1", "site2", "site3", "site4", "site5",
+                      "site6", "fluff1", "background", "fluff2", "gc"),
+             sep = "_", convert = TRUE) %>%
+    select(barcode, name, background, ratio)
+}
+
+backgrounds_0A <- bc_backgrounds_sep(bc_DNA_RNA_0A) %>%
+  mutate(sample = '0A')
+backgrounds_0B <- bc_backgrounds_sep(bc_DNA_RNA_0B) %>%
+  mutate(sample = '0B')
+backgrounds_4A <- bc_backgrounds_sep(bc_DNA_RNA_4A) %>%
+  mutate(sample = '4A')
+backgrounds_4B <- bc_backgrounds_sep(bc_DNA_RNA_4B) %>%
+  mutate(sample = '4B')
+backgrounds <- rbind(backgrounds_0A, backgrounds_0B, 
+                     backgrounds_4A, backgrounds_4B)
+
+scrambles %>% write.table("scrambles.txt", sep = '\t', row.names = FALSE)
+
+backgrounds %>% write.table("backgrounds.txt", sep = '\t', row.names = FALSE)
 
 

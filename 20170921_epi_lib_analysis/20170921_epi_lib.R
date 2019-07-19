@@ -36,6 +36,7 @@ library(caTools)
 library(broom)
 library(modelr)
 library(reshape2)
+library(GGally)
 
 #General figure customizations
 
@@ -551,6 +552,9 @@ p_titr_pc_back <- epi_back_norm_conc %>%
   figurefont_theme
 
 ggsave('../plots/p_titr_pc_back.pdf', p_titr_pc_back, width = 2.8, height = 2,
+       units = 'in')
+
+ggsave('../plots/p_titr_pc_back.png', p_titr_pc_back, width = 2.8, height = 2,
        units = 'in')
 
 #Figure 1E----------------------------------------------------------------------
@@ -2130,6 +2134,217 @@ p_gen_epi_rep <- gen_epi %>%
 ggsave('../plots/p_gen_epi_rep.png', p_gen_epi_rep,
        width = 2.6, height = 2.2, units = 'in')
 
+
+
+
+
+#New data-----------------------------------------------------------------------
+
+med_rep_followup <- read_tsv(
+  '../20190712_epilib_analysis/med_rep_follow_up.txt')
+
+scramble_newback_norm <- read_tsv(
+  '../20190712_epilib_analysis/scramble_newback_norm.txt')
+
+scramble_oldback_norm <- read_tsv(
+  '../20190712_epilib_analysis/scramble_oldback_norm.txt')
+
+sixsite_newback_norm <- read_tsv(
+  '../20190712_epilib_analysis/sixsite_newback_norm.txt')
+
+sixsite_oldback_norm <- read_tsv(
+  '../20190712_epilib_analysis/sixsite_oldback_norm.txt')
+
+twosite_norm <- read_tsv(
+  '../20190712_epilib_analysis/twosite_norm.txt')
+
+twosite_distal_norm <- read_tsv(
+  '../20190712_epilib_analysis/twosite_distal_norm.txt')
+
+twosite_proximal_norm <- read_tsv(
+  '../20190712_epilib_analysis/twosite_proximal_norm.txt')
+
+
+#new data rep plots and comparison plots----------------------------------------
+
+p_rep_0 <- med_rep_followup %>%
+  ggplot(aes(med_ratio_0A, med_ratio_0B)) +
+  geom_point(alpha = 0.1, size = 0.75) +
+  geom_point(data = filter(med_rep_followup, 
+                           grepl(
+                             'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.5) + 
+  geom_point(data = filter(med_rep_followup, 
+                           name == 'control_pGL4.29 Promega 1-63 + 1-87'), 
+             fill = 'red', shape = 21, size = 1.75) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Expression (a.u.) replicate 1") +
+  ylab("Expression (a.u.) replicate 2") +
+  scale_x_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+
+p_rep_4 <- med_rep_followup %>%
+  ggplot(aes(med_ratio_4A, med_ratio_4B)) +
+  geom_point(alpha = 0.1, size = 0.75) +
+  geom_point(data = filter(med_rep_followup, 
+                           grepl(
+                             'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.5) + 
+  geom_point(data = filter(med_rep_followup, 
+                           name == 'control_pGL4.29 Promega 1-63 + 1-87'), 
+             fill = 'red', shape = 21, size = 1.75) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Expression (a.u.) replicate 1") +
+  ylab("Expression (a.u.) replicate 2") +
+  scale_x_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+
+log10_med_rep_followup <- var_log10(med_rep_followup)
+
+pearsons_followup <- tibble(
+  sample = c('0 µM', '4 µM'),
+  pearsons = c(cor(log10_med_rep_followup$med_ratio_0A, 
+                   log10_med_rep_followup$med_ratio_0B, 
+                   use = "pairwise.complete.obs", method = "pearson"),
+               cor(log10_med_rep_followup$med_ratio_4A, 
+                   log10_med_rep_followup$med_ratio_4B, 
+                   use = "pairwise.complete.obs", method = "pearson")))
+
+#compare differently barcoded replicates between old and new library
+
+barcode_rep <- med_rep_0_22_A_B %>%
+  select(subpool, name, most_common, barcodes_DNA, med_ratio_0A, 
+         barcodes_RNA_0A, med_ratio_0B, barcodes_RNA_0B, med_ratio_22A, 
+         barcodes_RNA_22A, med_ratio_22B, barcodes_RNA_22B) %>%
+  inner_join(med_rep_followup, by = c('most_common'), 
+             suffix = c('_old', '_new')) %>%
+  mutate(ave_old_0 = (med_ratio_0A_old + med_ratio_0B_old)/2) %>%
+  mutate(ave_old_4 = (med_ratio_22A + med_ratio_22B)/2) %>%
+  mutate(ave_new_0 = (med_ratio_0A_new + med_ratio_0B_new)/2) %>%
+  mutate(ave_new_4 = (med_ratio_4A + med_ratio_4B)/2) %>%
+  mutate(ind_old = ave_old_4/ave_old_0) %>%
+  mutate(ind_new = ave_new_4/ave_new_0)
+
+old_new_0 <- barcode_rep %>%
+  select(med_ratio_0A_old, med_ratio_0B_old, med_ratio_0A_new, 
+         med_ratio_0B_new) %>%
+  var_log10()
+
+old_new_4 <- barcode_rep %>%
+  select(med_ratio_22A, med_ratio_22B, med_ratio_4A, 
+         med_ratio_4B) %>%
+  var_log10()
+
+my_points <- function(data, mapping, ...) {
+  ggplot(data = data, mapping = mapping) +
+    geom_point(alpha = 0.1, size = 0.75) +
+    scale_x_continuous(limits = c(-1.3, 1.2), breaks = c(-1:1)) + 
+    scale_y_continuous(limits = c(-1.3, 1.2), breaks = c(-1:1)) +
+    annotation_logticks(sides = 'bl') +
+    geom_abline(color = 'red')
+}
+
+my_density <- function(data, mapping, ...) {
+  ggplot(data = data, mapping = mapping) +
+    geom_density(kernel = 'gaussian') +
+    scale_x_continuous(limits = c(-1.3, 1.2), breaks = c(-1:1)) +
+    scale_y_continuous(limits = c(-1.3, 6)) +
+    annotation_logticks(sides = 'b')
+}
+
+p_old_new_0 <- ggpairs(old_new_0, 
+                       columnLabels = c('Barcoding A\nrep. 1', 
+                                        'Barcoding A\nrep. 2',
+                                        'Barcoding B\nrep. 1',
+                                        'Barcoding B\nrep. 2'),
+                        lower = list(continuous = my_points),
+                        diag = list(continuous = my_density),
+                       upper = list(continuous = wrap("cor", size = 2.5))) +
+  panel_border(colour = 'black') +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        panel.spacing.x=unit(1, "lines")) +
+  theme(panel.grid.major = element_blank()) +
+  figurefont_theme
+
+p_old_new_4 <- ggpairs(old_new_4, 
+                       columnLabels = c('Barcoding A\nrep. 1', 
+                                        'Barcoding A\nrep. 2',
+                                        'Barcoding B\nrep. 1',
+                                        'Barcoding B\nrep. 2'),
+                       lower = list(continuous = my_points),
+                       diag = list(continuous = my_density),
+                       upper = list(continuous = wrap("cor", size = 2.5))) +
+  panel_border(colour = 'black') +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        panel.spacing.x=unit(1, "lines")) +
+  theme(panel.grid.major = element_blank()) +
+  figurefont_theme
+
+ggsave('../plots/p_old_new_bc_0.png', p_old_new_0,
+       width = 4.5, height = 3.95, units = 'in')
+
+ggsave('../plots/p_old_new_bc_4.png', p_old_new_4,
+       width = 4.5, height = 3.95, units = 'in')
+
+#Comparing induction between assays (4 µM expression/0 µM expression)
+
+p_old_new_bc_ind <- barcode_rep %>%
+  ggplot(aes(ind_old, ind_new)) +
+  geom_point(alpha = 0.1, size = 0.75) +
+  geom_abline(color = 'red') +
+  xlab('Original barcoding induction') +
+  ylab('Alternative barcoding induction') +
+  scale_x_log10(limits = c(0.1, 7), breaks = c(0.1, 1)) +
+  scale_y_log10(limits = c(0.1, 7), breaks = c(0.1, 1)) +
+  annotation_logticks(sides = 'bl') +
+  figurefont_theme
+
+ggsave('../plots/p_old_new_bc_ind.png', p_old_new_bc_ind,
+       width = 2.25, height = 2, units = 'in')
+
+#New data sixsite---------------------------------------------------------------
+
+#Plot GC content of backgrounds in new library vs. number of consensus sites and
+#expression
+
+p_back_gc_consensus <- sixsite_newback_norm %>%
+  ggplot(aes(gc, ave_med_ratio_norm_4)) +
+  facet_grid(consensus ~ .) +
+  geom_point(alpha = 0.2) +
+  panel_border(colour = 'black') +
+  figurefont_theme
+
+
+#New data twosite---------------------------------------------------------------
+
+twosite_4_moveavg3 <- twosite_norm %>%
+  mutate(ave_ratio_norm = ave_med_ratio_norm_4) %>%
+  select(background, spacing, dist, ave_ratio_norm) %>%
+  group_by(background, spacing) %>%
+  arrange(dist, .by_group = TRUE) %>%
+  moveavg_dist3()
+
+p_twosite_back41 <- twosite_4_moveavg3 %>%
+  filter(background == '41') %>%
+  filter(dist < 120) %>%
+  ggplot(aes(dist, ave_ratio_norm)) +
+  facet_grid(spacing ~ .) +
+  geom_point(size = 1, alpha = 0.5) +
+  geom_line(aes(dist, ave_3), size = 0.5) +
+  scale_x_continuous("Distance to minimal promoter (bp)",
+                     breaks = c(seq(from = 60, to = 190, by = 10))) +
+  scale_y_continuous("Average normalized\nexpression (a.u.)") +
+  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
+  panel_border(colour = 'black') +
+  figurefont_theme
 
 
 
