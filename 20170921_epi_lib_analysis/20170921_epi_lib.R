@@ -2346,6 +2346,82 @@ p_twosite_back41 <- twosite_4_moveavg3 %>%
   panel_border(colour = 'black') +
   figurefont_theme
 
+twosite_4_moveavg3_dist_distal <- twosite_norm %>%
+  mutate(distal_dist = dist + spacing + 8) %>%
+  mutate(ave_ratio_norm = ave_med_ratio_norm_4) %>%
+  select(background, spacing, distal_dist, ave_ratio_norm) %>%
+  group_by(background, spacing) %>%
+  arrange(distal_dist, .by_group = TRUE) %>%
+  moveavg_dist3()
+
+p_twosite_back41_dist_distal <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == '41') %>%
+  filter(distal_dist < 130) %>%
+  ggplot(aes(distal_dist, ave_ratio_norm)) +
+  facet_grid(spacing ~ .) +
+  geom_point(size = 1, alpha = 0.5) +
+  geom_line(aes(distal_dist, ave_3), size = 0.5) +
+  scale_x_continuous("Distance to minimal promoter from distal CRE (bp)",
+                     breaks = c(seq(from = 60, to = 190, by = 10))) +
+  scale_y_log10(breaks = c(1, 10)) +
+  annotation_logticks(sides = 'l') +
+  ylab("Average normalized expression (a.u.)") +
+  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
+  geom_vline(xintercept = c(90.5, 101, 111), color = 'red', linetype = 2, 
+             alpha = 0.75) +
+  panel_border(colour = 'black') +
+  theme(axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_twosite_back55_dist_distal <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == '55') %>%
+  ggplot(aes(distal_dist, ave_ratio_norm)) +
+  facet_grid(spacing ~ .) +
+  geom_vline(xintercept = c(108, 117, 128, 138, 147, 159, 170, 181, 191), 
+             color = 'red', alpha = 0.75, linetype = 2) +
+  geom_point(size = 1, alpha = 0.5) +
+  geom_line(aes(distal_dist, ave_3), size = 0.5) +
+  scale_x_continuous("Distance to minimal promoter from distal CRE (bp)",
+                     breaks = c(108, 117, 128, 138, 147, 159, 170, 181, 191)) +
+  scale_y_log10(breaks = c(1, 10)) +
+  annotation_logticks(sides = 'l') +
+  ylab("Average normalized expression (a.u.)") +
+  panel_border(colour = 'black') +
+  theme(axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_twosite_back52_dist_distal <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == '52') %>%
+  ggplot(aes(distal_dist, ave_ratio_norm)) +
+  facet_grid(spacing ~ .) +
+  geom_vline(xintercept = c(93, 137, 146, 192, 201), 
+             color = 'red', alpha = 0.75, linetype = 2) +
+  geom_point(size = 1, alpha = 0.5) +
+  geom_line(aes(distal_dist, ave_3), size = 0.5) +
+  scale_x_continuous("Distance to minimal promoter from distal CRE (bp)",
+                     breaks = c(seq(from = 60, to = 200, by = 10))) +
+  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
+  scale_y_log10(breaks = c(1, 10)) +
+  annotation_logticks(sides = 'l') +
+  ylab("Average normalized expression (a.u.)") +
+  panel_border(colour = 'black') +
+  theme(axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_twosite_back41_dist_distal.pdf', 
+       p_twosite_back41_dist_distal,
+       width = 2.75, height = 7.25, units = 'in')
+
+ggsave('../plots/p_twosite_back55_dist_distal.pdf', 
+       p_twosite_back55_dist_distal,
+       width = 4, height = 7.25, units = 'in')
+
+ggsave('../plots/p_twosite_back52_dist_distal.pdf', 
+       p_twosite_back55_dist_distal,
+       width = 4, height = 7.25, units = 'in')
 
 
 
