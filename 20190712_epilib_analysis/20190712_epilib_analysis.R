@@ -216,12 +216,13 @@ twosite <- med_rep_0_4_A_B %>%
   select(-subpool, -fluff1, -fluff2, -fluff3) %>%
   mutate(dist = dist + 64)
 
-#The twosite_distal library consists of a fixed proximal CRE and moving distal 
-#CRE. The offset of the proximal CRE from the 3' end of the background is 
-#indicated in 0, 5, 10, and 15 bp increments. The spacing between the CREs is
-#also indicated. The distance of the distal CRE as it is placed further from the
-#3' end is indicated as the distance from the start of this site to the minimal 
-#promoter. Distance stops at 60 bp. Only the 3 original backgrounds were used here.
+#The twosite_distal library consists of a fixed proximal CRE at the 3' end of 
+#the background and a moving distal CRE. The offset of the proximal CRE upstream
+#from the 3' end of the background is indicated in 0, 5, 10, and 15 bp 
+#increments. The spacing between the CREs is also indicated. The distance of the
+#distal CRE as it is placed further from the 3' end is indicated as the distance
+#from the start of this site to the minimal promoter. Distance stops at 60 bp. 
+#Only the 3 original backgrounds were used here.
 
 twosite_distal <- med_rep_0_4_A_B %>%
   filter(grepl('twositedistdistal', name)) %>%
@@ -421,8 +422,160 @@ backgrounds_4B <- bc_backgrounds_sep(bc_DNA_RNA_4B) %>%
 backgrounds <- rbind(backgrounds_0A, backgrounds_0B, 
                      backgrounds_4A, backgrounds_4B)
 
-scrambles %>% write.table("scrambles.txt", sep = '\t', row.names = FALSE)
+#Do same process for old backgrounds
 
-backgrounds %>% write.table("backgrounds.txt", sep = '\t', row.names = FALSE)
+bc_scramble_sep_old <- function(df) {
+  df <- df %>%
+    filter(grepl('scramble', name)) %>%
+    filter(grepl('oldback', name)) %>%
+    mutate(fluff = name) %>%
+    separate(fluff, 
+             into = c("subpool", "fluff1", "dist", "fluff2", "similarity", 
+                      "fluff3", "background"),
+             sep = "_", convert = TRUE) %>%
+    select(barcode, name, background, ratio)
+}
+
+scramble_0A_old <- bc_scramble_sep_old(bc_DNA_RNA_0A) %>%
+  mutate(sample = '0A')
+scramble_0B_old <- bc_scramble_sep_old(bc_DNA_RNA_0B) %>%
+  mutate(sample = '0B')
+scramble_4A_old <- bc_scramble_sep_old(bc_DNA_RNA_4A) %>%
+  mutate(sample = '4A')
+scramble_4B_old <- bc_scramble_sep_old(bc_DNA_RNA_4B) %>%
+  mutate(sample = '4B')
+scrambles_old <- rbind(scramble_0A_old, scramble_0B_old, 
+                       scramble_4A_old, scramble_4B_old)
+
+bc_backgrounds_sep_old <- function(df) {
+  df <- df %>%
+    filter(grepl(
+      'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
+      name)) %>%
+    filter(grepl('oldback', name)) %>%
+    mutate(fluff = name) %>%
+    separate(fluff, 
+             into = c("subpool", "site1", "site2", "site3", "site4", "site5",
+                      "site6", "fluff1", "background", "fluff2", "gc"),
+             sep = "_", convert = TRUE) %>%
+    select(barcode, name, background, ratio)
+}
+
+backgrounds_0A_old <- bc_backgrounds_sep_old(bc_DNA_RNA_0A) %>%
+  mutate(sample = '0A')
+backgrounds_0B_old <- bc_backgrounds_sep_old(bc_DNA_RNA_0B) %>%
+  mutate(sample = '0B')
+backgrounds_4A_old <- bc_backgrounds_sep_old(bc_DNA_RNA_4A) %>%
+  mutate(sample = '4A')
+backgrounds_4B_old <- bc_backgrounds_sep_old(bc_DNA_RNA_4B) %>%
+  mutate(sample = '4B')
+backgrounds_old <- rbind(backgrounds_0A_old, backgrounds_0B_old, 
+                         backgrounds_4A_old, backgrounds_4B_old)
+
+#Determine significant scrambles based on the difference in the distribution of 
+#barcode expression ratios between scramble and background
+
+#this part was written by Kim
+
+library(dplyr)
+library(tidyr)
+library(purrr)
+
+options(stringsAsFactors = F)
+options(scipen = 10000)
+
+# assign category to make t-test easier
+
+backgrounds$category <- 'background'
+scrambles$category <- 'scramble'
+
+backgrounds_old$category <- 'background'
+scrambles_old$category <- 'scramble'
+
+#For each scramble we want to grab all barcodes (for a given sample) and compare
+#the mean expression for the barcoded scrambles to the mean expression for the 
+#barcoded background.
+
+ttest_cre_custom <- function(df, df_bg) {
+  bg_name <- df$background[1]
+  sample_name <- df$sample[1]
+  # bind unscrambled barcodes to df
+  df_with_bg <- bind_rows(df,
+                          filter(df_bg, 
+                                 background == bg_name,
+                                 sample == sample_name)) %>% 
+    mutate(category_fctr = factor(category))
+  
+  result <- tryCatch(
+    {
+      t.test(ratio ~ category_fctr, df_with_bg)
+    }, warning = function(cond) {
+      return(NA)
+    }, error = function(cond) {
+      return(NA)
+    }
+  )
+  return(result)
+}
+
+# test <- filter(scrambles, name == 'scramble_dist_60_similarity_0_background_78')
+
+scramble_ttests <- scrambles %>% 
+  group_by(name, sample) %>% 
+  do(ttest = ttest_cre_custom(., df_bg = backgrounds)) %>% 
+  broom::tidy(ttest) %>% 
+  ungroup()
+
+scramble_ttests_old <- scrambles_old %>%
+  group_by(name, sample) %>% 
+  do(ttest = ttest_cre_custom(., df_bg = backgrounds_old)) %>% 
+  broom::tidy(ttest) %>% 
+  ungroup()
+
+scramble_ttests <- scramble_ttests %>% 
+  select(name, sample, mean_diff = estimate, mean_bg = estimate1,
+         mean_scramble = estimate2, tstat = statistic, p.value,
+         conf.low, conf.high)
+
+scramble_ttests_old <- scramble_ttests_old %>% 
+  select(name, sample, mean_diff = estimate, mean_bg = estimate1,
+         mean_scramble = estimate2, tstat = statistic, p.value,
+         conf.low, conf.high)
+
+scramble_ttests$p.value.fdr <- p.adjust(scramble_ttests$p.value, method = 'fdr')
+
+scramble_ttests_old$p.value.fdr <- p.adjust(scramble_ttests_old$p.value, 
+                                            method = 'fdr')
+
+#Filter for adjusted p-value < 0.05. This corresponds to a false discovery rate 
+#of 5%, meaning that for all significant results 5% will be false positive.
+
+scramble_signif <- filter(scramble_ttests, p.value.fdr <= 0.05) %>%
+  mutate(background = str_sub(name, nchar(name)-1, nchar(name))) %>%
+  mutate(background = as.integer(background))
+
+bgs_signif <- tibble(background = c(unique(scramble_signif$background)))
+
+removed_bgs_sixsite_newback_norm <- anti_join(sixsite_newback_norm, 
+                                              bgs_signif, by = 'background')
+
+removed_bgs_sixsite_newback_norm %>%
+  write.table(
+    "removed_bgs_sixsite_newback_norm.txt", 
+    sep = '\t', row.names = FALSE)
+
+
+#Check if scramble is significant for old backgrounds. Returned one scramble for 
+#background 52 but I checked this using the single CRE distance library and 
+#there is no obvious dip in this portion of the background
+
+scramble_signif_old <- filter(scramble_ttests, p.value.fdr <= 0.05) %>%
+  mutate(background = str_sub(name, nchar(name)-1, nchar(name))) %>%
+  mutate(background = as.integer(background))
+  
+
+
+
+
 
 
