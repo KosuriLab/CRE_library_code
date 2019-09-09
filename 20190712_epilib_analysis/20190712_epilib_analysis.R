@@ -26,7 +26,7 @@ bc_R4B <- read_tsv('BCreads_txts/R4B_BC.txt')
 #Load barcode mapping table, sequences (most_common) are rcomp due to sequencing
 #format
 
-Follow_up_map <- read_tsv('../BCMap/cre_followup_barcode_statistics.txt') %>%
+Follow_up_map <- read_tsv('../BCMap/CRE_15K/barcode_statistics.txt') %>%
   select(-num_unique_constructs, -num_reads, -num_reads_most_common)
 
 #Join reads to bcmap------------------------------------------------------------
@@ -216,40 +216,6 @@ twosite <- med_rep_0_4_A_B %>%
   select(-subpool, -fluff1, -fluff2, -fluff3) %>%
   mutate(dist = dist + 64)
 
-#The twosite_distal library consists of a fixed proximal CRE at the 3' end of 
-#the background and a moving distal CRE. The offset of the proximal CRE upstream
-#from the 3' end of the background is indicated in 0, 5, 10, and 15 bp 
-#increments. The spacing between the CREs is also indicated. The distance of the
-#distal CRE as it is placed further from the 3' end is indicated as the distance
-#from the start of this site to the minimal promoter. Distance stops at 60 bp. 
-#Only the 3 original backgrounds were used here.
-
-twosite_distal <- med_rep_0_4_A_B %>%
-  filter(grepl('twositedistdistal', name)) %>%
-  separate(name, 
-           into = c("subpool", "fluff1", "offset", "fluff2", "spacing", 
-                    "fluff3", "distaldist", "fluff4", "background"),
-           sep = "_", convert = TRUE) %>%
-  select(-subpool, -fluff1, -fluff2, -fluff3, -fluff4) %>%
-  mutate(distaldist = distaldist + 64)
-
-#The twosite_proximal library consists of a fixed distal CRE and moving proximal 
-#CRE. The distal CRE is placed 60 bp from the 3' end of the background - offset.
-#The offset of the distal CRE from the 5' end of the background is 
-#indicated in 0, 5, 10, and 15 bp increments. The spacing between the CREs is
-#also indicated. The distance of the proximal CRE as it is placed closer to the
-#3' end is indicated as the distance from the start of this site to the minimal 
-#promoter. Only the 3 original backgrounds were used here.
-
-twosite_proximal <- med_rep_0_4_A_B %>%
-  filter(grepl('twositedistproximal', name)) %>%
-  separate(name, 
-           into = c("subpool", "fluff1", "offset", "fluff2", "spacing", 
-                    "fluff3", "proximaldist", "fluff4", "background"),
-           sep = "_", convert = TRUE) %>%
-  select(-subpool, -fluff1, -fluff2, -fluff3, -fluff4) %>%
-  mutate(proximaldist = proximaldist + 64)
-
 
 #Background-normalize subpools--------------------------------------------------
 
@@ -294,8 +260,6 @@ scramble_oldback_norm <- back_norm(oldback, scramble_oldback)
 sixsite_newback_norm <- back_norm(newback, sixsite_newback)
 sixsite_oldback_norm <- back_norm(oldback, sixsite_oldback)
 twosite_norm <- back_norm(oldback, twosite)
-twosite_distal_norm <- back_norm(oldback, twosite_distal)
-twosite_proximal_norm <- back_norm(oldback, twosite_proximal)
 
 #Export dfs---------------------------------------------------------------------
 
@@ -327,16 +291,6 @@ sixsite_oldback_norm %>%
 twosite_norm %>%
   write.table(
     "twosite_norm.txt", 
-    sep = '\t', row.names = FALSE)
-
-twosite_distal_norm %>%
-  write.table(
-    "twosite_distal_norm.txt", 
-    sep = '\t', row.names = FALSE)
-
-twosite_proximal_norm %>%
-  write.table(
-    "twosite_proximal_norm.txt", 
     sep = '\t', row.names = FALSE)
 
 

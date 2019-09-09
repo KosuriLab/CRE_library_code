@@ -48,6 +48,8 @@ cbPalette7_grad_light <- c('white', '#FDE725FF', '#B8DE29FF', '#55C667FF',
 
 spacing_5_20_cbpalette <- c('gray20', 'deepskyblue2', 'orangered3', 'sandybrown')
 
+
+
 figurefont_theme <- theme(text = element_text(size = 8)) +
   theme(axis.title = element_text(size = 8)) +
   theme(legend.title = element_text(size = 8)) +
@@ -1065,7 +1067,7 @@ p_induction_spacing_10_back_55 <- s3_tidy_moveavg3 %>%
   geom_line(aes(dist, ave_3, color = conc, group = conc), size = 0.5) +
   geom_line(data = filter(s3_tidy_moveavg3, conc == -7 & background == '55' & spacing == 10), 
             aes(dist, ave_3), color = '#FDE725FF', size = 0.75) +
-  scale_x_continuous("Distance to minimal promoter (bp)",
+  scale_x_reverse("Distance to minimal promoter (bp)",
                      breaks = c(seq(from = 60, to = 190, by = 10))) +
   scale_y_continuous("Average normalized\nexpression (a.u.)") +
   background_grid(major = 'x', minor = 'none', colour.major = 'grey70') + 
@@ -1102,12 +1104,12 @@ p_MPRA_dist_spacing_10_back_55 <- s3_tidy_moveavg3_MPRA %>%
             size = 0.5) +
   scale_color_manual(values = c('#3CBB75FF', 'gray35'), 
                      name = 'MPRA') +
-  scale_x_continuous("Distance to minimal promoter (bp)",
+  scale_x_reverse("Distance to minimal promoter (bp)",
                      breaks = c(seq(from = 60, to = 190, by = 10))) +
   scale_y_continuous("Average normalized\nexpression (a.u.)") +
   background_grid(major = 'x', minor = 'none', colour.major = 'grey70') + 
   panel_border(colour = 'black') +
-  figurefont_theme  +
+  figurefont_theme +
   theme(strip.background = element_rect(colour="black", fill="white"))
   
 ggsave('../plots/p_MPRA_dist_spacing_10_back_55.pdf', 
@@ -1260,7 +1262,7 @@ p_subpool2_dist_0_25 <- s2_untidy_moveavg3 %>%
   scale_color_manual(values = c('gray20', 'firebrick3'), 
                      name = 'forskolin (µM)') +
   scale_y_log10(limits = c(0.5, 4)) +
-  scale_x_continuous("Distance to minimal promoter (bp)", 
+  scale_x_reverse("Distance to minimal promoter (bp)", 
                      breaks = seq(from = 66, to = 206, by = 20)) +
   theme(legend.position = 'right',
         strip.background = element_rect(colour="black", fill="white")) +
@@ -1322,7 +1324,7 @@ p_space_dist_gen_epi <- s3_tidy_moveavg3_MPRA %>%
   annotation_logticks(sides = 'l') +
   background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
                   colour.minor = 'grey95') +
-  scale_x_continuous("Distance to minimal promoter (bp)", 
+  scale_x_reverse("Distance to minimal promoter (bp)", 
                      breaks = seq(from = 70, to = 190, by = 20)) +
   figurefont_theme +
   theme(legend.position = 'top',
@@ -1336,7 +1338,7 @@ ggsave('../plots/space_dist_gen_epi.pdf', p_space_dist_gen_epi, units = 'in',
 p_subpool3_spa_4_vchr9_5_10 <- s3_tidy_moveavg3_MPRA %>%
   filter(MPRA == 'episomal' & background == 41 & dist < 124 & (spacing == 5 | spacing == 10)) %>%
   ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
-  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_line(aes(y = ave_3), size = 0.65) +
   geom_point(alpha = 0.5, size = 1) +
   scale_color_manual(values = c('gray20', 'dodgerblue2'), name = 'spacing (bp)') +
   ylab('Average normalized expression (a.u.)') + 
@@ -1345,10 +1347,9 @@ p_subpool3_spa_4_vchr9_5_10 <- s3_tidy_moveavg3_MPRA %>%
              alpha = 0.5) +
   geom_vline(xintercept = c(83, 92), color = 'dodgerblue2', linetype = 2, 
              alpha = 0.5) +
-  scale_y_log10(limits = c(1, 20), breaks = c(1, 10)) +
-  annotation_logticks(sides = 'l') +
+  scale_y_continuous(limits = c(1, 15)) +
   background_grid(major = 'x', minor = 'none') +
-  scale_x_continuous("Distance to minimal promoter (bp)", 
+  scale_x_reverse("Distance to minimal promoter from proximal CRE (bp)", 
                      breaks = seq(from = 66, to = 126, by = 10)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
@@ -1357,7 +1358,7 @@ p_subpool3_spa_4_vchr9_5_10 <- s3_tidy_moveavg3_MPRA %>%
 p_subpool3_spa_4_vchr9_5_15 <- s3_tidy_moveavg3_MPRA %>%
   filter(MPRA == 'episomal' & background == 41 & dist < 124 & (spacing == 5 | spacing == 15)) %>%
   ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
-  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_line(aes(y = ave_3), size = 0.65) +
   geom_point(alpha = 0.5, size = 1) +
   scale_color_manual(values = c('gray20', 'orangered3'), 
                      name = 'spacing (bp)') +
@@ -1367,11 +1368,10 @@ p_subpool3_spa_4_vchr9_5_15 <- s3_tidy_moveavg3_MPRA %>%
   panel_border(colour = 'black') +
   geom_vline(xintercept = c(78, 88), color = 'gray20', linetype = 2, 
              alpha = 0.5) +
-  scale_y_log10(limits = c(1, 20), breaks = c(1, 10)) +
-  annotation_logticks(sides = 'l') +
+  scale_y_continuous(limits = c(1, 15)) +
   background_grid(major = 'x', minor = 'none') +
-  scale_x_continuous("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 66, to = 126, by = 10)) +
+  scale_x_reverse("Distance to minimal promoter from proximal CRE (bp)", 
+                  breaks = seq(from = 66, to = 126, by = 10)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1384,7 +1384,7 @@ dumbdata <- tibble(dist = 66, ave_ratio_norm = 0.5)
 p_subpool3_spa_4_vchr9_10_20 <- s3_tidy_moveavg3_MPRA %>%
   filter(MPRA == 'episomal' & background == 41 & dist < 124 & (spacing == 10 | spacing == 20)) %>%
   ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
-  geom_line(aes(y = ave_3), size = 0.4) +
+  geom_line(aes(y = ave_3), size = 0.65) +
   geom_point(data = dumbdata, alpha = 1, color = 'white') +
   geom_point(alpha = 0.5, size = 1) +
   scale_color_manual(values = c('dodgerblue2', 'sandybrown'),
@@ -1395,23 +1395,61 @@ p_subpool3_spa_4_vchr9_10_20 <- s3_tidy_moveavg3_MPRA %>%
   panel_border(colour = 'black') +
   geom_vline(xintercept = c(83, 92), color = 'dodgerblue2', linetype = 2, 
              alpha = 0.5) +
-  scale_y_log10(limits = c(1, 20), breaks = c(1, 10)) +
-  annotation_logticks(sides = 'l') +
+  scale_y_continuous(limits = c(1, 15)) +
   background_grid(major = 'x', minor = 'none') +
-  scale_x_continuous("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 66, to = 126, by = 10)) +
+  scale_x_reverse("Distance to minimal promoter from proximal CRE (bp)", 
+                  breaks = seq(from = 66, to = 126, by = 10)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
 ggsave('../plots/p_subpool3_med_spa_4_vchr9_5_10.pdf', 
-       p_subpool3_spa_4_vchr9_5_10, height = 1.5, width = 4.9, units = 'in')
+       p_subpool3_spa_4_vchr9_5_10, height = 1.35, width = 4.8, units = 'in')
 
 ggsave('../plots/p_subpool3_med_spa_4_vchr9_5_15.pdf', 
-       p_subpool3_spa_4_vchr9_5_15, height = 1.5, width = 4.9, units = 'in')
+       p_subpool3_spa_4_vchr9_5_15, height = 1.35, width = 4.8, units = 'in')
 
 ggsave('../plots/p_subpool3_med_spa_4_vchr9_10_20.pdf', 
-       p_subpool3_spa_4_vchr9_10_20, height = 1.5, width = 4.9, units = 'in')
+       p_subpool3_spa_4_vchr9_10_20, height = 1.35, width = 4.8, units = 'in')
+
+#Plot all on one plot based on distance from distal CRE
+
+twosite_4_moveavg3_dist_distal_MPRA <- s3_gen_epi_rbind41 %>%
+  mutate(distal_dist = dist + spacing + 8) %>%
+  select(background, spacing, distal_dist, MPRA, ave_ratio_norm) %>%
+  group_by(background, spacing, MPRA) %>%
+  arrange(distal_dist, .by_group = TRUE) %>%
+  moveavg_dist3()
+
+p_subpool3_spa_4_vchr9_dist_distal <- twosite_4_moveavg3_dist_distal_MPRA %>%
+  filter(MPRA == 'episomal' & background == 41 & distal_dist < 137 & spacing != 0 & spacing != 70) %>%
+  ggplot(aes(x = distal_dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.65) +
+  geom_point(alpha = 0.5, size = 1) +
+  scale_color_manual(values = c('gray20', 'dodgerblue2', 
+                                'orangered3', 'sandybrown'),
+                     name = 'spacing (bp)') +
+  scale_fill_manual(values = c('gray20', 'dodgerblue2', 
+                               'orangered3', 'sandybrown'),
+                    name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  geom_vline(xintercept = c(91, 101, 111), color = 'black', linetype = 2, 
+             alpha = 0.5) +
+  scale_y_continuous(limits = c(1, 15)) +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)", 
+                  breaks = seq(from = 66, to = 140, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_subpool3_spa_4_vchr9_dist_distal.pdf', 
+       p_subpool3_spa_4_vchr9_dist_distal, height = 1.35, width = 4.8, 
+       units = 'in')
+
+
+
 
 #Supplemental Figure 5
 
@@ -2152,12 +2190,6 @@ sixsite_oldback_norm <- read_tsv(
 twosite_norm <- read_tsv(
   '../20190712_epilib_analysis/twosite_norm.txt')
 
-twosite_distal_norm <- read_tsv(
-  '../20190712_epilib_analysis/twosite_distal_norm.txt')
-
-twosite_proximal_norm <- read_tsv(
-  '../20190712_epilib_analysis/twosite_proximal_norm.txt')
-
 removed_bgs_sixsite_newback_norm <- read_tsv(
   '../20190712_epilib_analysis/removed_bgs_sixsite_newback_norm.txt')
 
@@ -2638,6 +2670,80 @@ ggsave('../plots/p_ind_site_ind_back_anova_epi_new.pdf',
 
 #New data twosite---------------------------------------------------------------
 
+#Look at median expression across spacings and backgrounds
+
+background_cbPalette <- c('#39568CFF', '#20A387FF', '#B8DE29FF')
+
+ave_exp_spacings <- twosite_norm %>%
+  group_by(background, spacing) %>%
+  summarize(ave_ratio_norm = mean(ave_med_ratio_norm_4))
+
+p_twosite_spacing_medexp <- ave_exp_spacings %>%
+  ggplot(aes(spacing, ave_ratio_norm, color = as.factor(background))) +
+  geom_point(size = 1) +
+  scale_x_continuous(breaks = c(1:13), name = 'CRE spacing (bp)') +
+  ylab('Average expression\nacross distances (a.u.)') +
+  scale_color_manual(values = background_cbPalette,
+                     name = 'Background') +
+  theme(strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_twosite_spacing_medexp.pdf', 
+       p_twosite_spacing_medexp, height = 1.75, width = 4, units = 'in')
+  
+#Determine 3 bp moving average for plotting
+
+twosite_4_moveavg3_dist <- twosite_norm %>%
+  mutate(ave_ratio_norm = ave_med_ratio_norm_4) %>%
+  select(background, spacing, dist, ave_ratio_norm) %>%
+  group_by(background, spacing) %>%
+  arrange(dist, .by_group = TRUE) %>%
+  moveavg_dist3()
+
+#Plot figure 3 with new data
+
+p_twosite_back41_space5 <- twosite_4_moveavg3_dist %>%
+  filter(background == 41 & dist < 124 & spacing == 5) %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), color = 'gray20', size = 0.4) +
+  geom_point(alpha = 0.5, size = 1, color = 'gray20') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  geom_vline(xintercept = c(78, 88), color = 'gray20', linetype = 2, 
+             alpha = 0.5) +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_reverse("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 66, to = 126, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_twosite_back41_space10 <- twosite_4_moveavg3_dist %>%
+  filter(background == 41 & dist < 124 & spacing == 10) %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), color = 'dodgerblue2', size = 0.4) +
+  geom_point(alpha = 1, color = 'white') +
+  geom_point(alpha = 0.5, color = 'dodgerblue2', size = 1) +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  geom_vline(xintercept = c(83, 92), color = 'dodgerblue2', linetype = 2, 
+             alpha = 0.5) +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_reverse("Distance to minimal promoter (bp)", 
+                     breaks = seq(from = 66, to = 126, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_twosite_back41_space5.pdf', 
+       p_twosite_back41_space5, height = 1.5, width = 4, units = 'in')
+
+ggsave('../plots/p_twosite_back41_space10.pdf', 
+       p_twosite_back41_space10, height = 1.5, width = 4, units = 'in')
+
+
+#plot according to distal CRE distance
+
 twosite_4_moveavg3_dist_distal <- twosite_norm %>%
   mutate(distal_dist = dist + spacing + 8) %>%
   mutate(ave_ratio_norm = ave_med_ratio_norm_4) %>%
@@ -2646,26 +2752,89 @@ twosite_4_moveavg3_dist_distal <- twosite_norm %>%
   arrange(distal_dist, .by_group = TRUE) %>%
   moveavg_dist3()
 
-p_twosite_back41_dist_distal <- twosite_4_moveavg3_dist_distal %>%
-  filter(background == '41') %>%
-  filter(spacing != 1 & spacing != 4 & spacing != 6 & spacing != 9 & spacing != 11) %>%
-  filter(distal_dist < 130) %>%
+p_twosite_back41_dist_distal_space5 <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == '41' & spacing == 5 & distal_dist < 132) %>%
   ggplot(aes(distal_dist, ave_ratio_norm)) +
-  facet_grid(spacing ~ .) +
-  geom_point(size = 1, alpha = 0.5) +
-  geom_line(aes(distal_dist, ave_3), size = 0.5) +
-  scale_x_continuous("Distance to minimal promoter from distal CRE (bp)",
-                     breaks = c(seq(from = 60, to = 190, by = 10))) +
-  scale_y_log10(breaks = c(1, 10)) +
-  annotation_logticks(sides = 'l') +
+  geom_point(alpha = 0.5, color = 'gray20', size = 1) +
+  geom_line(aes(y = ave_3), color = 'gray20', size = 0.4) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                     breaks = c(seq(from = 80, to = 130, by = 10))) +
   ylab("Average normalized expression (a.u.)") +
   background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
-  geom_vline(xintercept = c(90.5, 101, 111), color = 'red', linetype = 2, 
+  geom_vline(xintercept = c(101, 111), color = 'red', linetype = 2, 
              alpha = 0.75) +
   panel_border(colour = 'black') +
   theme(axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
+
+dumbdata <- tibble(distal_dist = 80, ave_ratio_norm = 5)
+
+p_twosite_back41_dist_distal_space10 <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == '41' & spacing == 10 & distal_dist < 132) %>%
+  ggplot(aes(distal_dist, ave_ratio_norm)) +
+  geom_point(alpha = 0.5, color = 'dodgerblue2', size = 1) +
+  geom_point(data = dumbdata, alpha = 0, color = 'white') +
+  geom_line(aes(y = ave_3), color = 'dodgerblue2', size = 0.4) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                  breaks = c(seq(from = 80, to = 130, by = 10))) +
+  ylab("Average normalized expression (a.u.)") +
+  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
+  geom_vline(xintercept = c(101, 111), color = 'red', linetype = 2, 
+             alpha = 0.75) +
+  panel_border(colour = 'black') +
+  theme(axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_twosite_back41_dist_distal_trunc <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == '41' & distal_dist < 150) %>%
+  filter(spacing == 1 | spacing == 2 | spacing == 4 | spacing == 7 | spacing == 10 | spacing == 13) %>%
+  ggplot(aes(distal_dist, ave_ratio_norm)) +
+  facet_grid(spacing ~ .) +
+  geom_point(size = 1, alpha = 0.5) +
+  geom_line(aes(distal_dist, ave_3), size = 0.5) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                     breaks = c(seq(from = 80, to = 140, by = 10))) +
+  ylab("Average normalized expression (a.u.)") +
+  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
+  geom_vline(xintercept = c(101, 111), color = 'red', linetype = 2, 
+             alpha = 0.75) +
+  panel_border(colour = 'black') +
+  theme(axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_twosite_back41_dist_distal_trunc <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == '41' & distal_dist < 150) %>%
+  ggplot(aes(distal_dist, ave_ratio_norm, color = as.factor(spacing))) +
+  geom_point(size = 1, alpha = 0.5) +
+  geom_line(aes(distal_dist, ave_3, color = as.factor(spacing)), size = 0.75) +
+  geom_line(data = filter(twosite_4_moveavg3_dist_distal, spacing == 13 & background == 41 & distal_dist < 150),
+            aes(distal_dist, ave_3), color = '#FDE725FF', size = 0.75) +
+  scale_color_viridis(discrete = TRUE) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                  breaks = c(seq(from = 80, to = 140, by = 10))) +
+  ylab("Average normalized expression (a.u.)") +
+  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
+  geom_vline(xintercept = c(91, 101, 111), color = 'red', linetype = 2, 
+             alpha = 0.75) +
+  panel_border(colour = 'black') +
+  theme(axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_twosite_back41_dist_distal_space5.pdf', 
+       p_twosite_back41_dist_distal_space5,
+       height = 1.5, width = 4, units = 'in')
+
+ggsave('../plots/p_twosite_back41_dist_distal_space10.pdf', 
+       p_twosite_back41_dist_distal_space10,
+       height = 1.5, width = 4, units = 'in')
+
+ggsave('../plots/p_twosite_back41_dist_distal_trunc.pdf', 
+       p_twosite_back41_dist_distal_trunc,
+       height = 5, width = 3.5, units = 'in')
 
 p_twosite_back41_dist_distal_full <- twosite_4_moveavg3_dist_distal %>%
   filter(background == '41') %>%
@@ -2679,7 +2848,7 @@ p_twosite_back41_dist_distal_full <- twosite_4_moveavg3_dist_distal %>%
   annotation_logticks(sides = 'l') +
   ylab("Average normalized expression (a.u.)") +
   background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
-  geom_vline(xintercept = c(90.5, 101, 111), color = 'red', linetype = 2, 
+  geom_vline(xintercept = c(91, 101, 111), color = 'red', linetype = 2, 
              alpha = 0.75) +
   panel_border(colour = 'black') +
   theme(axis.ticks.x = element_blank(),
@@ -2690,7 +2859,7 @@ p_twosite_back55_dist_distal <- twosite_4_moveavg3_dist_distal %>%
   filter(background == '55') %>%
   ggplot(aes(distal_dist, ave_ratio_norm)) +
   facet_grid(spacing ~ .) +
-  geom_vline(xintercept = c(108, 117, 128, 138, 147, 159, 170, 181, 191), 
+  geom_vline(xintercept = c(108, 117.5, 127.5, 137.5, 180, 191.5), 
              color = 'red', alpha = 0.75, linetype = 2) +
   geom_point(size = 1, alpha = 0.5) +
   geom_line(aes(distal_dist, ave_3), size = 0.5) +
@@ -2709,7 +2878,7 @@ p_twosite_back52_dist_distal <- twosite_4_moveavg3_dist_distal %>%
   filter(background == '52') %>%
   ggplot(aes(distal_dist, ave_ratio_norm)) +
   facet_grid(spacing ~ .) +
-  geom_vline(xintercept = c(93, 137, 146, 156, 192, 201), 
+  geom_vline(xintercept = c(92.5, 137, 146.5, 156, 191.5, 200.5), 
              color = 'red', alpha = 0.75, linetype = 2) +
   geom_point(size = 1, alpha = 0.5) +
   geom_line(aes(distal_dist, ave_3), size = 0.5) +
@@ -2724,10 +2893,6 @@ p_twosite_back52_dist_distal <- twosite_4_moveavg3_dist_distal %>%
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
-ggsave('../plots/p_twosite_back41_dist_distal.pdf', 
-       p_twosite_back41_dist_distal,
-       width = 2.75, height = 6.25, units = 'in')
-
 ggsave('../plots/p_twosite_back41_dist_distal_full.pdf', 
        p_twosite_back41_dist_distal_full,
        width = 4, height = 7.75, units = 'in')
@@ -2741,6 +2906,85 @@ ggsave('../plots/p_twosite_back52_dist_distal.pdf',
        width = 4, height = 7.75, units = 'in')
 
 
+
+#tileplot of all backgrounds and spacings, take average expression per distance
+#per background across spacings and plot 3 bp moving average to summarize
+#periodicities above plots
+
+twosite_4_avespace_moveavg3_dist_distal <- twosite_norm %>%
+  mutate(distal_dist = dist + spacing + 8) %>%
+  mutate(ave_ratio_norm = ave_med_ratio_norm_4) %>%
+  select(background, spacing, distal_dist, ave_ratio_norm) %>%
+  group_by(background, distal_dist) %>%
+  summarize(ave_ratio_norm = mean(ave_ratio_norm)) %>%
+  group_by(background) %>%
+  arrange(distal_dist, .by_group = TRUE) %>%
+  moveavg_dist3()
+
+p_twosite_ave3 <- twosite_4_avespace_moveavg3_dist_distal %>%
+  ggplot(aes(distal_dist, ave_ratio_norm)) +
+  facet_grid(background ~ ., scales = 'free') +
+  geom_point(color = 'gray50', alpha = 0.75, size = 0.5) +
+  geom_line(aes(distal_dist, ave_3), size = 0.5) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                  breaks = c(seq(from = 60, to = 200, by = 10))) +
+  ylab('Average expression across spacings (a.u.)') +
+  theme(strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_twosite_ave3.pdf', p_twosite_ave3,
+       width = 5.6, height = 1.75, units = 'in')
+
+p_twosite_tile_back41 <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == 41) %>%
+  ggplot(aes(x = distal_dist, y = spacing, fill = ave_ratio_norm)) +
+  facet_grid(background ~ .) +
+  geom_tile() +
+  scale_fill_viridis(name = 'Average normalized\nexpression (a.u.)') +
+  guides(fill = guide_colorbar(frame.colour = 'black', 
+                                ticks.colour = 'black')) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                  breaks = c(seq(from = 60, to = 200, by = 10))) +
+  ylab("Spacing between CREs (bp)") +
+  theme(strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_twosite_tile_back52 <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == 52) %>%
+  ggplot(aes(x = distal_dist, y = spacing, fill = ave_ratio_norm)) +
+  facet_grid(background ~ .) +
+  geom_tile() +
+  scale_fill_viridis(name = 'Average normalized\nexpression (a.u.)') +
+  guides(fill = guide_colorbar(frame.colour = 'black', 
+                               ticks.colour = 'black')) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                  breaks = c(seq(from = 60, to = 200, by = 10))) +
+  ylab("Spacing between CREs (bp)") +
+  theme(strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_twosite_tile_back55 <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == 55) %>%
+  ggplot(aes(x = distal_dist, y = spacing, fill = ave_ratio_norm)) +
+  facet_grid(background ~ .) +
+  geom_tile() +
+  scale_fill_viridis(name = 'Average normalized\nexpression (a.u.)') +
+  guides(fill = guide_colorbar(frame.colour = 'black', 
+                               ticks.colour = 'black')) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                  breaks = c(seq(from = 60, to = 200, by = 10))) +
+  ylab("Spacing between CREs (bp)") +
+  theme(strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_twosite_tile_back41.pdf', p_twosite_tile_back41,
+       width = 7, height = 1.75, units = 'in')
+
+ggsave('../plots/p_twosite_tile_back52.pdf', p_twosite_tile_back52,
+       width = 7, height = 1.75, units = 'in')
+
+ggsave('../plots/p_twosite_tile_back55.pdf', p_twosite_tile_back55,
+       width = 7, height = 1.75, units = 'in')
 
 
 
