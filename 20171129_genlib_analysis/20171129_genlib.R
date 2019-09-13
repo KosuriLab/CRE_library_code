@@ -174,3 +174,95 @@ output_int <- rep_1_2_back_norm %>%
     "rep_1_2.txt", 
     sep = '\t', row.names = FALSE)
 
+
+#Redo analysis for lower BC cut-off---------------------------------------------
+
+#Count barcodes per variant per DNA and RNA, set minimum of 8 BC's per variant 
+#in DNA, take median RNA/DNA per variant, then per variant determine 
+#the median absolute deviation of all barcode ratios. Then filter out variants 
+#with 0 median expression
+
+ratio_bc_med_var <- function(df) {
+  bc_count_DNA <- df %>%
+    group_by(subpool, name, most_common) %>%
+    summarize(barcodes_DNA = n()) %>%
+    filter(barcodes_DNA > 2)
+  bc_count_RNA <- df %>%
+    group_by(subpool, name, most_common) %>%
+    filter(num_reads_RNA != 0) %>%
+    summarize(barcodes_RNA = n())
+  bc_DNA_RNA <- left_join(bc_count_DNA, bc_count_RNA, 
+                          by = c('subpool', 'name', 'most_common')) %>%
+    ungroup()
+  bc_min_8_df <- left_join(bc_DNA_RNA, df, 
+                           by = c('subpool', 'name', 'most_common')) %>%
+    ungroup()
+  med_ratio <- bc_min_8_df %>%
+    group_by(subpool, name, most_common) %>%
+    summarize(med_ratio = median(ratio)) %>%
+    filter(med_ratio > 0)
+  mad_ratio <- bc_min_8_df %>%
+    group_by(subpool, name, most_common) %>%
+    summarize(mad = mad(ratio, constant = 1))
+  med_mad <- left_join(med_ratio, mad_ratio, 
+                       by = c('subpool', 'name', 'most_common')) %>%
+    mutate(mad_over_med = as.double(mad/med_ratio))
+  bc_med <- inner_join(med_mad, bc_DNA_RNA, 
+                       by = c('subpool', 'name', 'most_common')) %>%
+    ungroup()
+  return(bc_med)
+}
+
+med_ratio_1 <- ratio_bc_med_var(bc_ave_DNA_RNA_1)
+med_ratio_2 <- ratio_bc_med_var(bc_ave_DNA_RNA_2)
+
+
+#combine biological replicates
+
+rep_1_2 <- inner_join(med_ratio_1, med_ratio_2,
+                      by = c("name", "subpool", "most_common"),
+                      suffix = c('_br1', '_br2'))
+
+#After combining rename backgrounds to simplified names, make background column. 
+#Separate out background values in each dataset and left join to original 
+#dataset. Normalize expression of each variant to its background in that 
+#biological replicate. Determine average expression and average 
+#background-normalized expression across biological replicates.
+
+back_norm <- function(df1) {
+  gsub_1_2 <- df1 %>%
+    ungroup() %>%
+    filter(subpool != 'control') %>%
+    mutate(
+      name = gsub('Smith R. Vista chr9:83712599-83712766', 'back_41', name),
+      name = gsub('Vista Chr5:88673410-88674494', 'back_52', name),
+      name = gsub('scramble pGL4.29 Promega 1-63 \\+ 1-87', 'back_55', name)
+    ) %>%
+    mutate(background = name) %>%
+    mutate(background = str_sub(background, 
+                                nchar(background)-1, 
+                                nchar(background)))
+  backgrounds <- gsub_1_2 %>%
+    filter(startsWith(name, 'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')) %>%
+    select(background, med_ratio_br1, med_ratio_br2) %>%
+    rename(med_ratio_br1_back = med_ratio_br1) %>%
+    rename(med_ratio_br2_back = med_ratio_br2) 
+  back_join_norm <- left_join(gsub_1_2, backgrounds, by = 'background') %>%
+    mutate(ave_med_ratio = (med_ratio_br1 + med_ratio_br2)/2) %>%
+    mutate(med_ratio_br1_norm = med_ratio_br1/med_ratio_br1_back) %>%
+    mutate(med_ratio_br2_norm = med_ratio_br2/med_ratio_br2_back) %>%
+    mutate(ave_med_ratio_norm = (med_ratio_br1_norm + med_ratio_br2_norm)/2)
+}
+
+rep_1_2_back_norm <- rep_1_2 %>%
+  filter(name == 'pGL4.29 Promega 1-63 + 1-87') %>%
+  mutate(name = str_c(name, '_scramble pGL4.29 Promega 1-63 + 1-87')) %>%
+  mutate(subpool = 'subpool3') %>%
+  rbind(rep_1_2) %>%
+  back_norm()
+
+output_int_lowbc <- rep_1_2_back_norm %>%
+  write.table(
+    "int_lowbc.txt", 
+    sep = '\t', row.names = FALSE)
+
