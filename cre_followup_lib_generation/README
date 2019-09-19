@@ -1,0 +1,9 @@
+Directory contains all materials required to generate the follow-up CRE library. 
+
+CRE library generation ran with cre_followup_lib_generation.py using bgs_top3.csv, controls.csv, and oldbackgrounds.csv
+
+Output is cre_Acontent_lib.csv, of which was sent for synthesis.
+
+cre_Acontent_lib_no_twositeoffset.csv is used in BCmap for generating BC-variant associations. This version of the library has the twosite
+offset libraries removed as a portion of sequences overlapped those in the twosite library, throwing off barcode-mapping. As the results
+from the twosite offset libraries were not informative, they were removed from analysis and barcode-mapping was performed without them.
