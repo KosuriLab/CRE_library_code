@@ -7,7 +7,7 @@ This paper is currently not peer-reviewed and may change throughout this process
 
 Included in this project is code required to:
 
--generate CRE variants (cre_lib_generation)
+-generate CRE variants (cre_lib_generation and cre_followuplib_generation)
 
 -assign barcodes to CRE variants (BCMap)
 
