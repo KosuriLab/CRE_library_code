@@ -4,4 +4,6 @@ CRE library generation ran with cre_lib.py using cre_controls, enhancer_template
 
 Output is cre_lib_final.csv, of which was sent for synthesis.
 
-cre_lib_final.csv is used in BCmap for generating BC-variant associations. cre_lib_final_2_4.csv is subset from this and contains corresponding to the single CRE library and another library that was not analyzed in this MPRA. cre_lib_final_3_5_c.csv corresponds to variants in the CRE Spacing and Distance library and Number and Affinity library.
+cre_lib_final.csv is used in BCmap for generating BC-variant associations. cre_lib_final_2_4.csv is subset from this and contains 
+corresponding to the single CRE library and another library that was not analyzed in this MPRA. cre_lib_final_3_5_c.csv corresponds 
+to variants in the CRE Spacing and Distance library and Number and Affinity library.
