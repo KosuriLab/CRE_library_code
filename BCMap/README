@@ -1,11 +1,13 @@
-Directory contains materials required to associate BCs to variants generated from 2 sequencing runs (SP3_5_barcode_mapping and SP2_4_barcode_mapping). 
+Directory contains materials required to associate BCs to variants generated from 2 sequencing runs 
+(SP3_5_barcode_mapping and SP2_4_barcode_mapping). 
 
 Uses cre_lib_final_#_#.csv from ../cre_lib_generation per subpools being mapped (2 and 4 or 3 and 5 and controls). 
 
 Also uses merged reads to be uploaded later on the Gene Expression Omnibus.
 
 Running CREB_barcode_mapping.py per subpool combination requires the arguments in order ran within the relevant folder (SP2_4 and SP3_5): 
-<BC read file.txt> <library file.csv> <library file format> <variant length> <primer + RE length> <BC location> <BC length> <levenshtein cut-off> <output file name> 
+<BC read file.txt> <library file.csv> <library file format> <variant length> <primer + RE length> <BC location> <BC length> 
+<levenshtein cut-off> <output file name> 
 
 Thus for bc mapping subpool 3 and 5 with controls the following specifications are given:
 bbmerge_assembled.txt cre_lib_final_3_5_c.csv csv 150 25 start 20 13 CREB_barcode_mapping_3_5.txt
@@ -13,9 +15,14 @@ bbmerge_assembled.txt cre_lib_final_3_5_c.csv csv 150 25 start 20 13 CREB_barcod
 and for subpool 2 and 4:
 bbmerge_assembled.txt cre_lib_final_2_4.csv csv 150 25 start 20 13 CREB_barcode_mapping_2_4.txt
 
-Both barcode mapping outputs (barcode_statistics.txt) are then combined into one file and duplicates are removed using uniqueSP2345.R. The output uniqueSP2345.txt is used in all MPRA analyses
+Both barcode mapping outputs (barcode_statistics.txt) are then combined into one file and duplicates are removed using uniqueSP2345.R. 
+The output uniqueSP2345.txt is used in all MPRA analyses
 
-BC-mapping outputs from both runs as well as the combined table are too large to be uploaded onto github and will be uploaded later on the Gene Expression Omnibus.
+For the follow-up library BC mapping, CREB_barcode_mapping.py can be used with the following specifications:
+bbmerge_assembled.txt cre_test_Acontent_lib_no_twositeoffset.csv csv 150 25 start 20 24 CREB_barcode_mapping_notwositeoffset.txt
+
+BC-mapping outputs from all runs are too large to be uploaded onto github and can be generated using sequencing data from 
+the Gene Expression Omnibus.
 
 
 
