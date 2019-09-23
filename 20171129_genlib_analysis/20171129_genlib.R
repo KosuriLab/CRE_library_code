@@ -8,12 +8,12 @@ library(tidyverse)
 
 #Load index and bcmap files-----------------------------------------------------
 
-bc_DNA_1_1 <- read_tsv('BCreads_txts/D11_BC.txt')
-bc_DNA_1_2 <- read_tsv('BCreads_txts/D12_BC.txt')
-bc_DNA_2_1 <- read_tsv('BCreads_txts/D21_BC.txt')
-bc_DNA_2_2 <- read_tsv('BCreads_txts/D22_BC.txt')
-bc_RNA_1 <- read_tsv('BCreads_txts/R18_BC.txt')
-bc_RNA_2 <- read_tsv('BCreads_txts/R28_BC.txt')
+bc_DNA_1_1 <- read_tsv('BCreads_txts/20171129_DNA_1_1_BC.txt')
+bc_DNA_1_2 <- read_tsv('BCreads_txts/20171129_DNA_1_2_BC.txt')
+bc_DNA_2_1 <- read_tsv('BCreads_txts/20171129_DNA_2_1_BC.txt')
+bc_DNA_2_2 <- read_tsv('BCreads_txts/20171129_DNA_2_2_BC.txt')
+bc_RNA_1 <- read_tsv('BCreads_txts/20171129_R8_1_BC.txt')
+bc_RNA_2 <- read_tsv('BCreads_txts/20171129_R8_2_BC.txt')
 
 #Load barcode mapping table, sequences (most_common) are rcomp due to sequencing
 #format. Pick out controls, subpool 3, and subpool 5 in the bcmap that were used

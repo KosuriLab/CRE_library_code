@@ -14,11 +14,11 @@ library(tidyverse)
 
 #Load index files---------------------------------------------------------------
 
-bc_R25A <- read_tsv('BCreads_txts/bc_JD02.txt')
-bc_R25B <- read_tsv('BCreads_txts/bc_JD03.txt')
-bc_R0A <- read_tsv('BCreads_txts/bc_JD04.txt')
-bc_R0B <- read_tsv('BCreads_txts/bc_JD05.txt')
-bc_DNA <- read_tsv('BCreads_txts/bc_JD11.txt')
+bc_R25A <- read_tsv('BCreads_txts/20170320_bc_R25A.txt')
+bc_R25B <- read_tsv('BCreads_txts/20170320_bc_R25B.txt')
+bc_R0A <- read_tsv('BCreads_txts/20170320_bc_R0A.txt')
+bc_R0B <- read_tsv('BCreads_txts/20170320_bc_R0B.txt')
+bc_DNA <- read_tsv('BCreads_txts/20170320_bc_DNA.txt')
 
 
 #Load barcode mapping table, remember sequences are rcomp

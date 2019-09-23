@@ -17,16 +17,16 @@ library(cowplot)
 
 #Load index and bcmap files-----------------------------------------------------
 
-bc_DNA <- read_tsv('BCreads_txts/D3_BC.txt')
-bc_R0A <- read_tsv('BCreads_txts/R0A_BC.txt')
-bc_R0B <- read_tsv('BCreads_txts/R0B_BC.txt')
-bc_R4A <- read_tsv('BCreads_txts/R4A_BC.txt')
-bc_R4B <- read_tsv('BCreads_txts/R4B_BC.txt')
+bc_DNA <- read_tsv('BCreads_txts/20190712_DNA_BC.txt')
+bc_R0A <- read_tsv('BCreads_txts/20190712_R0A_BC.txt')
+bc_R0B <- read_tsv('BCreads_txts/20190712_R0B_BC.txt')
+bc_R4A <- read_tsv('BCreads_txts/20190712_R4A_BC.txt')
+bc_R4B <- read_tsv('BCreads_txts/20190712_R4B_BC.txt')
 
 #Load barcode mapping table, sequences (most_common) are rcomp due to sequencing
 #format
 
-Follow_up_map <- read_tsv('../BCMap/CRE_15K/barcode_statistics.txt') %>%
+Follow_up_map <- read_tsv('../BCMap/followup/barcode_statistics_followup.txt') %>%
   select(-num_unique_constructs, -num_reads, -num_reads_most_common)
 
 #Join reads to bcmap------------------------------------------------------------

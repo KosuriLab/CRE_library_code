@@ -76,23 +76,23 @@ moveavg_dist3 <- function(df) {
 
 #Load indexed BC reads
 
-bc_DNA <- read_tsv('BCreads_txts/DNA_BC.txt')
-bc_R0A <- read_tsv('BCreads_txts/R0A_BC.txt')
-bc_R0B <- read_tsv('BCreads_txts/R0B_BC.txt')
-bc_R2_5A <- read_tsv('BCreads_txts/R2-5A_BC.txt')
-bc_R2_5B <- read_tsv('BCreads_txts/R2-5B_BC.txt')
-bc_R2_4A <- read_tsv('BCreads_txts/R2-4A_BC.txt')
-bc_R2_4B <- read_tsv('BCreads_txts/R2-4B_BC.txt')
-bc_R2_3A <- read_tsv('BCreads_txts/R2-3A_BC.txt')
-bc_R2_3B <- read_tsv('BCreads_txts/R2-3B_BC.txt')
-bc_R2_2A <- read_tsv('BCreads_txts/R2-2A_BC.txt')
-bc_R2_2B <- read_tsv('BCreads_txts/R2-2B_BC.txt')
-bc_R2_1A <- read_tsv('BCreads_txts/R2-1A_BC.txt')
-bc_R2_1B <- read_tsv('BCreads_txts/R2-1B_BC.txt')
-bc_R20A <- read_tsv('BCreads_txts/R20A_BC.txt')
-bc_R20B <- read_tsv('BCreads_txts/R20B_BC.txt')
-bc_R22A <- read_tsv('BCreads_txts/R22A_BC.txt')
-bc_R22B <- read_tsv('BCreads_txts/R22B_BC.txt')
+bc_DNA <- read_tsv('BCreads_txts/20170921_DNA_BC.txt')
+bc_R0A <- read_tsv('BCreads_txts/20170921_R0A_BC.txt')
+bc_R0B <- read_tsv('BCreads_txts/20170921_R0B_BC.txt')
+bc_R2_5A <- read_tsv('BCreads_txts/20170921_R2-5A_BC.txt')
+bc_R2_5B <- read_tsv('BCreads_txts/20170921_R2-5B_BC.txt')
+bc_R2_4A <- read_tsv('BCreads_txts/20170921_R2-4A_BC.txt')
+bc_R2_4B <- read_tsv('BCreads_txts/20170921_R2-4B_BC.txt')
+bc_R2_3A <- read_tsv('BCreads_txts/20170921_R2-3A_BC.txt')
+bc_R2_3B <- read_tsv('BCreads_txts/20170921_R2-3B_BC.txt')
+bc_R2_2A <- read_tsv('BCreads_txts/20170921_R2-2A_BC.txt')
+bc_R2_2B <- read_tsv('BCreads_txts/20170921_R2-2B_BC.txt')
+bc_R2_1A <- read_tsv('BCreads_txts/20170921_R2-1A_BC.txt')
+bc_R2_1B <- read_tsv('BCreads_txts/20170921_R2-1B_BC.txt')
+bc_R20A <- read_tsv('BCreads_txts/20170921_R20A_BC.txt')
+bc_R20B <- read_tsv('BCreads_txts/20170921_R20B_BC.txt')
+bc_R22A <- read_tsv('BCreads_txts/20170921_R22A_BC.txt')
+bc_R22B <- read_tsv('BCreads_txts/20170921_R22B_BC.txt')
 
 #Load barcode mapping table, sequences (most_common) are rcomp due to sequencing
 #format. Pick out controls, subpool 3, and subpool 5 in the bcmap that were used
@@ -951,6 +951,74 @@ pearsons_epi_epi <- tibble(
 )
 
 
+#Replicability between backgrounds----------------------------------------------
+
+back_epi <- epi_back_norm_pc_spGl4 %>%
+  select(name, background, med_ratio_22A, med_ratio_22B) %>%
+  mutate(ave_ratio_22 = (med_ratio_22A + med_ratio_22B)/2) %>%
+  select(-med_ratio_22A, -med_ratio_22B) %>%
+  mutate(name = str_sub(name, 0, nchar(name)-8)) %>%
+  spread(key = background, value = c(ave_ratio_22)) %>%
+  var_log10() %>%
+  na.omit() %>%
+  select(-name)
+
+back_gen <- gen_rep_1_2 %>%
+  select(name, background, ave_med_ratio) %>%
+  mutate(name = str_sub(name, 0, nchar(name)-8)) %>%
+  spread(key = background, value = c(ave_med_ratio)) %>%
+  var_log10() %>%
+  na.omit() %>%
+  select(-name)
+
+my_points <- function(data, mapping, ...) {
+  ggplot(data = data, mapping = mapping) +
+    geom_point(alpha = 0.1, size = 0.5) +
+    scale_x_continuous(limits = c(-2, 1.3), breaks = c(-2:1)) + 
+    scale_y_continuous(limits = c(-2, 1.3), breaks = c(-2:1)) +
+    annotation_logticks(sides = 'bl')
+}
+
+my_density <- function(data, mapping, ...) {
+  ggplot(data = data, mapping = mapping) +
+    geom_density(kernel = 'gaussian') +
+    scale_x_continuous(limits = c(-2, 1.3), breaks = c(-2:1)) +
+    scale_y_continuous(limits = c(-0.5, 2)) +
+    annotation_logticks(sides = 'b')
+}
+
+p_back_epi <- ggpairs(back_epi, 
+                       columnLabels = c('background 41', 
+                                        'background 52',
+                                        'background 55'),
+                       lower = list(continuous = my_points),
+                       diag = list(continuous = my_density),
+                       upper = list(continuous = wrap("cor", size = 2.5))) +
+  panel_border(colour = 'black') +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        panel.spacing.x=unit(0.5, "lines")) +
+  theme(panel.grid.major = element_blank()) +
+  figurefont_theme
+
+p_back_gen <- ggpairs(back_gen, 
+                       columnLabels = c('background 41', 
+                                        'background 52',
+                                        'background 55'),
+                       lower = list(continuous = my_points),
+                       diag = list(continuous = my_density),
+                       upper = list(continuous = wrap("cor", size = 2.5))) +
+  panel_border(colour = 'black') +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        panel.spacing.x=unit(1, "lines")) +
+  theme(panel.grid.major = element_blank()) +
+  figurefont_theme
+
+ggsave('../plots/p_back_epi.png', p_back_epi,
+       width = 3.1, height = 2.96, units = 'in')
+
+ggsave('../plots/p_back_gen.png', p_back_gen,
+       width = 3.1, height = 2.96, units = 'in')
+
 #Separate into sublibraries-----------------------------------------------------
 
 #Subpool 3 corresponds to the CRE Spacing and Distance Library. This library
@@ -1300,7 +1368,7 @@ p_subpool2_dist_0_25 <- s2_untidy_moveavg3 %>%
 ggsave('../plots/subpool2_dist_0_25.pdf', p_subpool2_dist_0_25, units = 'in',
        width = 5, height = 2.66)
 
-#Supp. Fig, 4, Figure 3, and Supp. Fig. 5 and 6---------------------------------
+#Supp. Fig, 4, Figure 3, and Supp. Fig. 5---------------------------------------
 
 #Plot average background-normalized expression per MPRA, CRE Spacing, and CRE
 #background acros CRE Distances. Because so few variants were retained in this 
@@ -1743,50 +1811,6 @@ ggsave('../plots/p_subpool3_spa_vchr5_int_10_20.pdf',
        p_subpool3_spa_vchr5_int_10_20, 
        height = 1.25, width = 4.4, units = 'in')
 
-#Supplemental Figure 6
-
-#Import lower DNA BC cut-off (3 BCs) from genomic MPRA to visualize spacing
-#periodicity phasings in background 41
-
-gen_rep_1_2_backnorm_lowbc <- read_tsv('../20171129_genlib_analysis/int_lowbc.txt')
-
-s3_lowbc_41 <- subpool3(gen_rep_1_2_backnorm_lowbc) %>%
-  filter(background == 41 & spacing != 0 & spacing != 70) %>%
-  rename(ave_ratio_norm = ave_med_ratio_norm) %>%
-  mutate(distal_dist = dist + spacing + 8) %>%
-  select(spacing, distal_dist, ave_ratio_norm) %>%
-  group_by(spacing) %>%
-  arrange(distal_dist, .by_group = TRUE) %>%
-  moveavg_dist3()
-
-dumbdata <- tibble(distal_dist = 79, ave_ratio_norm = 20, spacing = 5)
-
-p_s3_lowbc_41_spacing <- s3_lowbc_41 %>%
-  filter(distal_dist < 137) %>%
-  ggplot(aes(x = distal_dist, y = ave_ratio_norm, color = as.factor(spacing))) +
-  geom_line(aes(y = ave_3), size = 0.65) +
-  geom_point(alpha = 0.5, size = 1) +
-  geom_point(data = dumbdata, alpha = 0) +
-  scale_color_manual(values = c('gray20', 'dodgerblue2', 
-                                'orangered3', 'sandybrown'),
-                     name = 'spacing (bp)') +
-  scale_fill_manual(values = c('gray20', 'dodgerblue2', 
-                               'orangered3', 'sandybrown'),
-                    name = 'spacing (bp)') +
-  ylab('Average normalized expression (a.u.)') + 
-  panel_border(colour = 'black') +
-  geom_vline(xintercept = c(91, 101, 111), color = 'black', linetype = 2, 
-             alpha = 0.5) +
-  background_grid(major = 'x', minor = 'none') +
-  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)", 
-                  breaks = seq(from = 66, to = 140, by = 10)) +
-  theme(legend.position = 'right', axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_s3_lowbc_41_spacing.pdf', 
-       p_s3_lowbc_41_spacing, height = 1.35, width = 4.8, 
-       units = 'in')
 
 #Figure 4 and Supplemental Figures 7 and 8--------------------------------------
 
@@ -2198,7 +2222,7 @@ ggsave('../plots/p_s5_gen_epi_site_combo_resid_abline.pdf',
 
 p_gen_epi_rep <- gen_epi %>%
   ggplot(aes(ave_med_ratio, ave_ratio_22)) +
-  geom_point(alpha = 0.1, size = 1) +
+  geom_point(alpha = 0.1, size = 0.75) +
   geom_point(data = filter(gen_epi, 
                            grepl(
                              'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
@@ -2211,23 +2235,18 @@ p_gen_epi_rep <- gen_epi %>%
   ylab("Average episomal expression (a.u.)") +
   scale_x_log10(limits = c(0.01, 20), breaks = c(0.1, 1, 10)) + 
   scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
-  background_grid(major = 'xy', minor = 'none') + 
-  annotate("text", x = 0.05, y = 5, 
-           label = paste('r =', 
-                         round(cor(gen_epi$ave_med_ratio,
-                                   gen_epi$ave_ratio_22,
-                                   use = "pairwise.complete.obs", 
-                                   method = "pearson"), 2)),
-           size = 3) +
   theme(strip.background = element_rect(colour="black", fill="white"),
         axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
   figurefont_theme
   
 ggsave('../plots/p_gen_epi_rep.png', p_gen_epi_rep,
-       width = 2.6, height = 2.2, units = 'in')
+       width = 2, height = 1.9, units = 'in')
 
+log10_gen_epi <- var_log10(gen_epi)
 
-
+pearsons_epi_gen <- tibble(
+  pearsons = c(cor(log10_gen_epi$ave_med_ratio, log10_gen_epi$ave_ratio_22, 
+                   use = "pairwise.complete.obs", method = "pearson")))
 
 
 #New data-----------------------------------------------------------------------
@@ -2322,82 +2341,91 @@ barcode_rep <- med_rep_0_22_A_B %>%
   mutate(ind_old = ave_old_4/ave_old_0) %>%
   mutate(ind_new = ave_new_4/ave_new_0)
 
-old_new_0 <- barcode_rep %>%
-  select(med_ratio_0A_old, med_ratio_0B_old, med_ratio_0A_new, 
-         med_ratio_0B_new) %>%
-  var_log10()
-
-old_new_4 <- barcode_rep %>%
-  select(med_ratio_22A, med_ratio_22B, med_ratio_4A, 
-         med_ratio_4B) %>%
-  var_log10()
-
-my_points <- function(data, mapping, ...) {
-  ggplot(data = data, mapping = mapping) +
-    geom_point(alpha = 0.1, size = 0.75) +
-    scale_x_continuous(limits = c(-1.3, 1.2), breaks = c(-1:1)) + 
-    scale_y_continuous(limits = c(-1.3, 1.2), breaks = c(-1:1)) +
-    annotation_logticks(sides = 'bl') +
-    geom_abline(color = 'red')
-}
-
-my_density <- function(data, mapping, ...) {
-  ggplot(data = data, mapping = mapping) +
-    geom_density(kernel = 'gaussian') +
-    scale_x_continuous(limits = c(-1.3, 1.2), breaks = c(-1:1)) +
-    scale_y_continuous(limits = c(-1.3, 6)) +
-    annotation_logticks(sides = 'b')
-}
-
-p_old_new_0 <- ggpairs(old_new_0, 
-                       columnLabels = c('Barcoding A\nrep. 1', 
-                                        'Barcoding A\nrep. 2',
-                                        'Barcoding B\nrep. 1',
-                                        'Barcoding B\nrep. 2'),
-                        lower = list(continuous = my_points),
-                        diag = list(continuous = my_density),
-                       upper = list(continuous = wrap("cor", size = 2.5))) +
-  panel_border(colour = 'black') +
+p_old_new_4 <- barcode_rep %>%
+  ggplot(aes(ave_old_4, ave_new_4)) +
+  geom_point(alpha = 0.1, size = 1) +
+  geom_point(data = filter(barcode_rep, 
+                           grepl(
+                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
+                             name_old)), 
+             fill = 'orange', shape = 21, size = 1.75) + 
+  geom_point(data = filter(barcode_rep, name_old == 'pGL4.29 Promega 1-63 + 1-87'), 
+             fill = 'red', shape = 21, size = 1.75) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Barcode replicate 1\nexpression (a.u.)") +
+  ylab("Barcode replicate 2\nexpression (a.u.)") +
+  scale_x_log10(limits = c(0.06, 16), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.06, 16), breaks = c(0.1, 1, 10))  +
   theme(strip.background = element_rect(colour="black", fill="white"),
-        panel.spacing.x=unit(1, "lines")) +
-  theme(panel.grid.major = element_blank()) +
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
   figurefont_theme
 
-p_old_new_4 <- ggpairs(old_new_4, 
-                       columnLabels = c('Barcoding A\nrep. 1', 
-                                        'Barcoding A\nrep. 2',
-                                        'Barcoding B\nrep. 1',
-                                        'Barcoding B\nrep. 2'),
-                       lower = list(continuous = my_points),
-                       diag = list(continuous = my_density),
-                       upper = list(continuous = wrap("cor", size = 2.5))) +
-  panel_border(colour = 'black') +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        panel.spacing.x=unit(1, "lines")) +
-  theme(panel.grid.major = element_blank()) +
+ggsave('../plots/p_old_new_4.png', p_old_new_4,
+       width = 2.2, height = 2, units = 'in')
+
+log10_barcode_rep <- var_log10(barcode_rep)
+
+pearsons_barcode_rep <- tibble(
+  pearsons = c(cor(log10_barcode_rep$ave_old_4, log10_barcode_rep$ave_new_4, 
+                   use = "pairwise.complete.obs", method = "pearson")))
+
+
+#Barcode analysis---------------------------------------------------------------
+
+bc_epi_RNA <- gen_epi %>%
+  mutate(ave_barcodes = (barcodes_RNA_22A + barcodes_RNA_22B)/2) %>%
+  mutate(sample = 'RNA') %>%
+  mutate(group = 'episomal') %>%
+  select(ave_barcodes, sample, group)
+
+bc_epi_DNA <- gen_epi %>%
+  mutate(ave_barcodes = barcodes_DNA) %>%
+  mutate(sample = 'DNA') %>%
+  mutate(group = 'episomal') %>%
+  select(ave_barcodes, sample, group)
+  
+bc_gen_RNA <- gen_epi %>%
+  mutate(ave_barcodes = (barcodes_RNA_br1 + barcodes_RNA_br2)/2) %>%
+  mutate(sample = 'RNA') %>%
+  mutate(group = 'genomic') %>%
+  select(ave_barcodes, sample, group)
+
+bc_gen_DNA <- gen_epi %>%
+  mutate(ave_barcodes = (barcodes_DNA_br1 + barcodes_DNA_br2)/2) %>%
+  mutate(sample = 'DNA') %>%
+  mutate(group = 'genomic') %>%
+  select(ave_barcodes, sample, group)
+
+bc_barcode_rep_RNA <- barcode_rep %>%
+  mutate(ave_barcodes = (barcodes_RNA_4A + barcodes_RNA_4B)/2) %>%
+  mutate(sample = 'RNA') %>%
+  mutate(group = 'episomal rep') %>%
+  select(ave_barcodes, sample, group)
+
+bc_barcode_rep_DNA <- barcode_rep %>%
+  mutate(ave_barcodes = barcodes_DNA_new) %>%
+  mutate(sample = 'DNA') %>%
+  mutate(group = 'episomal rep') %>%
+  select(ave_barcodes, sample, group)
+
+bc_comb <- rbind(bc_epi_RNA, bc_epi_DNA, bc_gen_RNA, bc_gen_DNA, 
+                 bc_barcode_rep_RNA, bc_barcode_rep_DNA)
+
+p_bc_distr <- bc_comb %>%
+  ggplot(aes(group, ave_barcodes, fill = sample)) +
+  scale_fill_manual('Sample', values = c('#B8DDA3', '#A3B8DD')) +
+  geom_violin(position = 'dodge', size = 0.25) +
+  geom_boxplot(position = 'dodge', alpha = 0.5, outlier.alpha = 0, size = 0.25,
+               width = 0.9) +
+  scale_y_log10('Average barcodes per variant', breaks = c(10, 100)) +
+  annotation_logticks(sides = 'l') +
+  xlab('') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   figurefont_theme
+  
+ggsave('../plots/p_bc_distr.pdf', p_bc_distr, 
+       width = 3, height = 2, units = 'in')
 
-ggsave('../plots/p_old_new_bc_0.png', p_old_new_0,
-       width = 4.5, height = 3.95, units = 'in')
-
-ggsave('../plots/p_old_new_bc_4.png', p_old_new_4,
-       width = 4.5, height = 3.95, units = 'in')
-
-#Comparing induction between assays (4 µM expression/0 µM expression)
-
-p_old_new_bc_ind <- barcode_rep %>%
-  ggplot(aes(ind_old, ind_new)) +
-  geom_point(alpha = 0.1, size = 0.75) +
-  geom_abline(color = 'red') +
-  xlab('Original barcoding induction') +
-  ylab('Alternative barcoding induction') +
-  scale_x_log10(limits = c(0.1, 7), breaks = c(0.1, 1)) +
-  scale_y_log10(limits = c(0.1, 7), breaks = c(0.1, 1)) +
-  annotation_logticks(sides = 'bl') +
-  figurefont_theme
-
-ggsave('../plots/p_old_new_bc_ind.png', p_old_new_bc_ind,
-       width = 2.25, height = 2, units = 'in')
 
 #New data sixsite---------------------------------------------------------------
 
@@ -2987,6 +3015,359 @@ ggsave('../plots/p_twosite_tile_back55.pdf', p_twosite_tile_back55,
 
 
 
+#Reviewer-specific plots--------------------------------------------------------
+
+#looking at barcode effects based on % match to perfect variant
+
+SP3_SP5_bc <- read_tsv('../BCMap/uniqueSP2345_bcdetail.txt', 
+                        col_names = c(
+                          'fluff', 'barcode', 'num_unique', 'total_reads', 
+                          'mapped_variant_reads', 'most_common', 'name'), 
+                        skip = 1) %>%
+  select(-fluff) %>%
+  mutate(subpool = ifelse(startsWith(name, 'subpool'), 
+                          substr(name, 1, 8), 
+                          'control')) %>%
+  filter(subpool != 'subpool2' & subpool != 'subpool4')
+
+#join to variants analyzed in episomal MPRA
+
+bc_DNA_percent <- function(df1, df2) {
+  bc_count_med <- df1 %>%
+    group_by(subpool, name, most_common) %>%
+    mutate(barcodes_DNA = n()) %>%
+    filter(barcodes_DNA > 7) %>%
+    mutate(med_ratio = median(ratio)) %>%
+    filter(med_ratio > 0)
+  BCmap_join <- left_join(bc_count_med, df2) %>%
+    mutate(percent_associated = (mapped_variant_reads/total_reads)*100) %>%
+    mutate(other_assoc = total_reads - mapped_variant_reads)
+  return(BCmap_join)
+} 
+  
+epi_bc_percent <- bc_DNA_percent(bc_DNA_RNA_22A, SP3_SP5_bc)
+
+bc_assoc_count_0 <- filter(epi_bc_percent, other_assoc == 0)
+
+bc_assoc_count_1 <- filter(epi_bc_percent, other_assoc == 1)
+
+bc_assoc_count_2 <- filter(epi_bc_percent, other_assoc == 2)
+
+bc_assoc_count_3 <- filter(epi_bc_percent, other_assoc == 3)
+
+bc_assoc_count_4 <- filter(epi_bc_percent, other_assoc > 3)
+
+bc_assoc_count <- tibble(reads_to_nonmap = c('0', '1', '2', '3', '>3'),
+                         percent = c(nrow(bc_assoc_count_0)/nrow(epi_bc_percent),
+                                     nrow(bc_assoc_count_1)/nrow(epi_bc_percent),
+                                     nrow(bc_assoc_count_2)/nrow(epi_bc_percent),
+                                     nrow(bc_assoc_count_3)/nrow(epi_bc_percent),
+                                     nrow(bc_assoc_count_4)/nrow(epi_bc_percent))) %>%
+  mutate(percent = percent*100)
+
+test <- bc_assoc_count %>%
+  filter(reads_to_nonmap != '>3') %>%
+  summarize(sum(percent))
+
+p_bc_assoc_count <- bc_assoc_count %>%
+  mutate(reads_to_nonmap = factor(reads_to_nonmap, 
+                                  levels = c('0', '1', '2', '3', '>3'))) %>%
+  ggplot(aes(reads_to_nonmap, percent)) +
+  geom_col() +
+  ylab('% of barcodes') +
+  xlab('Reads mapping to non-variant') +
+  figurefont_theme
+
+ggsave('../plots/p_bc_assoc_count.pdf', 
+       p_bc_assoc_count, height = 1.5, width = 2, units = 'in')
+
+p_bc_percent_exp <- epi_bc_percent %>%
+  ggplot(aes(percent_associated, med_ratio)) +
+  geom_point(alpha = 0.1, size = 0.2) +
+  scale_y_log10('Variant expression (a.u.)') +
+  annotation_logticks(sides = 'l') +
+  xlab('% barcode map to variant') +
+  figurefont_theme
+
+ggsave('../plots/p_bc_percent_exp.png', 
+       p_bc_percent_exp, height = 1.75, width = 2.5, units = 'in')
+
+
+
+#fitting hill plots to two-site library
+
+#subtract expression at 0 conc per each variant to make fitting easier
+
+trans_back_0_norm_conc <- epi_back_norm_pc_spGl4 %>%
+  mutate(ave_ratio_2_5_norm = ave_ratio_2_5_norm - ave_ratio_0_norm) %>%
+  mutate(ave_ratio_2_4_norm = ave_ratio_2_4_norm - ave_ratio_0_norm) %>%
+  mutate(ave_ratio_2_3_norm = ave_ratio_2_3_norm - ave_ratio_0_norm) %>%
+  mutate(ave_ratio_2_2_norm = ave_ratio_2_2_norm - ave_ratio_0_norm) %>%
+  mutate(ave_ratio_2_1_norm = ave_ratio_2_1_norm - ave_ratio_0_norm) %>%
+  mutate(ave_ratio_20_norm = ave_ratio_20_norm - ave_ratio_0_norm) %>%
+  mutate(ave_ratio_22_norm = ave_ratio_22_norm - ave_ratio_0_norm) %>%
+  mutate(ave_ratio_0_norm = ave_ratio_0_norm - ave_ratio_0_norm) %>%
+  var_conc_exp()
+
+#non-linear fit functions, using the hill equation in the form of reaction 
+#velocity, fitting n and "EC50"
+
+library(minpack.lm)
+
+sem_m_model_nlslm <- function(df) {
+  m_m_nlslm <- nlsLM(
+    ave_ratio_norm ~ (max_ave_ratio_norm * conc^n)/(conc_half_max^n + conc^n),
+    data = df, 
+    start = list(conc_half_max = (2^-3), max_ave_ratio_norm = 2, n = 1))
+  return(m_m_nlslm)
+}
+
+m_m_nest_coef <- function(df1) {
+  add_coef_unnest <- df1 %>%
+    mutate(results = map(m_m_fit, tidy)) %>%
+    select(-m_m_fit, -data) %>%
+    unnest()
+}
+
+m_m_nest_pred_resid <- function(df1) {
+  pred <- df1 %>%
+    mutate(m_m_pred = map2(data, m_m_fit, add_predictions)) %>%
+    select(-data, -m_m_fit) %>%
+    unnest()
+  resid <- df1 %>%
+    mutate(m_m_resids = map2(data, m_m_fit, add_residuals)) %>%
+    select(-data, -m_m_fit) %>%
+    unnest()
+  data <- df1 %>%
+    select(-m_m_fit) %>%
+    unnest()
+  data_pred <- left_join(data, pred, 
+                         by = c('subpool', 'name', 'most_common', 'background',
+                                'conc', 'ave_ratio_norm', 'induction', 
+                                'ratio_A_norm', 'ratio_B_norm'))
+  data_pred_resid <- left_join(data_pred, resid,
+                               by = c('subpool', 'name', 'most_common', 
+                                      'background', 'conc', 'ave_ratio_norm', 
+                                      'induction', 'ratio_A_norm', 
+                                      'ratio_B_norm')) %>%
+    ungroup()
+  return(data_pred_resid)
+}
+
+#filter out variants with higher expression in the two site library (sp3) and
+#six site library (sp5) to make more robust model fits
+
+trans_back_0_norm_conc_nest_sp3 <- trans_back_0_norm_conc %>%
+  select(-ave_barcode) %>%
+  mutate(conc = 2^conc) %>%
+  filter(subpool == 'subpool3') %>%
+  arrange(desc(ave_ratio_norm)) %>%
+  group_by(subpool, name, most_common, background) %>%
+  nest() %>%
+  slice(1:590)
+
+m_m_nest_fit_nlslm_sp3 <- trans_back_0_norm_conc_nest_sp3 %>%
+  mutate(m_m_fit = map(trans_back_0_norm_conc_nest_sp3$data, m_m_model_nlslm))
+
+m_m_coef_nlslm_sp3 <- m_m_nest_coef(m_m_nest_fit_nlslm_sp3)
+
+
+trans_back_0_norm_conc_nest_sp5 <- trans_back_0_norm_conc %>%
+  select(-ave_barcode) %>%
+  mutate(conc = 2^conc) %>%
+  filter(!grepl('^subpool5_no_site_no_site_no_site_no_site_no_site_no_site', 
+                name)) %>%
+  filter(subpool == 'subpool5') %>%
+  arrange(desc(ave_ratio_norm)) %>%
+  group_by(subpool, name, most_common, background) %>%
+  nest() %>%
+  slice(1:1270)
+
+m_m_nest_fit_nlslm_sp5 <- trans_back_0_norm_conc_nest_sp5 %>%
+  mutate(m_m_fit = map(trans_back_0_norm_conc_nest_sp5$data, m_m_model_nlslm))
+
+m_m_coef_nlslm_sp5 <- m_m_nest_coef(m_m_nest_fit_nlslm_sp5)
+
+#Filter out n and EC50 estimates with lower than 0.25 relative standard error.
+#Join back to main df to retaion sequence info
+
+hillcoef_sp3 <- m_m_coef_nlslm_sp3 %>%
+  filter(term == 'n') %>%
+  mutate(n_rse = std.error/estimate) %>%
+  filter(n_rse <= 0.25) %>%
+  rename(n = estimate) %>%
+  select(-term, -std.error, -statistic, -p.value) %>%
+  left_join(s3_epi_back_norm_conc,
+            by = c('most_common', 'background')) %>%
+  select(-subpool) %>%
+  ungroup()
+
+hill_EC50_sp3 <- m_m_coef_nlslm_sp3 %>%
+  filter(term == 'conc_half_max') %>%
+  mutate(EC50_rse = std.error/estimate) %>%
+  filter(EC50_rse <= 0.25) %>%
+  rename(EC50 = estimate) %>%
+  select(-term, -std.error, -statistic, -p.value) %>%
+  inner_join(hillcoef_sp3, by = c('name', 'most_common', 'background')) %>%
+  ungroup() %>%
+  mutate(conc = 2^conc)
+
+
+hillcoef_sp5 <- m_m_coef_nlslm_sp5 %>%
+  filter(term == 'n') %>%
+  mutate(n_rse = std.error/estimate) %>%
+  filter(n_rse <= 0.25) %>%
+  rename(n = estimate) %>%
+  select(-term, -std.error, -statistic, -p.value) %>%
+  left_join(s5_epi_back_norm_conc,
+            by = c('most_common', 'background')) %>%
+  select(-subpool) %>%
+  ungroup()
+
+hill_EC50_sp5 <- m_m_coef_nlslm_sp5 %>%
+  filter(term == 'conc_half_max') %>%
+  mutate(EC50_rse = std.error/estimate) %>%
+  filter(EC50_rse <= 0.25) %>%
+  rename(EC50 = estimate) %>%
+  select(-term, -std.error, -statistic, -p.value) %>%
+  inner_join(hillcoef_sp5, by = c('name', 'most_common', 'background')) %>%
+  ungroup() %>%
+  mutate(conc = 2^conc)
+
+#determine model predictions and residuals
+
+m_m_p_r_sp3 <- m_m_nest_pred_resid(m_m_nest_fit_nlslm_sp3) %>%
+  rename(ave_ratio_norm_0 = ave_ratio_norm)
+
+m_m_EC50_n_p_r_sp3 <- left_join(hill_EC50_sp3, m_m_p_r_sp3, 
+                            by = c('subpool', 'name', 'most_common', 
+                                   'background', 'conc', 'induction', 
+                                   'ratio_A_norm', 'ratio_B_norm'))
+
+
+m_m_p_r_sp5 <- m_m_nest_pred_resid(m_m_nest_fit_nlslm_sp5) %>%
+  rename(ave_ratio_norm_0 = ave_ratio_norm)
+
+m_m_EC50_n_p_r_sp5 <- left_join(hill_EC50_sp5, m_m_p_r_sp5, 
+                                by = c('subpool', 'name', 'most_common', 
+                                       'background', 'conc', 'induction', 
+                                       'ratio_A_norm', 'ratio_B_norm'))
+
+#plot residuals and relative standare errors
+
+p_resid_dens_sp3 <- m_m_EC50_n_p_r_sp3 %>%
+  ggplot(aes(resid)) +
+  geom_density(kernel = 'gaussian') +
+  xlab('expression residual')
+
+p_resid_distr_sp3 <- ggplot(m_m_EC50_n_p_r_sp3, aes(ave_ratio_norm_0, resid)) +
+  geom_point(alpha = 0.1, size = 0.75) +
+  xlab('Average normalized\nexpression (a.u.)\n-exp. at 0 µM')
+
+p_EC50_rse_hist_sp3 <- m_m_EC50_n_p_r_sp3 %>%
+  filter(conc == 4) %>%
+  ggplot(aes(EC50_rse)) +
+  geom_density(kernel = 'gaussian') +
+  scale_x_continuous(breaks = c(0, 0.1, 0.2))
+
+p_n_rse_hist_sp3 <- m_m_EC50_n_p_r_sp3 %>%
+  filter(conc == 4) %>%
+  ggplot(aes(n_rse)) +
+  geom_density(kernel = 'gaussian') +
+  scale_x_continuous(breaks = c(0, 0.1, 0.2))
+
+
+p_resid_dens_sp5 <- m_m_EC50_n_p_r_sp5 %>%
+  ggplot(aes(resid)) +
+  geom_density(kernel = 'gaussian') +
+  xlab('expression residual')
+
+p_resid_distr_sp5 <- ggplot(m_m_EC50_n_p_r_sp5, aes(ave_ratio_norm_0, resid)) +
+  geom_point(alpha = 0.1, size = 0.75) +
+  xlab('Average normalized\nexpression (a.u.)\n-exp. at 0 µM')
+
+p_EC50_rse_hist_sp5 <- m_m_EC50_n_p_r_sp5 %>%
+  filter(conc == 4) %>%
+  ggplot(aes(EC50_rse)) +
+  geom_density(kernel = 'gaussian') +
+  scale_x_continuous(breaks = c(0, 0.1, 0.2))
+
+p_n_rse_hist_sp5 <- m_m_EC50_n_p_r_sp5 %>%
+  filter(conc == 4) %>%
+  ggplot(aes(n_rse)) +
+  geom_density(kernel = 'gaussian') +
+  scale_x_continuous(breaks = c(0, 0.1, 0.2))
+
+#Plot trends in n and EC50 based on library features
+
+p_s3_spacing_n <- m_m_EC50_n_p_r_sp3 %>%
+  filter(spacing != 0 & spacing != 70) %>%
+  filter(conc == 4) %>%
+  ggplot(aes(spacing, n)) +
+  facet_grid(. ~ background) +
+  geom_jitter(aes(group = spacing), alpha = 0.25, size = 0.5) +
+  geom_boxplot(aes(group = spacing), alpha = 0.5, outlier.alpha = 0, 
+               size = 0.3) +
+  panel_border(colour = 'black') +
+  ylab('Hill n') +
+  xlab('Spacing') +
+  figurefont_theme +
+  theme(strip.background = element_rect(colour="black", fill="white"))
+
+p_s3_spacing_ec50 <- m_m_EC50_n_p_r_sp3 %>%
+  filter(spacing != 0 & spacing != 70) %>%
+  filter(conc == 4) %>%
+  ggplot(aes(spacing, EC50)) +
+  facet_grid(. ~ background) +
+  geom_jitter(aes(group = spacing), alpha = 0.25, size = 0.5) +
+  geom_boxplot(aes(group = spacing), alpha = 0.5, outlier.alpha = 0,
+               size = 0.3) +
+  panel_border(colour = 'black') +
+  xlab('Spacing') +
+  figurefont_theme +
+  theme(strip.background = element_rect(colour="black", fill="white"))
+
+
+p_s5_cons_n <- m_m_EC50_n_p_r_sp5 %>%
+  filter(conc == 4) %>%
+  ggplot(aes(as.factor(consensus), n, fill = as.factor(weak))) +
+  facet_grid(. ~ background) +
+  geom_boxplot(outlier.size = 0.7, size = 0.3, 
+               outlier.shape = 21, outlier.alpha = 1, 
+               position = position_dodge(0.75)) +
+  scale_fill_manual(name = 'number of\nweak CREs', 
+                    values = cbPalette7_grad_light) +
+  panel_border(colour = 'black') +
+  ylab('Hill n') +
+  xlab('Number of consensus CREs') +
+  figurefont_theme +
+  theme(strip.background = element_rect(colour="black", fill="white"))
+
+p_s5_cons_ec50 <- m_m_EC50_n_p_r_sp5 %>%
+  filter(conc == 4) %>%
+  ggplot(aes(as.factor(consensus), EC50, fill = as.factor(weak))) +
+  facet_grid(. ~ background) +
+  geom_boxplot(outlier.size = 0.7, size = 0.3, 
+               outlier.shape = 21, outlier.alpha = 1, 
+               position = position_dodge(0.75)) +
+  scale_fill_manual(name = 'number of\nweak CREs', 
+                    values = cbPalette7_grad_light) +
+  panel_border(colour = 'black') +
+  xlab('Number of consensus CREs') +
+  figurefont_theme +
+  theme(strip.background = element_rect(colour="black", fill="white"))
+
+ggsave('../plots/p_s3_spacing_n.pdf', p_s3_spacing_n, 
+       width = 2.75, height = 1.5, units = 'in')
+
+ggsave('../plots/p_s3_spacing_ec50.pdf', p_s3_spacing_ec50, 
+       width = 2.75, height = 1.5, units = 'in')
+
+ggsave('../plots/p_s5_cons_n.pdf', p_s5_cons_n, 
+       width = 6.5, height = 1.75, units = 'in')
+
+ggsave('../plots/p_s5_cons_ec50.pdf', p_s5_cons_ec50, 
+       width = 6.5, height = 1.75, units = 'in')
 
 
 
