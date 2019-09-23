@@ -10,19 +10,19 @@ Running CREB_barcode_mapping.py per subpool combination requires the arguments i
 <levenshtein cut-off> <output file name> 
 
 Thus for bc mapping subpool 3 and 5 with controls the following specifications are given:
-bbmerge_assembled.txt cre_lib_final_3_5_c.csv csv 150 25 start 20 13 CREB_barcode_mapping_3_5.txt
+bbmerge_assembled_3_5.txt cre_lib_final_3_5_c.csv csv 150 25 start 20 13 CREB_barcode_mapping_3_5.txt
 
 and for subpool 2 and 4:
-bbmerge_assembled.txt cre_lib_final_2_4.csv csv 150 25 start 20 13 CREB_barcode_mapping_2_4.txt
+bbmerge_assembled_2_4.txt cre_lib_final_2_4.csv csv 150 25 start 20 13 CREB_barcode_mapping_2_4.txt
 
 Both barcode mapping outputs (barcode_statistics.txt) are then combined into one file and duplicates are removed using uniqueSP2345.R. 
 The output uniqueSP2345.txt is used in all MPRA analyses
 
 For the follow-up library BC mapping, CREB_barcode_mapping.py can be used with the following specifications:
-bbmerge_assembled.txt cre_Acontent_lib_no_twositeoffset.csv csv 150 25 start 20 24 CREB_barcode_mapping_notwositeoffset.txt
+bbmerge_assembled_followup.txt cre_Acontent_lib_no_twositeoffset.csv csv 150 25 start 20 24 CREB_barcode_mapping_notwositeoffset.txt
 
 BC-mapping outputs from all runs are too large to be uploaded onto github and can be generated using sequencing data from 
-the Gene Expression Omnibus.
+the Gene Expression Omnibus, in addition BC-mapping outputs are also uploaded onto the Gene Expression Omnibus
 
 
 
