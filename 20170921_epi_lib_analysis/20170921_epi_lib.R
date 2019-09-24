@@ -524,6 +524,31 @@ MPRA_ave <- gen_epi %>%
   filter((MPRA == 'genomic' & MPRA3 == 'genomic') | (MPRA == 'episomal' & MPRA3 == 'episomal')) %>%
   select(-MPRA3)
 
+
+#Read in follow-up library------------------------------------------------------
+
+med_rep_followup <- read_tsv(
+  '../20190712_epilib_analysis/med_rep_follow_up.txt')
+
+scramble_newback_norm <- read_tsv(
+  '../20190712_epilib_analysis/scramble_newback_norm.txt')
+
+scramble_oldback_norm <- read_tsv(
+  '../20190712_epilib_analysis/scramble_oldback_norm.txt')
+
+sixsite_newback_norm <- read_tsv(
+  '../20190712_epilib_analysis/sixsite_newback_norm.txt')
+
+sixsite_oldback_norm <- read_tsv(
+  '../20190712_epilib_analysis/sixsite_oldback_norm.txt')
+
+twosite_norm <- read_tsv(
+  '../20190712_epilib_analysis/twosite_norm.txt')
+
+removed_bgs_sixsite_newback_norm <- read_tsv(
+  '../20190712_epilib_analysis/removed_bgs_sixsite_newback_norm.txt')
+
+
 #Figure 1D----------------------------------------------------------------------
 
 #Plot normalized variant expression curves across forskolin concentrations. 
@@ -560,7 +585,7 @@ ggsave('../plots/p_titr_pc_back.pdf', p_titr_pc_back, width = 2.8, height = 2,
 ggsave('../plots/p_titr_pc_back.png', p_titr_pc_back, width = 2.8, height = 2,
        units = 'in')
 
-#Figure 1E----------------------------------------------------------------------
+#Figure 1E and F----------------------------------------------------------------
 
 #Plot replicability with backgrounds in orange and positive control in red
 
@@ -632,6 +657,194 @@ pearsons_gen <- tibble(
                cor(filter(log10_gen_epi, subpool == 'subpool5')$med_ratio_br1,
                    filter(log10_gen_epi, subpool == 'subpool5')$med_ratio_br2,
                          use = "pairwise.complete.obs", method = "pearson")))
+
+#Figure 1F
+
+p_gen_epi_rep <- gen_epi %>%
+  ggplot(aes(ave_med_ratio, ave_ratio_22)) +
+  geom_point(alpha = 0.1, size = 0.75) +
+  geom_point(data = filter(gen_epi, 
+                           grepl(
+                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.75) + 
+  geom_point(data = filter(gen_epi, name == 'pGL4.29 Promega 1-63 + 1-87_back_55'), 
+             fill = 'red', shape = 21, size = 1.75) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Average genomic expression (a.u.)") +
+  ylab("Average episomal expression (a.u.)") +
+  scale_x_log10(limits = c(0.01, 20), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+
+ggsave('../plots/p_gen_epi_rep.png', p_gen_epi_rep,
+       width = 2, height = 1.9, units = 'in')
+
+log10_gen_epi <- var_log10(gen_epi)
+
+pearsons_epi_gen <- tibble(
+  pearsons = c(cor(log10_gen_epi$ave_med_ratio, log10_gen_epi$ave_ratio_22, 
+                   use = "pairwise.complete.obs", method = "pearson")))
+
+
+#Figure 1G and H----------------------------------------------------------------
+
+#check replicability of follow-up library
+
+p_rep_0 <- med_rep_followup %>%
+  ggplot(aes(med_ratio_0A, med_ratio_0B)) +
+  geom_point(alpha = 0.1, size = 0.75) +
+  geom_point(data = filter(med_rep_followup, 
+                           grepl(
+                             'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.5) + 
+  geom_point(data = filter(med_rep_followup, 
+                           name == 'control_pGL4.29 Promega 1-63 + 1-87'), 
+             fill = 'red', shape = 21, size = 1.75) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Expression (a.u.) replicate 1") +
+  ylab("Expression (a.u.) replicate 2") +
+  scale_x_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+
+p_rep_4 <- med_rep_followup %>%
+  ggplot(aes(med_ratio_4A, med_ratio_4B)) +
+  geom_point(alpha = 0.1, size = 0.75) +
+  geom_point(data = filter(med_rep_followup, 
+                           grepl(
+                             'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
+                             name)), 
+             fill = 'orange', shape = 21, size = 1.5) + 
+  geom_point(data = filter(med_rep_followup, 
+                           name == 'control_pGL4.29 Promega 1-63 + 1-87'), 
+             fill = 'red', shape = 21, size = 1.75) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Expression (a.u.) replicate 1") +
+  ylab("Expression (a.u.) replicate 2") +
+  scale_x_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+
+log10_med_rep_followup <- var_log10(med_rep_followup)
+
+pearsons_followup <- tibble(
+  sample = c('0 µM', '4 µM'),
+  pearsons = c(cor(log10_med_rep_followup$med_ratio_0A, 
+                   log10_med_rep_followup$med_ratio_0B, 
+                   use = "pairwise.complete.obs", method = "pearson"),
+               cor(log10_med_rep_followup$med_ratio_4A, 
+                   log10_med_rep_followup$med_ratio_4B, 
+                   use = "pairwise.complete.obs", method = "pearson")))
+
+#compare differently barcoded replicates between old and new library
+
+#Figure 1G
+
+barcode_rep <- med_rep_0_22_A_B %>%
+  select(subpool, name, most_common, barcodes_DNA, med_ratio_0A, 
+         barcodes_RNA_0A, med_ratio_0B, barcodes_RNA_0B, med_ratio_22A, 
+         barcodes_RNA_22A, med_ratio_22B, barcodes_RNA_22B) %>%
+  inner_join(med_rep_followup, by = c('most_common'), 
+             suffix = c('_old', '_new')) %>%
+  mutate(ave_old_0 = (med_ratio_0A_old + med_ratio_0B_old)/2) %>%
+  mutate(ave_old_4 = (med_ratio_22A + med_ratio_22B)/2) %>%
+  mutate(ave_new_0 = (med_ratio_0A_new + med_ratio_0B_new)/2) %>%
+  mutate(ave_new_4 = (med_ratio_4A + med_ratio_4B)/2) %>%
+  mutate(ind_old = ave_old_4/ave_old_0) %>%
+  mutate(ind_new = ave_new_4/ave_new_0)
+
+p_old_new_4 <- barcode_rep %>%
+  ggplot(aes(ave_old_4, ave_new_4)) +
+  geom_point(alpha = 0.1, size = 1) +
+  geom_point(data = filter(barcode_rep, 
+                           grepl(
+                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
+                             name_old)), 
+             fill = 'orange', shape = 21, size = 1.75) + 
+  geom_point(data = filter(barcode_rep, name_old == 'pGL4.29 Promega 1-63 + 1-87'), 
+             fill = 'red', shape = 21, size = 1.75) +
+  annotation_logticks(scaled = TRUE) +
+  xlab("Barcode replicate 1\nexpression (a.u.)") +
+  ylab("Barcode replicate 2\nexpression (a.u.)") +
+  scale_x_log10(limits = c(0.06, 16), breaks = c(0.1, 1, 10)) + 
+  scale_y_log10(limits = c(0.06, 16), breaks = c(0.1, 1, 10))  +
+  theme(strip.background = element_rect(colour="black", fill="white"),
+        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
+  figurefont_theme
+
+ggsave('../plots/p_old_new_4.png', p_old_new_4,
+       width = 2.2, height = 2, units = 'in')
+
+log10_barcode_rep <- var_log10(barcode_rep)
+
+pearsons_barcode_rep <- tibble(
+  pearsons = c(cor(log10_barcode_rep$ave_old_4, log10_barcode_rep$ave_new_4, 
+                   use = "pairwise.complete.obs", method = "pearson")))
+
+#Figure 1H
+
+bc_epi_RNA <- gen_epi %>%
+  mutate(ave_barcodes = (barcodes_RNA_22A + barcodes_RNA_22B)/2) %>%
+  mutate(sample = 'RNA') %>%
+  mutate(group = 'episomal') %>%
+  select(ave_barcodes, sample, group)
+
+bc_epi_DNA <- gen_epi %>%
+  mutate(ave_barcodes = barcodes_DNA) %>%
+  mutate(sample = 'DNA') %>%
+  mutate(group = 'episomal') %>%
+  select(ave_barcodes, sample, group)
+
+bc_gen_RNA <- gen_epi %>%
+  mutate(ave_barcodes = (barcodes_RNA_br1 + barcodes_RNA_br2)/2) %>%
+  mutate(sample = 'RNA') %>%
+  mutate(group = 'genomic') %>%
+  select(ave_barcodes, sample, group)
+
+bc_gen_DNA <- gen_epi %>%
+  mutate(ave_barcodes = (barcodes_DNA_br1 + barcodes_DNA_br2)/2) %>%
+  mutate(sample = 'DNA') %>%
+  mutate(group = 'genomic') %>%
+  select(ave_barcodes, sample, group)
+
+bc_barcode_rep_RNA <- barcode_rep %>%
+  mutate(ave_barcodes = (barcodes_RNA_4A + barcodes_RNA_4B)/2) %>%
+  mutate(sample = 'RNA') %>%
+  mutate(group = 'episomal rep') %>%
+  select(ave_barcodes, sample, group)
+
+bc_barcode_rep_DNA <- barcode_rep %>%
+  mutate(ave_barcodes = barcodes_DNA_new) %>%
+  mutate(sample = 'DNA') %>%
+  mutate(group = 'episomal rep') %>%
+  select(ave_barcodes, sample, group)
+
+bc_comb <- rbind(bc_epi_RNA, bc_epi_DNA, bc_gen_RNA, bc_gen_DNA, 
+                 bc_barcode_rep_RNA, bc_barcode_rep_DNA)
+
+p_bc_distr <- bc_comb %>%
+  ggplot(aes(group, ave_barcodes, fill = sample)) +
+  scale_fill_manual('Sample', values = c('#B8DDA3', '#A3B8DD')) +
+  geom_violin(position = 'dodge', size = 0.25) +
+  geom_boxplot(position = 'dodge', alpha = 0.5, outlier.alpha = 0, size = 0.25,
+               width = 0.9) +
+  scale_y_log10('Average barcodes per variant', breaks = c(10, 100)) +
+  annotation_logticks(sides = 'l') +
+  xlab('') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  figurefont_theme
+
+ggsave('../plots/p_bc_distr.pdf', p_bc_distr, 
+       width = 3, height = 2, units = 'in')
+
 
 #Supplemental Figure 1C---------------------------------------------------------
 
@@ -1304,6 +1517,105 @@ ggsave('../plots/p_s3_gen_epi_med_change_dist_52.pdf',
 
 ggsave('../plots/p_s3_gen_epi_med_change_dist_41.pdf', 
        p_s3_gen_epi_med_change_dist_41, width = 1.4, height = 2.3, unit = 'in')
+
+
+#Wilcox test between distances for figure 2B
+
+range_dist <- function(df) {
+  low <- df %>%
+    filter(dist >= 67 & dist <= 96) %>%
+    mutate(range = '67-96')
+  high <- df %>%
+    filter(dist >= 147 & dist <= 176) %>%
+    mutate(range = '147-176')
+  range <- rbind(low, high)
+}
+
+s3_gen_epi_range <- s3_gen_epi %>%
+  filter(spacing != 0 & spacing != 70) %>%
+  select(spacing, dist, most_common, background, MPRA, ave_ratio_norm) %>%
+  range_dist()
+
+s3_gen_epi_range_67 <- s3_gen_epi_range %>%
+  filter(range == '67-96')
+
+s3_gen_epi_range_147 <- s3_gen_epi_range %>%
+  filter(range == '147-176')
+
+#Make dfs for wilcox test (ave_ratio_norm, range) per MPRA and background
+
+s3_gen_epi_range_67_epi_41 <- s3_gen_epi_range_67 %>%
+  filter(MPRA == 'episomal', background == 41) %>%
+  select(ave_ratio_norm, range)
+
+s3_gen_epi_range_147_epi_41 <- s3_gen_epi_range_147 %>%
+  filter(MPRA == 'episomal', background == 41) %>%
+  select(ave_ratio_norm, range)
+
+rbind_epi_41 <- rbind(s3_gen_epi_range_67_epi_41, s3_gen_epi_range_147_epi_41)
+
+
+s3_gen_epi_range_67_epi_52 <- s3_gen_epi_range_67 %>%
+  filter(MPRA == 'episomal', background == 52) %>%
+  select(ave_ratio_norm, range)
+
+s3_gen_epi_range_147_epi_52 <- s3_gen_epi_range_147 %>%
+  filter(MPRA == 'episomal', background == 52) %>%
+  select(ave_ratio_norm, range)
+
+rbind_epi_52 <- rbind(s3_gen_epi_range_67_epi_52, s3_gen_epi_range_147_epi_52)
+
+
+s3_gen_epi_range_67_epi_55 <- s3_gen_epi_range_67 %>%
+  filter(MPRA == 'episomal', background == 55) %>%
+  select(ave_ratio_norm, range)
+
+s3_gen_epi_range_147_epi_55 <- s3_gen_epi_range_147 %>%
+  filter(MPRA == 'episomal', background == 55) %>%
+  select(ave_ratio_norm, range)
+
+rbind_epi_55 <- rbind(s3_gen_epi_range_67_epi_55, s3_gen_epi_range_147_epi_55)
+
+
+s3_gen_epi_range_67_gen_41 <- s3_gen_epi_range_67 %>%
+  filter(MPRA == 'genomic', background == 41) %>%
+  select(ave_ratio_norm, range)
+
+s3_gen_epi_range_147_gen_41 <- s3_gen_epi_range_147 %>%
+  filter(MPRA == 'genomic', background == 41) %>%
+  select(ave_ratio_norm, range)
+
+rbind_gen_41 <- rbind(s3_gen_epi_range_67_gen_41, s3_gen_epi_range_147_gen_41)
+
+
+s3_gen_epi_range_67_gen_52 <- s3_gen_epi_range_67 %>%
+  filter(MPRA == 'genomic', background == 52) %>%
+  select(ave_ratio_norm, range)
+
+s3_gen_epi_range_147_gen_52 <- s3_gen_epi_range_147 %>%
+  filter(MPRA == 'genomic', background == 52) %>%
+  select(ave_ratio_norm, range)
+
+rbind_gen_52 <- rbind(s3_gen_epi_range_67_gen_52, s3_gen_epi_range_147_gen_52)
+
+
+s3_gen_epi_range_67_gen_55 <- s3_gen_epi_range_67 %>%
+  filter(MPRA == 'genomic', background == 55) %>%
+  select(ave_ratio_norm, range)
+
+s3_gen_epi_range_147_gen_55 <- s3_gen_epi_range_147 %>%
+  filter(MPRA == 'genomic', background == 55) %>%
+  select(ave_ratio_norm, range)
+
+rbind_gen_55 <- rbind(s3_gen_epi_range_67_gen_55, s3_gen_epi_range_147_gen_55)
+
+#wilcox tests
+
+wilcox.test(ave_ratio_norm ~ range, data = rbind_epi_41)
+wilcox.test(ave_ratio_norm ~ range, data = rbind_epi_52)
+wilcox.test(ave_ratio_norm ~ range, data = rbind_epi_55)
+wilcox.test(ave_ratio_norm ~ range, data = rbind_gen_52)
+wilcox.test(ave_ratio_norm ~ range, data = rbind_gen_55)
 
 
 #Supplemental Figure 3----------------------------------------------------------
@@ -2135,12 +2447,12 @@ ggsave('../plots/p_ind_site_ind_back_anova_gen.pdf',
 #using variants containing only consensus CREs. Use this regression to plot 
 #correlation line and determine residuals to relationship
 
-abline <- s5_gen_epi %>%
-  mutate(ave_med_ratio_norm = ave_ratio_22_norm) %>%
-  filter(site_combo == 'consensus') %>%
-  var_log10()
+s5_cons_log10 <- s5_gen_epi %>%
+  var_log10() %>%
+  filter(site_combo == 'consensus')
 
-abline_lm <- lm(ave_ratio_22_norm ~ ave_med_ratio_norm, data = abline)
+cons_int_epi_lm <- lm(ave_ratio_22_norm ~ ave_med_ratio_norm, 
+                      data = s5_cons_log10)
 
 #Add model predictions and residuals to consensus only (R2 value) and to all 
 #variants in library
@@ -2154,35 +2466,39 @@ pred_resid <- function(df1, x) {
   print('processed pred_resid(df1, df2) in order of (data, model)')
 }
 
-s5_gen_epi_lm <- pred_resid(var_log10(s5_gen_epi), abline_lm)
+s5_gen_epi_cons_lm <- pred_resid(s5_cons_log10, cons_int_epi_lm)
 
-round(cor(s5_gen_epi_lm$ave_ratio_22_norm,
-          s5_gen_epi_lm$pred,
+round(cor(s5_gen_epi_cons_lm$ave_ratio_22,
+          s5_gen_epi_cons_lm$pred,
           use = "pairwise.complete.obs", 
-          method = "pearson"), 2)
+          method = "pearson")^2, 2)
+
+s5_gen_epi_all_lm <- pred_resid(var_log10(s5_gen_epi), cons_int_epi_lm)
 
 #Figure 5A, plot genomic vs. episomal expression and linear regression as
 #reference. Not plotting variants wihtout any CRE (backgrounds) as they do not
 #fall into CRE categories, the three points don't seem biased in expression
 #around line though.
 
-p_s5_int_trans_site_combo <- s5_gen_epi_lm %>%
+p_s5_int_trans_site_combo <- s5_gen_epi_all_lm %>%
   filter(site_combo != 'none') %>%
+  mutate(site_combo = factor(site_combo, 
+                             levels = c('consensus', 'weak', 'mixed'))) %>%
   ggplot(aes(ave_med_ratio_norm, ave_ratio_22_norm)) +
-  facet_grid(~ site_combo) +
-  geom_point(alpha = 0.1, size = 0.5)  +
-  geom_line(aes(ave_med_ratio_norm, pred), color = 'red') +
-  scale_x_continuous(limits = c(-0.4, 2.7), breaks = c(0, 1, 2)) +
-  scale_y_continuous(limits = c(-0.4, 2.7), breaks = c(0, 1, 2)) +
-  xlab('Average log10 normalized\ngenomic expression (a.u.)') +
-  ylab('Average log10 normalized\nepisomal expression (a.u.)') +
-  annotation_logticks(sides = 'bl') +
-  theme(legend.position = 'right',
+  facet_grid(. ~ site_combo) +
+  geom_point(alpha = 0.15, size = 0.5) +
+  geom_line(aes(ave_med_ratio_norm, pred), color = 'red', size = 0.5) +
+  annotation_logticks() +
+  scale_y_continuous(breaks = seq(from = 0, to = 2, by =1)) +
+  xlab('Average normalized log10 genomic expression (a.u.)') +
+  ylab('Average normalized log10\nepisomal expression (a.u.)') +
+  panel_border(colour = 'black') +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
-ggsave('../plots/p_s5_gen_epi_abline.pdf', p_s5_int_trans_site_combo,
-       width = 2.45, height = 2.35, units = 'in')
+ggsave('../plots/p_s5_int_trans_site_combo.pdf', p_s5_int_trans_site_combo,
+       width = 4, height = 2.25, units = 'in')
 
 #determine percent below line in mixed
 
@@ -2201,7 +2517,7 @@ n/m
 #higher relative expression of variant in the genomic MPRA and positive
 #indicates higher relative expression in episomal MPRA
 
-p_s5_gen_epi_site_combo_resid <- s5_gen_epi_lm %>%
+p_s5_gen_epi_site_combo_resid <- s5_gen_epi_all_lm %>%
   ggplot(aes(as.factor(consensus), resid, fill = as.factor(weak))) +
   geom_boxplot(outlier.size = 1, size = 0.3, 
                outlier.shape = 21, outlier.alpha = 1, 
@@ -2215,216 +2531,36 @@ p_s5_gen_epi_site_combo_resid <- s5_gen_epi_lm %>%
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
-ggsave('../plots/p_s5_gen_epi_site_combo_resid_abline.pdf', 
+ggsave('../plots/p_s5_gen_epi_site_combo_resid.pdf', 
        p_s5_gen_epi_site_combo_resid, width = 3.75, height = 3, units = 'in')
 
-#Supplemental Figure 9----------------------------------------------------------
 
-p_gen_epi_rep <- gen_epi %>%
-  ggplot(aes(ave_med_ratio, ave_ratio_22)) +
-  geom_point(alpha = 0.1, size = 0.75) +
-  geom_point(data = filter(gen_epi, 
-                           grepl(
-                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.75) + 
-  geom_point(data = filter(gen_epi, name == 'pGL4.29 Promega 1-63 + 1-87_back_55'), 
-             fill = 'red', shape = 21, size = 1.75) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Average genomic expression (a.u.)") +
-  ylab("Average episomal expression (a.u.)") +
-  scale_x_log10(limits = c(0.01, 20), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
-  figurefont_theme
-  
-ggsave('../plots/p_gen_epi_rep.png', p_gen_epi_rep,
-       width = 2, height = 1.9, units = 'in')
+#anova
 
-log10_gen_epi <- var_log10(gen_epi)
+aov_s5_gen_epi_all_lm <- aov(resid ~ as.factor(consensus) * as.factor(weak), 
+                         data = s5_gen_epi_all_lm)
 
-pearsons_epi_gen <- tibble(
-  pearsons = c(cor(log10_gen_epi$ave_med_ratio, log10_gen_epi$ave_ratio_22, 
-                   use = "pairwise.complete.obs", method = "pearson")))
+test <- s5_gen_epi_all_lm %>%
+  add_residuals(aov_s5_gen_epi_all_lm)
 
+write_csv(tidy(aov_s5_gen_epi_all_lm),
+          '../tables/aov_s5_gen_epi_all_lm.csv')
 
-#New data-----------------------------------------------------------------------
+plot(aov_s5_gen_epi_lm, 1)
 
-med_rep_followup <- read_tsv(
-  '../20190712_epilib_analysis/med_rep_follow_up.txt')
+library(car)
 
-scramble_newback_norm <- read_tsv(
-  '../20190712_epilib_analysis/scramble_newback_norm.txt')
+levene_s5_gen_epi_all_lm <- leveneTest(resid ~ as.factor(consensus) * as.factor(weak), 
+                                       data = s5_gen_epi_lm)
 
-scramble_oldback_norm <- read_tsv(
-  '../20190712_epilib_analysis/scramble_oldback_norm.txt')
+write_csv(tidy(levene_s5_gen_epi_all_lm),
+           '../tables/levene_s5_gen_epi_all_lm.csv')
 
-sixsite_newback_norm <- read_tsv(
-  '../20190712_epilib_analysis/sixsite_newback_norm.txt')
+qq_aov_s5_gen_epi_all_lm <- plot(aov_s5_gen_epi_all_lm, 2)
 
-sixsite_oldback_norm <- read_tsv(
-  '../20190712_epilib_analysis/sixsite_oldback_norm.txt')
+aov_s5_gen_epi_all_lm_resid <- residuals(object =  aov_s5_gen_epi_all_lm)
 
-twosite_norm <- read_tsv(
-  '../20190712_epilib_analysis/twosite_norm.txt')
-
-removed_bgs_sixsite_newback_norm <- read_tsv(
-  '../20190712_epilib_analysis/removed_bgs_sixsite_newback_norm.txt')
-
-
-#new data rep plots and comparison plots----------------------------------------
-
-p_rep_0 <- med_rep_followup %>%
-  ggplot(aes(med_ratio_0A, med_ratio_0B)) +
-  geom_point(alpha = 0.1, size = 0.75) +
-  geom_point(data = filter(med_rep_followup, 
-                           grepl(
-                             'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.5) + 
-  geom_point(data = filter(med_rep_followup, 
-                           name == 'control_pGL4.29 Promega 1-63 + 1-87'), 
-             fill = 'red', shape = 21, size = 1.75) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Expression (a.u.) replicate 1") +
-  ylab("Expression (a.u.) replicate 2") +
-  scale_x_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
-  figurefont_theme
-
-p_rep_4 <- med_rep_followup %>%
-  ggplot(aes(med_ratio_4A, med_ratio_4B)) +
-  geom_point(alpha = 0.1, size = 0.75) +
-  geom_point(data = filter(med_rep_followup, 
-                           grepl(
-                             'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.5) + 
-  geom_point(data = filter(med_rep_followup, 
-                           name == 'control_pGL4.29 Promega 1-63 + 1-87'), 
-             fill = 'red', shape = 21, size = 1.75) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Expression (a.u.) replicate 1") +
-  ylab("Expression (a.u.) replicate 2") +
-  scale_x_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
-  figurefont_theme
-
-log10_med_rep_followup <- var_log10(med_rep_followup)
-
-pearsons_followup <- tibble(
-  sample = c('0 µM', '4 µM'),
-  pearsons = c(cor(log10_med_rep_followup$med_ratio_0A, 
-                   log10_med_rep_followup$med_ratio_0B, 
-                   use = "pairwise.complete.obs", method = "pearson"),
-               cor(log10_med_rep_followup$med_ratio_4A, 
-                   log10_med_rep_followup$med_ratio_4B, 
-                   use = "pairwise.complete.obs", method = "pearson")))
-
-#compare differently barcoded replicates between old and new library
-
-barcode_rep <- med_rep_0_22_A_B %>%
-  select(subpool, name, most_common, barcodes_DNA, med_ratio_0A, 
-         barcodes_RNA_0A, med_ratio_0B, barcodes_RNA_0B, med_ratio_22A, 
-         barcodes_RNA_22A, med_ratio_22B, barcodes_RNA_22B) %>%
-  inner_join(med_rep_followup, by = c('most_common'), 
-             suffix = c('_old', '_new')) %>%
-  mutate(ave_old_0 = (med_ratio_0A_old + med_ratio_0B_old)/2) %>%
-  mutate(ave_old_4 = (med_ratio_22A + med_ratio_22B)/2) %>%
-  mutate(ave_new_0 = (med_ratio_0A_new + med_ratio_0B_new)/2) %>%
-  mutate(ave_new_4 = (med_ratio_4A + med_ratio_4B)/2) %>%
-  mutate(ind_old = ave_old_4/ave_old_0) %>%
-  mutate(ind_new = ave_new_4/ave_new_0)
-
-p_old_new_4 <- barcode_rep %>%
-  ggplot(aes(ave_old_4, ave_new_4)) +
-  geom_point(alpha = 0.1, size = 1) +
-  geom_point(data = filter(barcode_rep, 
-                           grepl(
-                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
-                             name_old)), 
-             fill = 'orange', shape = 21, size = 1.75) + 
-  geom_point(data = filter(barcode_rep, name_old == 'pGL4.29 Promega 1-63 + 1-87'), 
-             fill = 'red', shape = 21, size = 1.75) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Barcode replicate 1\nexpression (a.u.)") +
-  ylab("Barcode replicate 2\nexpression (a.u.)") +
-  scale_x_log10(limits = c(0.06, 16), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.06, 16), breaks = c(0.1, 1, 10))  +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
-  figurefont_theme
-
-ggsave('../plots/p_old_new_4.png', p_old_new_4,
-       width = 2.2, height = 2, units = 'in')
-
-log10_barcode_rep <- var_log10(barcode_rep)
-
-pearsons_barcode_rep <- tibble(
-  pearsons = c(cor(log10_barcode_rep$ave_old_4, log10_barcode_rep$ave_new_4, 
-                   use = "pairwise.complete.obs", method = "pearson")))
-
-
-#Barcode analysis---------------------------------------------------------------
-
-bc_epi_RNA <- gen_epi %>%
-  mutate(ave_barcodes = (barcodes_RNA_22A + barcodes_RNA_22B)/2) %>%
-  mutate(sample = 'RNA') %>%
-  mutate(group = 'episomal') %>%
-  select(ave_barcodes, sample, group)
-
-bc_epi_DNA <- gen_epi %>%
-  mutate(ave_barcodes = barcodes_DNA) %>%
-  mutate(sample = 'DNA') %>%
-  mutate(group = 'episomal') %>%
-  select(ave_barcodes, sample, group)
-  
-bc_gen_RNA <- gen_epi %>%
-  mutate(ave_barcodes = (barcodes_RNA_br1 + barcodes_RNA_br2)/2) %>%
-  mutate(sample = 'RNA') %>%
-  mutate(group = 'genomic') %>%
-  select(ave_barcodes, sample, group)
-
-bc_gen_DNA <- gen_epi %>%
-  mutate(ave_barcodes = (barcodes_DNA_br1 + barcodes_DNA_br2)/2) %>%
-  mutate(sample = 'DNA') %>%
-  mutate(group = 'genomic') %>%
-  select(ave_barcodes, sample, group)
-
-bc_barcode_rep_RNA <- barcode_rep %>%
-  mutate(ave_barcodes = (barcodes_RNA_4A + barcodes_RNA_4B)/2) %>%
-  mutate(sample = 'RNA') %>%
-  mutate(group = 'episomal rep') %>%
-  select(ave_barcodes, sample, group)
-
-bc_barcode_rep_DNA <- barcode_rep %>%
-  mutate(ave_barcodes = barcodes_DNA_new) %>%
-  mutate(sample = 'DNA') %>%
-  mutate(group = 'episomal rep') %>%
-  select(ave_barcodes, sample, group)
-
-bc_comb <- rbind(bc_epi_RNA, bc_epi_DNA, bc_gen_RNA, bc_gen_DNA, 
-                 bc_barcode_rep_RNA, bc_barcode_rep_DNA)
-
-p_bc_distr <- bc_comb %>%
-  ggplot(aes(group, ave_barcodes, fill = sample)) +
-  scale_fill_manual('Sample', values = c('#B8DDA3', '#A3B8DD')) +
-  geom_violin(position = 'dodge', size = 0.25) +
-  geom_boxplot(position = 'dodge', alpha = 0.5, outlier.alpha = 0, size = 0.25,
-               width = 0.9) +
-  scale_y_log10('Average barcodes per variant', breaks = c(10, 100)) +
-  annotation_logticks(sides = 'l') +
-  xlab('') +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  figurefont_theme
-  
-ggsave('../plots/p_bc_distr.pdf', p_bc_distr, 
-       width = 3, height = 2, units = 'in')
+#fails normality - too large?
 
 
 #New data sixsite---------------------------------------------------------------
@@ -3015,7 +3151,7 @@ ggsave('../plots/p_twosite_tile_back55.pdf', p_twosite_tile_back55,
 
 
 
-#Reviewer-specific plots--------------------------------------------------------
+#Reviewer-specific plots barcode effects----------------------------------------
 
 #looking at barcode effects based on % match to perfect variant
 
@@ -3094,7 +3230,7 @@ ggsave('../plots/p_bc_percent_exp.png',
 
 
 
-#fitting hill plots to two-site library
+#reviewer-specific plots, hill plots--------------------------------------------
 
 #subtract expression at 0 conc per each variant to make fitting easier
 
@@ -3371,6 +3507,91 @@ ggsave('../plots/p_s5_cons_ec50.pdf', p_s5_cons_ec50,
 
 
 
+#reviewer-spcific plots, MPRA comparison linear---------------------------------
+
+#Make linear regression predicting episomal expression from genomic expression
+#using variants containing only consensus CREs. Use this regression to plot 
+#correlation line and determine residuals to relationship
+
+abline_lm <- lm(ave_ratio_22_norm ~ ave_med_ratio_norm, s5_gen_epi)
+
+#Add model predictions and residuals to consensus only (R2 value) and to all 
+#variants in library
+
+pred_resid <- function(df1, x) {
+  df2 <- df1 %>%
+    add_predictions(x)
+  df3 <- df2 %>%
+    add_residuals(x)
+  return(df3)
+  print('processed pred_resid(df1, df2) in order of (data, model)')
+}
+
+s5_gen_epi_lm <- pred_resid(s5_gen_epi, abline_lm)
+
+round(cor(s5_gen_epi_lm$ave_ratio_22_norm,
+          s5_gen_epi_lm$pred,
+          use = "pairwise.complete.obs", 
+          method = "pearson")^2, 3)
+
+#Figure 5A, plot genomic vs. episomal expression and linear regression as
+#reference. Not plotting variants wihtout any CRE (backgrounds) as they do not
+#fall into CRE categories, the three points don't seem biased in expression
+#around line though.
+
+p_s5_int_trans_site_combo <- s5_gen_epi_lm %>%
+  filter(site_combo != 'none') %>%
+  ggplot(aes(ave_med_ratio_norm, ave_ratio_22_norm)) +
+  geom_point(alpha = 0.1, size = 0.5)  +
+  geom_line(aes(ave_med_ratio_norm, pred), color = 'red') +
+  xlab('Average normalized\ngenomic expression (a.u.)') +
+  ylab('Average normalized\nepisomal expression (a.u.)') +
+  theme(legend.position = 'right',
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_s5_gen_epi_abline_linear.png', p_s5_int_trans_site_combo,
+       width = 2.3, height = 2.2, units = 'in')
+
+
+#Figure 5B
+
+#Plot residual of each combination of CREs per variant to linear relationship 
+#between MPRA expression of variants with consensus CREs only. Linear 
+#relationship indicated with a red reference line. Negative residuals indicate 
+#higher relative expression of variant in the genomic MPRA and positive
+#indicates higher relative expression in episomal MPRA
+
+p_s5_gen_epi_site_combo_resid <- s5_gen_epi_lm %>%
+  filter(site_combo != 'none') %>%
+  ggplot(aes(as.factor(consensus), resid, fill = as.factor(weak))) +
+  geom_boxplot(outlier.size = 0.5, size = 0.3, 
+               outlier.shape = 21, outlier.alpha = 1, 
+               position = position_dodge(0.75)) +
+  scale_fill_manual(name = 'number of\nweak CREs', 
+                    values = cbPalette7_grad_light) +
+  xlab("consensus CREs") +
+  ylab("residual") +
+  geom_hline(yintercept = 0, linetype = 2, size = 0.5, color = 'red') +
+  theme(legend.position = 'top', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_s5_gen_epi_site_combo_resid_abline_linear.pdf', 
+       p_s5_gen_epi_site_combo_resid, width = 3.75, height = 3, units = 'in')
+
+
+aov_s5_gen_epi_lm <- aov(resid ~ as.factor(consensus) * as.factor(weak), 
+                      data = s5_gen_epi_lm)
+
+plot(aov_s5_gen_epi_lm, 1)
+
+library(car)
+
+leveneTest(resid ~ as.factor(consensus) * as.factor(weak), 
+          data = s5_gen_epi_lm)
+
+#We get no homogeneity of variance
 
 
 
