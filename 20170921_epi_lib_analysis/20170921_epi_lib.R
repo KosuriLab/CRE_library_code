@@ -25,6 +25,7 @@
 #Establish workspace------------------------------------------------------------
 
 options(stringsAsFactors = F)
+set.seed(1234)
 
 #import necessary libraries
 
@@ -37,6 +38,8 @@ library(broom)
 library(modelr)
 library(reshape2)
 library(GGally)
+library(caret)
+library(mlbench)
 
 #General figure customizations
 
@@ -2245,6 +2248,324 @@ ggsave('../plots/p_s5_num_cons_num_weak_back55_conc.pdf',
        p_s5_num_cons_num_weak_back55_conc, width = 4.5, height = 8.25, 
        units = 'in')
 
+
+#Prepare df for fit-------------------------------------------------------------
+
+#change order of site types to fit consensus and weak CRE expression relative to
+#no site
+
+subpool5_ncw <- s5_gen_epi %>%
+  mutate(site1 = gsub('nosite', 'anosite', site1)) %>%
+  mutate(site2 = gsub('nosite', 'anosite', site2)) %>%
+  mutate(site3 = gsub('nosite', 'anosite', site3)) %>%
+  mutate(site4 = gsub('nosite', 'anosite', site4)) %>%
+  mutate(site5 = gsub('nosite', 'anosite', site5)) %>%
+  mutate(site6 = gsub('nosite', 'anosite', site6)) %>%
+  var_log10()
+
+subpool5_epi <- subpool5_ncw %>%
+  filter(MPRA == 'episomal')
+
+subpool5_gen <- subpool5_ncw %>%
+  filter(MPRA == 'genomic')
+
+#split into training and test data
+
+s5_smp_size <- floor(0.8 * nrow(subpool5_epi))
+
+s5_smp <- sample(seq_len(nrow(subpool5_epi)), 
+                 size = s5_smp_size)
+
+subpool5_ncw_test_epi <- subpool5_epi[s5_smp, ]
+subpool5_ncw_train_epi <- subpool5_epi[-s5_smp, ]
+
+subpool5_ncw_test_gen <- subpool5_gen[s5_smp, ]
+subpool5_ncw_train_gen <- subpool5_gen[-s5_smp, ]
+
+
+#Variance explained episomal----------------------------------------------------
+
+#Determine vriance explained per feature
+
+model_back <- function(df) {
+  model <- lm(ave_ratio ~ background, data = df)
+}
+
+model_back_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  model_back()
+
+model_back_epi_variance <- tidy(anova(model_back_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_cons <- function(df) {
+  model <- lm(ave_ratio ~ consensus, data = df)
+}
+
+model_cons_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  model_cons()
+
+model_cons_epi_variance <- tidy(anova(model_cons_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_weak <- function(df) {
+  model <- lm(ave_ratio ~ weak, data = df)
+}
+
+model_weak_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  model_weak()
+
+model_weak_epi_variance <- tidy(anova(model_weak_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+
+model_site1 <- function(df) {
+  model <- lm(ave_ratio ~ site1, data = df)
+}
+
+model_site1_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  model_site1()
+
+model_site1_epi_variance <- tidy(anova(model_site1_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site2 <- function(df) {
+  model <- lm(ave_ratio ~ site2, data = df)
+}
+
+model_site2_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  model_site2()
+
+model_site2_epi_variance <- tidy(anova(model_site2_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site3 <- function(df) {
+  model <- lm(ave_ratio ~ site3, data = df)
+}
+
+model_site3_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  model_site3()
+
+model_site3_epi_variance <- tidy(anova(model_site3_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site4 <- function(df) {
+  model <- lm(ave_ratio ~ site4, data = df)
+}
+
+model_site4_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  model_site4()
+
+model_site4_epi_variance <- tidy(anova(model_site4_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site5 <- function(df) {
+  model <- lm(ave_ratio ~ site5, data = df)
+}
+
+model_site5_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  model_site5()
+
+model_site5_epi_variance <- tidy(anova(model_site5_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site6 <- function(df) {
+  model <- lm(ave_ratio ~ site6, data = df)
+}
+
+model_site6_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  model_site6()
+
+model_site6_epi_variance <- tidy(anova(model_site6_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+var_variance_epi <- rbind(model_back_epi_variance, model_cons_epi_variance, 
+                          model_weak_epi_variance, model_site1_epi_variance, 
+                          model_site2_epi_variance, model_site3_epi_variance,
+                          model_site4_epi_variance, model_site5_epi_variance, 
+                          model_site6_epi_variance)
+
+p_var_variance_epi <- var_variance_epi %>%
+  ggplot(aes(term, per_sumsq)) + 
+  geom_bar(stat = 'identity') + 
+  scale_y_continuous(limits = c(0, 0.73)) +
+  ylab('Proportion of\nvariance explained') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
+  figurefont_theme
+
+ggsave('../plots/p_var_variance_epi.pdf', 
+       p_var_variance_epi,
+       width = 2.75, height = 1.75)
+
+
+#Variance explained genomic-----------------------------------------------------
+
+#Determine vriance explained per feature
+
+model_back_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  model_back()
+
+model_back_gen_variance <- tidy(anova(model_back_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_cons_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  model_cons()
+
+model_cons_gen_variance <- tidy(anova(model_cons_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_weak_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  model_weak()
+
+model_weak_gen_variance <- tidy(anova(model_weak_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site1_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  model_site1()
+
+model_site1_gen_variance <- tidy(anova(model_site1_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site2_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  model_site2()
+
+model_site2_gen_variance <- tidy(anova(model_site2_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site3_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  model_site3()
+
+model_site3_gen_variance <- tidy(anova(model_site3_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site4_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  model_site4()
+
+model_site4_gen_variance <- tidy(anova(model_site4_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site5_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  model_site5()
+
+model_site5_gen_variance <- tidy(anova(model_site5_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+
+model_site6_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  model_site6()
+
+model_site6_gen_variance <- tidy(anova(model_site6_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq) %>%
+  filter(term != 'Residuals')
+
+var_variance_gen <- rbind(model_back_gen_variance, model_cons_gen_variance, 
+                          model_weak_gen_variance, model_site1_gen_variance, 
+                          model_site2_gen_variance, model_site3_gen_variance,
+                          model_site4_gen_variance, model_site5_gen_variance, 
+                          model_site6_gen_variance)
+
+p_var_variance_gen <- var_variance_gen %>%
+  ggplot(aes(term, per_sumsq)) + 
+  geom_bar(stat = 'identity') + 
+  scale_y_continuous(limits = c(0, 0.73)) +
+  ylab('Proportion of\nvariance explained') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
+  figurefont_theme
+
+ggsave('../plots/p_var_variance_gen.pdf', 
+       p_var_variance_gen,
+       width = 2.75, height = 1.75)
+
+
+#Linear model independent site backgrounds--------------------------------------
+
 #Figure 4B
 
 #Fit log-linear model to the different locations of CRE (site 1-6) and to the 
@@ -2283,27 +2604,34 @@ ind_site_ind_back_weights <- function(df) {
   return(weights)
 }
 
-#change order of site types to fit consensus and weak CRE expression relative to
-#no site
+dep_site_ind_back_weights <- function(df) {
+  df <- tidy(df)
+  sites <- df %>%
+    filter(str_detect(term, '^site')) %>%
+    mutate(term = gsub('consensus', '_consensus', term)) %>%
+    mutate(term = gsub('weak', '_weak', term)) %>%
+    separate(term, into = c('variable', 'type'), sep = "_")
+  background <- df %>%
+    filter(str_detect(term, '^background')) %>%
+    mutate(term = gsub('background', 'background_', term)) %>%
+    separate(term, into = c('variable', 'type'), sep = '_')
+  weights <- rbind(sites, background)
+  return(weights)
+}
 
-subpool5_ncw <- s5_gen_epi %>%
-  mutate(site1 = gsub('nosite', 'anosite', site1)) %>%
-  mutate(site2 = gsub('nosite', 'anosite', site2)) %>%
-  mutate(site3 = gsub('nosite', 'anosite', site3)) %>%
-  mutate(site4 = gsub('nosite', 'anosite', site4)) %>%
-  mutate(site5 = gsub('nosite', 'anosite', site5)) %>%
-  mutate(site6 = gsub('nosite', 'anosite', site6)) %>%
-  var_log10()
+#train independent site independent background model
 
-#Fit log-linear model to episomal data, join model predictions to df and 
-#determine the proportion of variance explained
-
-ind_site_ind_back_epi <- subpool5_ncw %>%
+ind_site_ind_back_epi <- subpool5_ncw_train_epi %>%
   filter(MPRA == 'episomal') %>%
   ind_site_ind_back()
 
-ind_site_ind_back_p_r_epi <- pred_resid(filter(subpool5_ncw, MPRA == 'episomal'), 
-                                        ind_site_ind_back_epi)
+#test independent site independent background model
+
+ind_site_ind_back_epi_test_p_r <- pred_resid(filter(subpool5_ncw_test_epi, 
+                                                    MPRA == 'episomal'), 
+                                              ind_site_ind_back_epi)
+
+#make model fits graphs
 
 ind_site_ind_back_weights_epi <- ind_site_ind_back_weights(ind_site_ind_back_epi)
 
@@ -2316,10 +2644,10 @@ ind_site_ind_back_anova_epi <- tidy(anova(ind_site_ind_back_epi)) %>%
 
 lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
 
-p_ind_site_ind_back_epi <- ggplot(ind_site_ind_back_p_r_epi, 
+p_ind_site_ind_back_epi <- ggplot(ind_site_ind_back_epi_test_p_r, 
                                   aes(ave_ratio, pred, 
                                       color = as.factor(consensus))) +
-  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+  geom_point(alpha = 0.15, size = 0.8, show.legend = FALSE) +
   scale_color_manual(values = lessthan1_2color) +
   scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
                      limits = c(-2, 2)) + 
@@ -2328,10 +2656,11 @@ p_ind_site_ind_back_epi <- ggplot(ind_site_ind_back_p_r_epi,
   annotation_logticks(sides = 'bl') +
   figurefont_theme
 
-round(cor(ind_site_ind_back_p_r_epi$pred,
-          ind_site_ind_back_p_r_epi$ave_ratio,
-          use = "pairwise.complete.obs", 
-          method = "pearson")^2, 2)
+rss <- summarize(ind_site_ind_back_epi_test_p_r, sum((resid)^2))
+
+tss <- summarize(ind_site_ind_back_epi_test_p_r, sum((ave_ratio - mean(ave_ratio))^2))
+
+1-rss/tss
 
 p_ind_site_ind_back_weights_epi <- ind_site_ind_back_weights_epi %>%
   mutate(type = factor(type, 
@@ -2372,11 +2701,11 @@ ggsave('../plots/p_ind_site_ind_back_anova_epi.pdf',
 #Fit log-linear model to genomic data, join model predictions to df and 
 #determine the proportion of variance explained
 
-ind_site_ind_back_gen <- subpool5_ncw %>%
+ind_site_ind_back_gen <- subpool5_ncw_train_gen %>%
   filter(MPRA == 'genomic') %>%
   ind_site_ind_back()
 
-ind_site_ind_back_p_r_gen <- pred_resid(filter(subpool5_ncw, MPRA == 'genomic'), 
+ind_site_ind_back_gen_test_p_r <- pred_resid(filter(subpool5_ncw_test_gen, MPRA == 'genomic'), 
                                         ind_site_ind_back_gen)
 
 ind_site_ind_back_weights_gen <- ind_site_ind_back_weights(ind_site_ind_back_gen)
@@ -2388,7 +2717,7 @@ ind_site_ind_back_anova_gen <- tidy(anova(ind_site_ind_back_gen)) %>%
 
 #Plot
 
-p_ind_site_ind_back_gen <- ggplot(ind_site_ind_back_p_r_gen, 
+p_ind_site_ind_back_gen <- ggplot(ind_site_ind_back_gen_test_p_r, 
                                   aes(ave_ratio, pred, 
                                       color = as.factor(consensus))) +
   geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
@@ -2400,10 +2729,11 @@ p_ind_site_ind_back_gen <- ggplot(ind_site_ind_back_p_r_gen,
   annotation_logticks(sides = 'bl') +
   figurefont_theme
 
-round(cor(ind_site_ind_back_p_r_gen$pred,
-          ind_site_ind_back_p_r_gen$ave_ratio,
-          use = "pairwise.complete.obs", 
-          method = "pearson")^2, 2)
+rss <- summarize(ind_site_ind_back_gen_test_p_r, sum((resid)^2))
+
+tss <- summarize(ind_site_ind_back_gen_test_p_r, sum((ave_ratio - mean(ave_ratio))^2))
+
+1-rss/tss
 
 p_ind_site_ind_back_weights_gen <- ind_site_ind_back_weights_gen %>%
   mutate(type = factor(type, 
@@ -2440,6 +2770,91 @@ ggsave('../plots/p_ind_site_ind_back_weights_gen.pdf',
 ggsave('../plots/p_ind_site_ind_back_anova_gen.pdf', 
        p_ind_site_ind_back_anova_gen,
        width = 2.5, height = 2.4)
+
+
+#plot other models--------------------------------------------------------------
+
+#site number and bg (independent)
+
+site_ind_back = function(df) {
+  model <- lm(ave_ratio ~ background + consensus + weak, data = df)
+}
+
+site_ind_back_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  site_ind_back()
+
+site_ind_back_p_r_epi <- pred_resid(filter(subpool5_ncw_test_epi, 
+                                           MPRA == 'episomal'), 
+                                        site_ind_back_epi)
+
+#Plot
+
+lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
+
+p_site_ind_back_epi <- ggplot(site_ind_back_p_r_epi, 
+                                  aes(ave_ratio, pred, 
+                                      color = as.factor(consensus))) +
+  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+  scale_color_manual(values = lessthan1_2color) +
+  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) + 
+  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) +
+  annotation_logticks(sides = 'bl') +
+  figurefont_theme
+
+rss <- summarize(site_ind_back_p_r_epi, sum((resid)^2))
+
+tss <- summarize(site_ind_back_p_r_epi, sum((ave_ratio - mean(ave_ratio))^2))
+
+1-rss/tss
+
+ggsave('../plots/p_site_ind_back_epi.png', p_site_ind_back_epi, 
+       width = 2.3, height = 2.2, units = 'in')
+
+
+#combinatorial effects
+
+dep_site_ind_back = function(df) {
+  model <- lm(ave_ratio ~ background * (site1 + site2 + site3 + site4 + site5 + site6), data = df)
+}
+
+dep_site_ind_back_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  dep_site_ind_back()
+
+dep_site_dep_back_p_r_epi <- pred_resid(filter(subpool5_ncw_test_epi, 
+                                           MPRA == 'episomal'), 
+                                        dep_site_ind_back_epi)
+
+test <- tidy(dep_site_ind_back_epi)
+
+#Plot
+
+lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
+
+p_site_ind_back_epi <- ggplot(dep_site_dep_back_p_r_epi, 
+                              aes(ave_ratio, pred, 
+                                  color = as.factor(consensus))) +
+  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+  scale_color_manual(values = lessthan1_2color) +
+  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) + 
+  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) +
+  annotation_logticks(sides = 'bl') +
+  figurefont_theme
+
+rss <- summarize(dep_site_dep_back_p_r_epi, sum((resid)^2))
+
+tss <- summarize(dep_site_dep_back_p_r_epi, sum((ave_ratio - mean(ave_ratio))^2))
+
+1-rss/tss
+
+ggsave('../plots/p_site_ind_back_epi.png', p_site_ind_back_epi, 
+       width = 2.3, height = 2.2, units = 'in')
+
 
 #Figure 5-----------------------------------------------------------------------
 
@@ -2571,69 +2986,79 @@ aov_s5_gen_epi_all_lm_resid <- residuals(object =  aov_s5_gen_epi_all_lm)
 #KpnI cut site at the beginning of the 3' to 5' variant sequence as can form a 
 #CG dinucleotide with variant sequence.
 
-sixsite_gc_cg_6 <- removed_bgs_sixsite_newback_norm %>%
-  filter(consensus == 6) %>%
+sixsite_gc_cg <- removed_bgs_sixsite_newback_norm %>%
   mutate(most_common_kpnI = str_c('C', most_common)) %>%
-  mutate(cg = str_count(most_common_kpnI, pattern = 'CG'))
-
-#Look at pearsons correlation of correlation of total GC content and plot
-
-gc_lm <- lm(ave_med_ratio_norm_4 ~ gc, 
-                      data = sixsite_gc_cg_6)
-
-pred_resid <- function(df1, x) {
-  df2 <- df1 %>%
-    add_predictions(x)
-  df3 <- df2 %>%
-    add_residuals(x)
-  return(df3)
-  print('processed pred_resid(df1, df2) in order of (data, model)')
-}
-
-bgs_6cons_gc_lm <- pred_resid(sixsite_gc_cg_6, gc_lm)
-
-round(cor(bgs_6cons_gc_lm$ave_med_ratio_norm_4,
-          bgs_6cons_gc_lm$pred,
-          use = "pairwise.complete.obs", 
-          method = "pearson"), 2)
-
-p_back_gc_consensus <- bgs_6cons_gc_lm %>%
-  ggplot(aes(x = gc)) +
-  geom_point(aes(y = ave_med_ratio_norm_4), alpha = 0.3, size = 1) +
-  geom_line(aes(y = pred), color = 'red') +
-  ylab('Average normalized\nexpression (a.u.)') +
-  xlab('Total GC content') +
-  figurefont_theme
-
-ggsave('../plots/p_back_gc_consensus.pdf', p_back_gc_consensus, width = 2.5, 
-       height = 1.5, units = 'in')
+  mutate(cg = str_count(most_common_kpnI, pattern = 'CG')) %>%
+  mutate(c = str_count(most_common_kpnI, pattern = 'C')) %>%
+  mutate(g = str_count(most_common_kpnI, pattern = 'G')) %>%
+  mutate(obs_exp_CpG = (cg*151)/(c*g)) %>%
+  mutate(A5 = str_count(most_common,
+                        pattern = 'AAAAA') + str_count(most_common, 
+                                                       pattern = 'TTTTT'))
 
 #Look at pearsons correlation of CG dinucleotides and plot
 
-cg_lm <- lm(ave_med_ratio_norm_4 ~ cg, 
-            data = sixsite_gc_cg_6)
-
-bgs_6cons_cg_lm <- pred_resid(sixsite_gc_cg_6, cg_lm)
-
-round(cor(bgs_6cons_cg_lm$ave_med_ratio_norm_4,
-          bgs_6cons_cg_lm$pred,
-          use = "pairwise.complete.obs", 
-          method = "pearson"), 2)
-
-p_back_cg_consensus <- bgs_6cons_cg_lm %>%
-  ggplot(aes(x = cg)) +
-  geom_point(aes(y = ave_med_ratio_norm_4, color = gc), alpha = 0.75, size = 1) +
-  geom_line(aes(y = pred), color = 'red') +
-  scale_color_viridis() +
+p_back_gc_consensus <- sixsite_gc_cg %>%
+  ggplot(aes(x = gc)) +
+  facet_grid(~ consensus) +
+  geom_point(aes(y = ave_med_ratio_4), alpha = 0.1, size = 0.75) +
+  scale_y_log10() +
+  panel_border(colour = 'black') +
+  annotation_logticks(sides = 'l') +
   guides(color = guide_colorbar(frame.colour = 'black', 
                                 ticks.colour = 'black')) +
   ylab('Average normalized\nexpression (a.u.)') +
-  xlab('CG dinucleotides') +
-  figurefont_theme
+  xlab('GC content') +
+  figurefont_theme +
+  theme(strip.background = element_rect(colour="black", fill="white"))
 
-ggsave('../plots/p_back_cg_consensus.pdf', p_back_cg_consensus, width = 3, 
-       height = 1.5, units = 'in')
-  
+ggsave('../plots/p_back_gc_consensus.png', p_back_gc_consensus, 
+       width = 5.5, height = 1.75, units = 'in')
+
+p_back_cpg_consensus <- sixsite_gc_cg %>%
+  filter(gc > 0.50) %>%
+  ggplot(aes(x = obs_exp_CpG)) +
+  facet_grid(consensus ~ .) +
+  geom_point(aes(y = ave_med_ratio_4), alpha = 0.1, size = 0.75) +
+  scale_y_log10() +
+  panel_border(colour = 'black') +
+  annotation_logticks(sides = 'l') +
+  guides(color = guide_colorbar(frame.colour = 'black', 
+                                ticks.colour = 'black')) +
+  ylab('Average normalized\nexpression (a.u.)') +
+  xlab('CpG island score') +
+  figurefont_theme +
+  theme(strip.background = element_rect(colour="black", fill="white"))
+
+ggsave('../plots/p_back_cpg_consensus.png', p_back_cpg_consensus, 
+       width = 2, height = 4, units = 'in')
+
+
+#Count 3 bp flanking motif around sites
+
+sixsite_newback_motif <- removed_bgs_sixsite_newback_norm %>%
+  mutate(site6_extra = 'C') %>%
+  mutate(site6_5 = str_sub(most_common, 1, 2)) %>%
+  mutate(site6_5 = str_c(site6_extra, site6_5)) %>%
+  select(-site6_extra) %>%
+  mutate(site6_3 = str_sub(most_common, 11, 13)) %>%
+  mutate(site5_5 = str_sub(most_common, 25, 27)) %>%
+  mutate(site5_3 = str_sub(most_common, 36, 38)) %>%
+  mutate(site4_5 = str_sub(most_common, 50, 52)) %>%
+  mutate(site4_3 = str_sub(most_common, 61, 63)) %>%
+  mutate(site3_5 = str_sub(most_common, 75, 77)) %>%
+  mutate(site3_3 = str_sub(most_common, 86, 88)) %>%
+  mutate(site2_5 = str_sub(most_common, 100, 102)) %>%
+  mutate(site2_3 = str_sub(most_common, 111, 113)) %>%
+  mutate(site1_5 = str_sub(most_common, 125, 127)) %>%
+  mutate(site1_3 = str_sub(most_common, 136, 138))
+
+test <- sixsite_newback_motif %>%
+  filter(site6 == 'consensus' & site5 == 'consensus') %>%
+  ggplot(aes(site5_3, site5_5, fill = ave_med_ratio_4)) +
+  facet_grid(consensus ~ .) +
+  geom_tile() +
+  scale_fill_viridis()
 
 #Look at local GC content around each site (4 bp on either side)
 
@@ -2653,6 +3078,14 @@ sixsite_newback_norm_localgc <- removed_bgs_sixsite_newback_norm %>%
   mutate(site3_gc = (str_count(site3_window, 'C') + str_count(site3_window, 'G'))/16)%>%
   mutate(site2_gc = (str_count(site2_window, 'C') + str_count(site2_window, 'G'))/16)%>%
   mutate(site1_gc = (str_count(site1_window, 'C') + str_count(site1_window, 'G'))/16)
+
+#interactions between high GC sites and neighbors?
+
+test <- sixsite_newback_norm_localgc %>%
+  filter(consensus == 3 & site6 == 'consensus' & site3 == 'consensus' & site2 == 'consensus') %>%
+  ggplot(aes(site2_gc, site3_gc, fill = ave_med_ratio_4)) +
+  geom_tile() +
+  scale_fill_viridis()
 
 #Local GC content plots and anovas
 
@@ -2793,7 +3226,9 @@ ggsave('../plots/p_site1_localgc.pdf', p_site1_localgc, width = 2.5, height = 2,
 
 #Fitting model to new backgrounds
 
-sixsite_newback_norm_localgc_sub <- sixsite_newback_norm_localgc %>%
+set.seed(1234)
+
+sixsite_newback_norm_sub <- removed_bgs_sixsite_newback_norm %>%
   mutate(site1 = gsub('nosite', 'anosite', site1)) %>%
   mutate(site2 = gsub('nosite', 'anosite', site2)) %>%
   mutate(site3 = gsub('nosite', 'anosite', site3)) %>%
@@ -2802,6 +3237,14 @@ sixsite_newback_norm_localgc_sub <- sixsite_newback_norm_localgc %>%
   mutate(site6 = gsub('nosite', 'anosite', site6)) %>%
   mutate(background = as.character(background)) %>%
   mutate(ave_med_ratio_4 = log10(ave_med_ratio_4))
+
+sixsite_smp_size <- floor(0.8 * nrow(sixsite_newback_norm_sub))
+
+sixsite_smp <- sample(seq_len(nrow(sixsite_newback_norm_sub)), 
+                 size = sixsite_smp_size)
+
+sixsite_test_epi <- sixsite_newback_norm_sub[sixsite_smp, ]
+sixsite_train_epi <- sixsite_newback_norm_sub[-sixsite_smp, ]
 
 new_sixsite_weights <- function(df) {
   df <- tidy(df)
@@ -2825,10 +3268,10 @@ ind_site_ind_back_new <- function(df) {
               data = df)
 }
 
-ind_site_ind_back_epi_new <- sixsite_newback_norm_localgc_sub %>%
+ind_site_ind_back_epi_new <- sixsite_train_epi %>%
   ind_site_ind_back_new()
 
-ind_site_ind_back_p_r_epi_new <- pred_resid(sixsite_newback_norm_localgc_sub, 
+ind_site_ind_back_p_r_epi_new <- pred_resid(sixsite_test_epi, 
                                         ind_site_ind_back_epi_new)
 
 ind_site_ind_back_weights_epi_new <- new_sixsite_weights(ind_site_ind_back_epi_new)
@@ -2848,16 +3291,17 @@ p_ind_site_ind_back_epi_new <- ggplot(ind_site_ind_back_p_r_epi_new,
   geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
   scale_color_manual(values = lessthan1_2color) +
   scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) + 
+                     limits = c(-1.6, 1.8)) + 
   scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) +
+                     limits = c(-1.6, 1.8)) +
   annotation_logticks(sides = 'bl') +
   figurefont_theme
 
-round(cor(ind_site_ind_back_p_r_epi_new$pred,
-          ind_site_ind_back_p_r_epi_new$ave_med_ratio_4,
-          use = "pairwise.complete.obs", 
-          method = "pearson")^2, 2)
+rss <- summarize(ind_site_ind_back_p_r_epi_new, sum((resid)^2))
+
+tss <- summarize(ind_site_ind_back_p_r_epi_new, sum((ave_med_ratio_4 - mean(ave_med_ratio_4))^2))
+
+1-rss/tss
 
 p_ind_site_ind_back_weights_epi_new <- ind_site_ind_back_weights_epi_new %>%
   ggplot(aes(variable, estimate, fill = type)) + 
@@ -2890,6 +3334,10 @@ ggsave('../plots/p_ind_site_ind_back_weights_epi_new.pdf',
 ggsave('../plots/p_ind_site_ind_back_anova_epi_new.pdf', 
        p_ind_site_ind_back_anova_epi_new,
        width = 2.5, height = 2.4)
+
+test <- removed_bgs_sixsite_newback_norm %>%
+  select(background) %>%
+  unique()
 
 
 #New data twosite---------------------------------------------------------------
@@ -3592,6 +4040,31 @@ leveneTest(resid ~ as.factor(consensus) * as.factor(weak),
           data = s5_gen_epi_lm)
 
 #We get no homogeneity of variance
+
+
+#Reviewer-specific plots feed forward attempt-----------------------------------
+
+#using caret
+
+library(fastDummies)
+
+test_data <- s5_gen_epi %>%
+  filter(MPRA == 'episomal') %>%
+  select(site1, site2, site3, site4, site5, site6, background, consensus, weak,
+         ave_ratio_22)
+
+test_data_dummy <- dummy_cols(test_data) %>%
+  select(-site1, -site2, -site3, -site4, -site5, -site6, -background)
+
+control <- trainControl(method = 'repeatedcv', number = 10, repeats = 3)
+
+model <- train(ave_ratio_22 ~ ., test_data_dummy, method = 'lm')
+
+importance <- varImp(model, scale = FALSE)
+
+#caret doesn't play nicely with categorical variables.....
+
+
 
 
 
