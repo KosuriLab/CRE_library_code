@@ -38,8 +38,6 @@ library(broom)
 library(modelr)
 library(reshape2)
 library(GGally)
-library(caret)
-library(mlbench)
 
 #General figure customizations
 
@@ -52,6 +50,10 @@ cbPalette7_grad_light <- c('white', '#FDE725FF', '#B8DE29FF', '#55C667FF',
 spacing_5_20_cbpalette <- c('gray20', 'deepskyblue2', 'orangered3', 'sandybrown')
 
 cbPalette_cont_blue <- c('gray100', 'lightskyblue', 'dodgerblue1', 'mediumblue', 'navy')
+
+background_cbPalette <- c('#E4CA2C', '#E46E2C', '#E42C46')
+
+
 
 
 figurefont_theme <- theme(text = element_text(size = 8)) +
@@ -1438,11 +1440,15 @@ fold_change_range <- function(df) {
 }
   
 s3_gen_epi_med_range <- med_range_dist(s3_gen_epi)
+s3_gen_epi_med_range_41 <- med_range_dist(s3_gen_epi_rbind41)
 
 #determine median fold-change between distance ranges
 
 s3_gen_epi_med_change_dist <- fold_change_range(s3_gen_epi_med_range) %>%
   filter(!(background == 41 & MPRA == 'genomic'))
+
+s3_gen_epi_med_change_dist_41 <- fold_change_range(s3_gen_epi_med_range) %>%
+  filter(background == 41 & MPRA == 'episomal')
 
 #plot per background
   
@@ -1490,11 +1496,10 @@ p_s3_gen_epi_med_change_dist_52 <- s3_gen_epi_med_range %>%
         axis.text.x = element_text(angle = 45, hjust = 1),
         axis.ticks.x = element_blank(), legend.position = 'top')
 
-p_s3_gen_epi_med_change_dist_41 <- s3_gen_epi_med_range %>%
-  filter(spacing != 0 & spacing != 70 & background == '41' & MPRA == 'episomal') %>%
+p_s3_gen_epi_med_change_dist_41 <- s3_gen_epi_med_range_41  %>%
+  filter(spacing != 0 & spacing != 70 & background =='41', MPRA == 'episomal') %>%
   mutate(range = factor(range, levels = c('147-176', '67-96'))) %>%
   ggplot(aes(range, median_range)) +
-  facet_grid(. ~ MPRA) +
   geom_jitter(aes(color = as.factor(spacing)), 
               position=position_jitter(width=0.3, height=0), alpha = 0.75,
               size = 1, show.legend = TRUE) +
@@ -1534,7 +1539,7 @@ range_dist <- function(df) {
   range <- rbind(low, high)
 }
 
-s3_gen_epi_range <- s3_gen_epi %>%
+s3_gen_epi_range <- s3_gen_epi_rbind41 %>%
   filter(spacing != 0 & spacing != 70) %>%
   select(spacing, dist, most_common, background, MPRA, ave_ratio_norm) %>%
   range_dist()
@@ -1544,6 +1549,7 @@ s3_gen_epi_range_67 <- s3_gen_epi_range %>%
 
 s3_gen_epi_range_147 <- s3_gen_epi_range %>%
   filter(range == '147-176')
+
 
 #Make dfs for wilcox test (ave_ratio_norm, range) per MPRA and background
 
@@ -1579,6 +1585,20 @@ s3_gen_epi_range_147_epi_55 <- s3_gen_epi_range_147 %>%
 
 rbind_epi_55 <- rbind(s3_gen_epi_range_67_epi_55, s3_gen_epi_range_147_epi_55)
 
+
+
+
+
+s3_gen_epi_range <- s3_gen_epi %>%
+  filter(spacing != 0 & spacing != 70) %>%
+  select(spacing, dist, most_common, background, MPRA, ave_ratio_norm) %>%
+  range_dist()
+
+s3_gen_epi_range_67 <- s3_gen_epi_range %>%
+  filter(range == '67-96')
+
+s3_gen_epi_range_147 <- s3_gen_epi_range %>%
+  filter(range == '147-176')
 
 s3_gen_epi_range_67_gen_41 <- s3_gen_epi_range_67 %>%
   filter(MPRA == 'genomic', background == 41) %>%
@@ -2439,7 +2459,7 @@ p_var_variance_epi <- var_variance_epi %>%
 
 ggsave('../plots/p_var_variance_epi.pdf', 
        p_var_variance_epi,
-       width = 2.75, height = 1.75)
+       width = 2.75, height = 1.5)
 
 
 #Variance explained genomic-----------------------------------------------------
@@ -2561,7 +2581,7 @@ p_var_variance_gen <- var_variance_gen %>%
 
 ggsave('../plots/p_var_variance_gen.pdf', 
        p_var_variance_gen,
-       width = 2.75, height = 1.75)
+       width = 2.75, height = 1.5)
 
 
 #Linear model independent site backgrounds--------------------------------------
@@ -2590,28 +2610,15 @@ pred_resid <- function(df1, x) {
 #Make model weights output plottable
 
 ind_site_ind_back_weights <- function(df) {
-  df <- tidy(df)
-  sites <- df %>%
+  df_conf <-confint_tidy(df)
+  df_tidy <- tidy(df)
+  df_comb <- cbind(df_tidy, df_conf)
+  sites <- df_comb %>%
     filter(str_detect(term, '^site')) %>%
     mutate(term = gsub('consensus', '_consensus', term)) %>%
     mutate(term = gsub('weak', '_weak', term)) %>%
     separate(term, into = c('variable', 'type'), sep = "_")
-  background <- df %>%
-    filter(str_detect(term, '^background')) %>%
-    mutate(term = gsub('background', 'background_', term)) %>%
-    separate(term, into = c('variable', 'type'), sep = '_')
-  weights <- rbind(sites, background)
-  return(weights)
-}
-
-dep_site_ind_back_weights <- function(df) {
-  df <- tidy(df)
-  sites <- df %>%
-    filter(str_detect(term, '^site')) %>%
-    mutate(term = gsub('consensus', '_consensus', term)) %>%
-    mutate(term = gsub('weak', '_weak', term)) %>%
-    separate(term, into = c('variable', 'type'), sep = "_")
-  background <- df %>%
+  background <- df_comb %>%
     filter(str_detect(term, '^background')) %>%
     mutate(term = gsub('background', 'background_', term)) %>%
     separate(term, into = c('variable', 'type'), sep = '_')
@@ -2644,11 +2651,13 @@ ind_site_ind_back_anova_epi <- tidy(anova(ind_site_ind_back_epi)) %>%
 
 lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
 
-p_ind_site_ind_back_epi <- ggplot(ind_site_ind_back_epi_test_p_r, 
-                                  aes(ave_ratio, pred, 
-                                      color = as.factor(consensus))) +
-  geom_point(alpha = 0.15, size = 0.8, show.legend = FALSE) +
-  scale_color_manual(values = lessthan1_2color) +
+background_viridis <- c('#440154FF', '#33638DFF', '#29AF7FFF')
+
+p_ind_site_ind_back_epi <- ind_site_ind_back_epi_test_p_r %>%
+  mutate(background = factor(background, levels = c('52', '55', '41')))  %>%
+  ggplot(aes(ave_ratio, pred, color = background)) +
+  geom_point(alpha = 0.25, size = 0.8, show.legend = FALSE) +
+  scale_color_manual(values = background_viridis) +
   scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
                      limits = c(-2, 2)) + 
   scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
@@ -2665,9 +2674,9 @@ tss <- summarize(ind_site_ind_back_epi_test_p_r, sum((ave_ratio - mean(ave_ratio
 p_ind_site_ind_back_weights_epi <- ind_site_ind_back_weights_epi %>%
   mutate(type = factor(type, 
                        levels = c('52', '55', 'consensus', 'weak'))) %>%
-  ggplot(aes(variable, estimate, fill = type)) + 
-  geom_bar(stat = 'identity', position = 'dodge', color = 'gray60', 
-           size = 0.3) + 
+  ggplot() + 
+  geom_pointrange(aes(variable, estimate, ymin = conf.low, ymax = conf.high,
+                    fill = type), fatten = 2, shape = 21, stroke = 0.5, size = 1) +
   geom_hline(yintercept = 0, size = 0.25) +
   scale_x_discrete(position = 'bottom') + 
   scale_fill_viridis(discrete = TRUE) + 
@@ -2717,11 +2726,11 @@ ind_site_ind_back_anova_gen <- tidy(anova(ind_site_ind_back_gen)) %>%
 
 #Plot
 
-p_ind_site_ind_back_gen <- ggplot(ind_site_ind_back_gen_test_p_r, 
-                                  aes(ave_ratio, pred, 
-                                      color = as.factor(consensus))) +
-  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
-  scale_color_manual(values = lessthan1_2color) +
+p_ind_site_ind_back_gen <-  ind_site_ind_back_gen_test_p_r %>%
+  mutate(background = factor(background, levels = c('52', '55', '41')))  %>%
+  ggplot(aes(ave_ratio, pred, color = background)) +
+  geom_point(alpha = 0.25, size = 0.8, show.legend = FALSE) +
+  scale_color_manual(values = background_viridis) +
   scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
                      limits = c(-2.1, 2)) + 
   scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
@@ -2738,9 +2747,9 @@ tss <- summarize(ind_site_ind_back_gen_test_p_r, sum((ave_ratio - mean(ave_ratio
 p_ind_site_ind_back_weights_gen <- ind_site_ind_back_weights_gen %>%
   mutate(type = factor(type, 
                        levels = c('52', '55', 'consensus', 'weak'))) %>%
-  ggplot(aes(variable, estimate, fill = type)) + 
-  geom_bar(stat = 'identity', position = 'dodge', color = 'gray60', 
-           size = 0.3) + 
+  ggplot() + 
+  geom_pointrange(aes(variable, estimate, ymin = conf.low, ymax = conf.high,
+                      fill = type), fatten = 2, shape = 21, stroke = 0.5, size = 1) +
   geom_hline(yintercept = 0, size = 0.25) +
   scale_x_discrete(position = 'bottom') + 
   scale_fill_viridis(discrete = TRUE) + 
@@ -2988,10 +2997,13 @@ aov_s5_gen_epi_all_lm_resid <- residuals(object =  aov_s5_gen_epi_all_lm)
 
 sixsite_gc_cg <- removed_bgs_sixsite_newback_norm %>%
   mutate(most_common_kpnI = str_c('C', most_common)) %>%
+  mutate(most_common_200 = str_c('CTCGAGGCTAGCGAGCTCAGGTACC', most_common, 
+                                'ACGCGTGCTCTACGACTATGCTCTT')) %>%
   mutate(cg = str_count(most_common_kpnI, pattern = 'CG')) %>%
-  mutate(c = str_count(most_common_kpnI, pattern = 'C')) %>%
-  mutate(g = str_count(most_common_kpnI, pattern = 'G')) %>%
-  mutate(obs_exp_CpG = (cg*151)/(c*g)) %>%
+  mutate(c = str_count(most_common_200, pattern = 'C')) %>%
+  mutate(g = str_count(most_common_200, pattern = 'G')) %>%
+  mutate(gc_200 = (str_count(most_common_200, pattern = 'C') + str_count(most_common_200, pattern = 'G'))/200) %>%
+  mutate(obs_exp_CpG = (cg*200)/(c*g)) %>%
   mutate(A5 = str_count(most_common,
                         pattern = 'AAAAA') + str_count(most_common, 
                                                        pattern = 'TTTTT'))
@@ -3016,22 +3028,23 @@ ggsave('../plots/p_back_gc_consensus.png', p_back_gc_consensus,
        width = 5.5, height = 1.75, units = 'in')
 
 p_back_cpg_consensus <- sixsite_gc_cg %>%
-  filter(gc > 0.50) %>%
+  filter(gc_200 > 0.50) %>%
   ggplot(aes(x = obs_exp_CpG)) +
-  facet_grid(consensus ~ .) +
+  facet_grid(~ consensus) +
   geom_point(aes(y = ave_med_ratio_4), alpha = 0.1, size = 0.75) +
   scale_y_log10() +
+  scale_x_continuous(breaks = c(0.5, 1)) +
   panel_border(colour = 'black') +
   annotation_logticks(sides = 'l') +
   guides(color = guide_colorbar(frame.colour = 'black', 
                                 ticks.colour = 'black')) +
   ylab('Average normalized\nexpression (a.u.)') +
-  xlab('CpG island score') +
+  xlab('Observed/Expected CpG') +
   figurefont_theme +
   theme(strip.background = element_rect(colour="black", fill="white"))
 
 ggsave('../plots/p_back_cpg_consensus.png', p_back_cpg_consensus, 
-       width = 2, height = 4, units = 'in')
+       width = 5.5, height = 1.5, units = 'in')
 
 
 #Count 3 bp flanking motif around sites
@@ -3343,10 +3356,6 @@ test <- removed_bgs_sixsite_newback_norm %>%
 #New data twosite---------------------------------------------------------------
 
 #Look at mean expression across spacings and backgrounds
-
-spacing_5_20_cbpalette <- c('gray20', 'deepskyblue2', 'orangered3', 'sandybrown')
-
-background_cbPalette <- c('#E4CA2C', '#E46E2C', '#E42C46')
 
 ave_exp_spacings <- twosite_norm %>%
   group_by(background, spacing) %>%
@@ -4063,6 +4072,22 @@ model <- train(ave_ratio_22 ~ ., test_data_dummy, method = 'lm')
 importance <- varImp(model, scale = FALSE)
 
 #caret doesn't play nicely with categorical variables.....
+
+
+
+#Extras-------------------------------------------------------------------------
+
+count_seq <- function(dfepi, dfgen, df25, dfnew) {
+  dfepi <- most_common(dfepi)
+  dfgen <- most_common(dfgen)
+  df25 <- most_common(df25)
+  dfnew <- most_common(dfnew)
+  total <- rbind(dfepi, dfgen, df25, dfnew) %>%
+    unique()
+  return(total)
+  }
+
+test <- count_seq(med_rep_0_22_A_B, gen_rep_1_2, s2_epi_rep_0_25, med_rep_followup)
 
 
 
