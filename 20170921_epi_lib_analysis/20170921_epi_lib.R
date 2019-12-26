@@ -15,9 +15,9 @@
 #Most figures require both genomic and episomal MPRAs, the genomic MPRA data
 #processing is performed in 20171129_genlib.R and imported here in section
 #"Import genomic MPRA and combine with episomal". Other episomal MPRAs used in
-#supplemental figures are performed in 20170320_epilib_analysis_0_25.R and 
-#20170631_epilib_analysis_0_64.R and are imported per supplemental figure 
-#section.
+#supplemental figures are performed in 20170320_epilib_analysis_0_25.R, 
+#20170631_epilib_analysis_0_64.R, and 20190712_eplib_analysis.R and are 
+#imported per main and supplemental figure section.
 
 #Beyond figure 1 and associated supplemental figures, the section "Separate into
 #sublibraries" is required for figure generation.
@@ -53,9 +53,6 @@ cbPalette_cont_blue <- c('gray100', 'lightskyblue', 'dodgerblue1', 'mediumblue',
 
 background_cbPalette <- c('#E4CA2C', '#E46E2C', '#E42C46')
 
-
-
-
 figurefont_theme <- theme(text = element_text(size = 8)) +
   theme(axis.title = element_text(size = 8)) +
   theme(legend.title = element_text(size = 8)) +
@@ -69,8 +66,8 @@ var_log10 <- function(df) {
   return(log_ratio_df)
 }
 
-#3bp moving window function used in a lot of the CRE Spacing and Distance
-#library figures
+#3bp moving window function used in most CRE Spacing and Distance library 
+#figures
 
 moveavg_dist3 <- function(df) {
   df <- df %>%
@@ -472,6 +469,42 @@ var_conc_exp <- function(df) {
 epi_back_norm_conc <- epi_back_norm_pc_spGl4 %>%
   var_conc_exp()
 
+#Figure 1D----------------------------------------------------------------------
+
+#Plot normalized variant expression curves across forskolin concentrations. 
+#Expression curves for backgrounds and control overlayed
+
+p_titr_pc_back <- epi_back_norm_conc %>%
+  ggplot(aes(conc, ave_ratio_norm)) +
+  geom_line(aes(group = name), alpha = 0.1) +
+  geom_point(data = filter(epi_back_norm_conc, 
+                           startsWith(name, 
+                                      'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')),
+             color = 'darkgoldenrod1', shape = 19, stroke = 0.75) +
+  geom_line(data = filter(epi_back_norm_conc, 
+                          startsWith(name, 
+                                     'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')),
+            color = 'darkgoldenrod1', size = 1) +
+  geom_point(data = filter(epi_back_norm_conc, 
+                           startsWith(name, 
+                                      'pGL4.29 Promega 1-63 + 1-87')),
+             color = 'firebrick2', shape = 19, stroke = 0.75) +
+  geom_line(data = filter(epi_back_norm_conc, 
+                          startsWith(name, 
+                                     'pGL4.29 Promega 1-63 + 1-87')),
+            color = 'firebrick2', size = 1) +
+  ylab('Average normalized\nexpression (a.u.)') +
+  annotation_logticks(sides = 'b', short = unit(0.05, 'cm'), 
+                      mid = unit(0.1, 'cm'), long = unit(0.15, 'cm')) +
+  scale_x_continuous(breaks = (-7:2), 'log2 forskolin (µM)') +
+  figurefont_theme
+
+ggsave('../plots/p_titr_pc_back.pdf', p_titr_pc_back, width = 2.8, height = 2,
+       units = 'in')
+
+ggsave('../plots/p_titr_pc_back.png', p_titr_pc_back, width = 2.8, height = 2,
+       units = 'in')
+
 #Import genomic MPRA and combine with episomal----------------------------------
 
 #Genomic MPRA expression determination and data processing performed in
@@ -529,68 +562,9 @@ MPRA_ave <- gen_epi %>%
   filter((MPRA == 'genomic' & MPRA3 == 'genomic') | (MPRA == 'episomal' & MPRA3 == 'episomal')) %>%
   select(-MPRA3)
 
-
-#Read in follow-up library------------------------------------------------------
-
-med_rep_followup <- read_tsv(
-  '../20190712_epilib_analysis/med_rep_follow_up.txt')
-
-scramble_newback_norm <- read_tsv(
-  '../20190712_epilib_analysis/scramble_newback_norm.txt')
-
-scramble_oldback_norm <- read_tsv(
-  '../20190712_epilib_analysis/scramble_oldback_norm.txt')
-
-sixsite_newback_norm <- read_tsv(
-  '../20190712_epilib_analysis/sixsite_newback_norm.txt')
-
-sixsite_oldback_norm <- read_tsv(
-  '../20190712_epilib_analysis/sixsite_oldback_norm.txt')
-
-twosite_norm <- read_tsv(
-  '../20190712_epilib_analysis/twosite_norm.txt')
-
-removed_bgs_sixsite_newback_norm <- read_tsv(
-  '../20190712_epilib_analysis/removed_bgs_sixsite_newback_norm.txt')
-
-
-#Figure 1D----------------------------------------------------------------------
-
-#Plot normalized variant expression curves across forskolin concentrations. 
-#Expression curves for backgrounds and control overlayed
-
-p_titr_pc_back <- epi_back_norm_conc %>%
-  ggplot(aes(conc, ave_ratio_norm)) +
-  geom_line(aes(group = name), alpha = 0.1) +
-  geom_point(data = filter(epi_back_norm_conc, 
-                           startsWith(name, 
-                                      'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')),
-             color = 'darkgoldenrod1', shape = 19, stroke = 0.75) +
-  geom_line(data = filter(epi_back_norm_conc, 
-                          startsWith(name, 
-                                     'subpool5_no_site_no_site_no_site_no_site_no_site_no_site')),
-            color = 'darkgoldenrod1', size = 1) +
-  geom_point(data = filter(epi_back_norm_conc, 
-                           startsWith(name, 
-                                      'pGL4.29 Promega 1-63 + 1-87')),
-             color = 'firebrick2', shape = 19, stroke = 0.75) +
-  geom_line(data = filter(epi_back_norm_conc, 
-                          startsWith(name, 
-                                     'pGL4.29 Promega 1-63 + 1-87')),
-            color = 'firebrick2', size = 1) +
-  ylab('Average normalized\nexpression (a.u.)') +
-  annotation_logticks(sides = 'b', short = unit(0.05, 'cm'), 
-                      mid = unit(0.1, 'cm'), long = unit(0.15, 'cm')) +
-  scale_x_continuous(breaks = (-7:2), 'log2 forskolin (µM)') +
-  figurefont_theme
-
-ggsave('../plots/p_titr_pc_back.pdf', p_titr_pc_back, width = 2.8, height = 2,
-       units = 'in')
-
-ggsave('../plots/p_titr_pc_back.png', p_titr_pc_back, width = 2.8, height = 2,
-       units = 'in')
-
 #Figure 1E and F----------------------------------------------------------------
+
+#Figure 1E
 
 #Plot replicability with backgrounds in orange and positive control in red
 
@@ -661,7 +635,7 @@ pearsons_gen <- tibble(
                    use = "pairwise.complete.obs", method = "pearson"),
                cor(filter(log10_gen_epi, subpool == 'subpool5')$med_ratio_br1,
                    filter(log10_gen_epi, subpool == 'subpool5')$med_ratio_br2,
-                         use = "pairwise.complete.obs", method = "pearson")))
+                   use = "pairwise.complete.obs", method = "pearson")))
 
 #Figure 1F
 
@@ -693,65 +667,35 @@ pearsons_epi_gen <- tibble(
   pearsons = c(cor(log10_gen_epi$ave_med_ratio, log10_gen_epi$ave_ratio_22, 
                    use = "pairwise.complete.obs", method = "pearson")))
 
+#Read in follow-up library containing barcoded replicates-----------------------
+
+med_rep_followup <- read_tsv(
+  '../20190712_epilib_analysis/med_rep_follow_up.txt')
+
+scramble_newback_norm <- read_tsv(
+  '../20190712_epilib_analysis/scramble_newback_norm.txt')
+
+scramble_oldback_norm <- read_tsv(
+  '../20190712_epilib_analysis/scramble_oldback_norm.txt')
+
+sixsite_newback_norm <- read_tsv(
+  '../20190712_epilib_analysis/sixsite_newback_norm.txt')
+
+sixsite_oldback_norm <- read_tsv(
+  '../20190712_epilib_analysis/sixsite_oldback_norm.txt')
+
+twosite_norm <- read_tsv(
+  '../20190712_epilib_analysis/twosite_norm.txt')
+
+removed_bgs_sixsite_newback_norm <- read_tsv(
+  '../20190712_epilib_analysis/removed_bgs_sixsite_newback_norm.txt')
 
 #Figure 1G and H----------------------------------------------------------------
 
-#check replicability of follow-up library
-
-p_rep_0 <- med_rep_followup %>%
-  ggplot(aes(med_ratio_0A, med_ratio_0B)) +
-  geom_point(alpha = 0.1, size = 0.75) +
-  geom_point(data = filter(med_rep_followup, 
-                           grepl(
-                             'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.5) + 
-  geom_point(data = filter(med_rep_followup, 
-                           name == 'control_pGL4.29 Promega 1-63 + 1-87'), 
-             fill = 'red', shape = 21, size = 1.75) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Expression (a.u.) replicate 1") +
-  ylab("Expression (a.u.) replicate 2") +
-  scale_x_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
-  figurefont_theme
-
-p_rep_4 <- med_rep_followup %>%
-  ggplot(aes(med_ratio_4A, med_ratio_4B)) +
-  geom_point(alpha = 0.1, size = 0.75) +
-  geom_point(data = filter(med_rep_followup, 
-                           grepl(
-                             'sixsite_nosite_nosite_nosite_nosite_nosite_nosite',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.5) + 
-  geom_point(data = filter(med_rep_followup, 
-                           name == 'control_pGL4.29 Promega 1-63 + 1-87'), 
-             fill = 'red', shape = 21, size = 1.75) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Expression (a.u.) replicate 1") +
-  ylab("Expression (a.u.) replicate 2") +
-  scale_x_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.02, 20), breaks = c(0.1, 1, 10)) +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
-  figurefont_theme
-
-log10_med_rep_followup <- var_log10(med_rep_followup)
-
-pearsons_followup <- tibble(
-  sample = c('0 µM', '4 µM'),
-  pearsons = c(cor(log10_med_rep_followup$med_ratio_0A, 
-                   log10_med_rep_followup$med_ratio_0B, 
-                   use = "pairwise.complete.obs", method = "pearson"),
-               cor(log10_med_rep_followup$med_ratio_4A, 
-                   log10_med_rep_followup$med_ratio_4B, 
-                   use = "pairwise.complete.obs", method = "pearson")))
-
 #compare differently barcoded replicates between old and new library
 
-#Figure 1G
+#Figure 1G - compare average expression between technical replicates between
+#separately barcoded experiments
 
 barcode_rep <- med_rep_0_22_A_B %>%
   select(subpool, name, most_common, barcodes_DNA, med_ratio_0A, 
@@ -794,7 +738,9 @@ pearsons_barcode_rep <- tibble(
   pearsons = c(cor(log10_barcode_rep$ave_old_4, log10_barcode_rep$ave_new_4, 
                    use = "pairwise.complete.obs", method = "pearson")))
 
-#Figure 1H
+#Figure 1H - plot average barcodes per variant between 2 technical replicates
+#and compare between the library members between separately-barcoded variants in
+#the episomal MPRA and to the genomic MPRA
 
 bc_epi_RNA <- gen_epi %>%
   mutate(ave_barcodes = (barcodes_RNA_22A + barcodes_RNA_22B)/2) %>%
@@ -983,193 +929,11 @@ pearsons_epi_conc <- tibble(
                          use = "pairwise.complete.obs", method = "pearson"), 3))
 )
 
-#Replicability beyond 4 µM and Supp. Fig. 2-------------------------------------
+#Supplemental figure 1F---------------------------------------------------------
 
-#Import expression from MPRA done across 0-64 µM forskolin concentrations,
-#concentrations given in powers of 2
-
-epi_rep_0_64 <- read_tsv('../20170631_epilib_analysis_0_64/rep_0_64_med.txt')
-epi_rep_0_64_back <- read_tsv(
-  '../20170631_epilib_analysis_0_64/rep_0_64_med_back.txt'
-  )
-epi_rep_0_64_conc <- read_tsv(
-  '../20170631_epilib_analysis_0_64/rep_0_64_med_norm.txt'
-  ) %>%
-  mutate(conc = log2(conc))
-
-#plot background-normalized replicability similar to Supplemental figure 1E
-
-p_var_epi_all_0_64 <- ggplot(epi_rep_0_64_conc, 
-                        aes(ratio_A_norm, ratio_B_norm)) +
-  facet_rep_wrap(~ conc, nrow = 3) +
-  geom_point(alpha = 0.1, size = 0.5) +
-  geom_point(data = filter(epi_rep_0_64_conc, 
-                           grepl(
-                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.25) + 
-  geom_point(data = filter(epi_rep_0_64_conc, name == 'pGL4.29 Promega 1-63 + 1-87_back_55'), 
-             fill = 'red', shape = 21, size = 1.25) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Normalized expression (a.u.) replicate 1") +
-  ylab("Normalized expression (a.u.) replicate 2") +
-  scale_x_log10(limits = c(0.1, 200), breaks = c(0.1, 1, 10, 100)) + 
-  scale_y_log10(limits = c(0.1, 200), breaks = c(0.1, 1, 10, 100)) +
-  background_grid(major = 'xy', minor = 'none') + 
-  panel_border(colour = 'black') +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
-  figurefont_theme
-
-ggsave('../plots/p_var_epi_all_0_64.png', p_var_epi_all_0_64, 
-       width = 4, height = 4.3, units = 'in')
-
-log10_epi_rep_0_64_back <- var_log10(epi_rep_0_64_back)
-
-pearsons_epi_conc_0_64 <- tibble(
-  conc = c(0, 1, 2, 4, 8, 16, 25, 32, 64),
-  pearsons = c(round(cor(log10_epi_rep_0_64_back$ratio_0A_norm, 
-                         log10_epi_rep_0_64_back$ratio_0B_norm, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3),
-               round(cor(log10_epi_rep_0_64_back$ratio_1A_norm, 
-                         log10_epi_rep_0_64_back$ratio_1B_norm, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3),
-               round(cor(log10_epi_rep_0_64_back$ratio_2A_norm, 
-                         log10_epi_rep_0_64_back$ratio_2B_norm, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3),
-               round(cor(log10_epi_rep_0_64_back$ratio_4A_norm, 
-                         log10_epi_rep_0_64_back$ratio_4B_norm, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3),
-               round(cor(log10_epi_rep_0_64_back$ratio_8A_norm, 
-                         log10_epi_rep_0_64_back$ratio_8B_norm, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3),
-               round(cor(log10_epi_rep_0_64_back$ratio_16A_norm, 
-                         log10_epi_rep_0_64_back$ratio_16B_norm, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3),
-               round(cor(log10_epi_rep_0_64_back$ratio_25A_norm, 
-                         log10_epi_rep_0_64_back$ratio_25B_norm, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3),
-               round(cor(log10_epi_rep_0_64_back$ratio_32A_norm, 
-                         log10_epi_rep_0_64_back$ratio_32B_norm, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3),
-               round(cor(log10_epi_rep_0_64_back$ratio_64A_norm, 
-                         log10_epi_rep_0_64_back$ratio_64B_norm, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3))
-)
-
-
-#Compare average expression between episomal MPRAs between repeated 
-#concentrations 0, 1 and 4 µM forskolin
-
-join_epi <- function(df_0_22, df_0_64) {
-  df_0_22 <- df_0_22 %>%
-    mutate(ave_med_ratio_0 = (med_ratio_0A + med_ratio_0B)/2) %>%
-    mutate(ave_med_ratio_1 = (med_ratio_20A + med_ratio_20B)/2) %>%
-    mutate(ave_med_ratio_4 = (med_ratio_22A + med_ratio_22B)/2) %>%
-    select(subpool, name, most_common, ave_med_ratio_0, ave_med_ratio_1, 
-           ave_med_ratio_4)
-  df_0_64 <- df_0_64 %>%
-    mutate(ave_med_ratio_0 = (med_ratio_0A + med_ratio_0B)/2) %>%
-    mutate(ave_med_ratio_1 = (med_ratio_1A + med_ratio_1B)/2) %>%
-    mutate(ave_med_ratio_4 = (med_ratio_4A + med_ratio_4B)/2) %>%
-    select(subpool, name, most_common, ave_med_ratio_0, ave_med_ratio_1, 
-           ave_med_ratio_4)
-  join <- inner_join(df_0_22, df_0_64, by = c('subpool', 'name', 'most_common'),
-                     suffix = c('_0_22', '_0_64'))
-  return(join)
-}
-
-epi_epi <- join_epi(med_rep_0_22_A_B, epi_rep_0_64)
-
-p_epi_epi_0 <- ggplot(epi_epi, 
-                      aes(ave_med_ratio_0_0_22, ave_med_ratio_0_0_64)) +
-  geom_point(alpha = 0.1, size = 0.5) +
-  geom_point(data = filter(epi_epi, 
-                           grepl(
-                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.25) + 
-  geom_point(data = filter(epi_epi, name == 'pGL4.29 Promega 1-63 + 1-87'), 
-             fill = 'red', shape = 21, size = 1.25) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Average expression (a.u.)\n0-4 µM forskolin MPRA") +
-  ylab("Average expression (a.u.)\n0-64 µM forskolin MPRA") +
-  scale_x_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
-  background_grid(major = 'xy', minor = 'none') + 
-  panel_border(colour = 'black') +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
-  figurefont_theme
-
-p_epi_epi_1 <- ggplot(epi_epi, 
-                      aes(ave_med_ratio_1_0_22, ave_med_ratio_1_0_64)) +
-  geom_point(alpha = 0.1, size = 0.5) +
-  geom_point(data = filter(epi_epi, 
-                           grepl(
-                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.25) + 
-  geom_point(data = filter(epi_epi, name == 'pGL4.29 Promega 1-63 + 1-87'), 
-             fill = 'red', shape = 21, size = 1.25) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Average expression (a.u.)\n0-4 µM forskolin MPRA") +
-  ylab("Average expression (a.u.)\n0-64 µM forskolin MPRA") +
-  scale_x_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
-  background_grid(major = 'xy', minor = 'none') + 
-  panel_border(colour = 'black') +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
-  figurefont_theme
-
-p_epi_epi_4 <- ggplot(epi_epi, 
-                      aes(ave_med_ratio_4_0_22, ave_med_ratio_4_0_64)) +
-  geom_point(alpha = 0.1, size = 0.5) +
-  geom_point(data = filter(epi_epi, 
-                           grepl(
-                             'subpool5_no_site_no_site_no_site_no_site_no_site_no_site',
-                             name)), 
-             fill = 'orange', shape = 21, size = 1.25) + 
-  geom_point(data = filter(epi_epi, name == 'pGL4.29 Promega 1-63 + 1-87'), 
-             fill = 'red', shape = 21, size = 1.25) +
-  annotation_logticks(scaled = TRUE) +
-  xlab("Average expression (a.u.)\n0-4 µM forskolin MPRA") +
-  ylab("Average expression (a.u.)\n0-64 µM forskolin MPRA") +
-  scale_x_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) + 
-  scale_y_log10(limits = c(0.05, 20), breaks = c(0.1, 1, 10)) +
-  background_grid(major = 'xy', minor = 'none') + 
-  panel_border(colour = 'black') +
-  theme(strip.background = element_rect(colour="black", fill="white"),
-        axis.line.y = element_line(), panel.spacing.x=unit(1, "lines")) +
-  figurefont_theme
-
-ggsave('../plots/p_epi_epi_0.png', p_epi_epi_0, width = 1.75, height = 1.6, 
-       units = 'in')
-
-ggsave('../plots/p_epi_epi_1.png', p_epi_epi_1, width = 1.75, height = 1.6, 
-       units = 'in')
-
-ggsave('../plots/p_epi_epi_4.png', p_epi_epi_4, width = 1.75, height = 1.6, 
-       units = 'in')
-
-log10_epi_epi <- var_log10(epi_epi)
-
-pearsons_epi_epi <- tibble(
-  conc = c(0, 1, 4),
-  pearsons = c(round(cor(log10_epi_epi$ave_med_ratio_0_0_22, 
-                         log10_epi_epi$ave_med_ratio_0_0_64, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3),
-               round(cor(log10_epi_epi$ave_med_ratio_1_0_22, 
-                         log10_epi_epi$ave_med_ratio_1_0_64, 
-                         use = "pairwise.complete.obs", method = "pearson"), 3),
-               round(cor(log10_epi_epi$ave_med_ratio_4_0_22, 
-                         log10_epi_epi$ave_med_ratio_4_0_64,
-                         use = "pairwise.complete.obs", method = "pearson"), 3))
-)
-
-
-#Replicability between backgrounds----------------------------------------------
+#Compare expression between variants with similar CRE architectures but
+#different background sequences. Comparison in both the episomal and genomic
+#MPRA
 
 back_epi <- epi_back_norm_pc_spGl4 %>%
   select(name, background, med_ratio_22A, med_ratio_22B) %>%
@@ -1438,6 +1202,24 @@ fold_change_range <- function(df) {
     summarize(med_fold_change = median(range_change))
   return(range_change)
 }
+
+#Because so few variants were retained in this library with background 41 in the
+#genomic MPRA, those in the episomal MPRA are added after the join for analysis 
+
+epi_41_rbind <- function(df1, df2) {
+  epi41 <- df1 %>%
+    filter(background == 41 & conc == 2) %>%
+    select(subpool, name, most_common, background, ave_ratio_norm) %>%
+    subpool3() %>%
+    mutate(MPRA = 'episomal')
+  combinedMPRA <- df2 %>%
+    select(spacing, dist, most_common, background, MPRA, ave_ratio_norm) %>%
+    filter(!(MPRA == 'episomal' &  background == 41)) %>%
+    rbind(epi41)
+  return(combinedMPRA)
+}
+
+s3_gen_epi_rbind41 <- epi_41_rbind(epi_back_norm_conc, s3_gen_epi)
   
 s3_gen_epi_med_range <- med_range_dist(s3_gen_epi)
 s3_gen_epi_med_range_41 <- med_range_dist(s3_gen_epi_rbind41)
@@ -1553,6 +1335,8 @@ s3_gen_epi_range_147 <- s3_gen_epi_range %>%
 
 #Make dfs for wilcox test (ave_ratio_norm, range) per MPRA and background
 
+#episomal MPRA
+
 s3_gen_epi_range_67_epi_41 <- s3_gen_epi_range_67 %>%
   filter(MPRA == 'episomal', background == 41) %>%
   select(ave_ratio_norm, range)
@@ -1585,9 +1369,7 @@ s3_gen_epi_range_147_epi_55 <- s3_gen_epi_range_147 %>%
 
 rbind_epi_55 <- rbind(s3_gen_epi_range_67_epi_55, s3_gen_epi_range_147_epi_55)
 
-
-
-
+#genomic MPRA
 
 s3_gen_epi_range <- s3_gen_epi %>%
   filter(spacing != 0 & spacing != 70) %>%
@@ -1641,7 +1423,7 @@ wilcox.test(ave_ratio_norm ~ range, data = rbind_gen_52)
 wilcox.test(ave_ratio_norm ~ range, data = rbind_gen_55)
 
 
-#Supplemental Figure 3----------------------------------------------------------
+#Supplemental Figure 2A---------------------------------------------------------
 
 #Import background-normalized expression table following first MPRA performed.
 #MPRA performed at 0 and 25 µM forskolin with library designs corresponding to 
@@ -1703,29 +1485,10 @@ p_subpool2_dist_0_25 <- s2_untidy_moveavg3 %>%
 ggsave('../plots/subpool2_dist_0_25.pdf', p_subpool2_dist_0_25, units = 'in',
        width = 5, height = 2.66)
 
-#Supp. Fig, 4, Figure 3, and Supp. Fig. 5---------------------------------------
+#Supplemental figure 2B---------------------------------------------------------
 
 #Plot average background-normalized expression per MPRA, CRE Spacing, and CRE
-#background acros CRE Distances. Because so few variants were retained in this 
-#library with background 41 in the genomic MPRA, the join results in too few
-#variants to analyze in the episomal MPRA as well. Thus here I show the variants
-#retained in the genomic MPRA for completeness but rbind variants retained in 
-#the episomal MPRA to show the full distance profile in the supplement
-
-epi_41_rbind <- function(df1, df2) {
-  epi41 <- df1 %>%
-    filter(background == 41 & conc == 2) %>%
-    select(subpool, name, most_common, background, ave_ratio_norm) %>%
-    subpool3() %>%
-    mutate(MPRA = 'episomal')
-  combinedMPRA <- df2 %>%
-    select(spacing, dist, most_common, background, MPRA, ave_ratio_norm) %>%
-    filter(!(MPRA == 'episomal' &  background == 41)) %>%
-    rbind(epi41)
-  return(combinedMPRA)
-}
-
-s3_gen_epi_rbind41 <- epi_41_rbind(epi_back_norm_conc, s3_gen_epi)
+#background acros CRE Distances. 
 
 #fit 3 bp moving window function
 
@@ -1734,8 +1497,6 @@ s3_tidy_moveavg3_MPRA <- s3_gen_epi_rbind41 %>%
   group_by(background, spacing, MPRA) %>%
   arrange(dist, .by_group = TRUE) %>%
   moveavg_dist3()
-
-#plot supplemental figure 4
 
 p_space_dist_gen_epi <- s3_tidy_moveavg3_MPRA %>%
   ggplot(aes(x = dist, y = ave_ratio_norm, color = MPRA)) + 
@@ -1759,7 +1520,9 @@ p_space_dist_gen_epi <- s3_tidy_moveavg3_MPRA %>%
 ggsave('../plots/space_dist_gen_epi.pdf', p_space_dist_gen_epi, units = 'in',
        width = 6.4, height = 5)
 
-#Plot figure 3
+#Figure 3 and Supplemental Figure 3---------------------------------------------
+
+#Figure 3A
 
 p_subpool3_spa_4_vchr9_5_10 <- s3_tidy_moveavg3_MPRA %>%
   filter(MPRA == 'episomal' & background == 41 & dist < 124 & (spacing == 5 | spacing == 10)) %>%
@@ -1838,6 +1601,8 @@ ggsave('../plots/p_subpool3_med_spa_4_vchr9_5_15.pdf',
 ggsave('../plots/p_subpool3_med_spa_4_vchr9_10_20.pdf', 
        p_subpool3_spa_4_vchr9_10_20, height = 1.35, width = 4.8, units = 'in')
 
+#Figure 3B
+
 #Plot all on one plot based on distance from distal CRE
 
 twosite_4_moveavg3_dist_distal_MPRA <- s3_gen_epi_rbind41 %>%
@@ -1874,8 +1639,7 @@ ggsave('../plots/p_subpool3_spa_4_vchr9_dist_distal.pdf',
        p_subpool3_spa_4_vchr9_dist_distal, height = 1.35, width = 4.8, 
        units = 'in')
 
-
-#Supplemental Figure 5
+#Supplemental Figure 3
 
 #Overlay of CRE expression profiles following CRE Distance and between the CRE 
 #Spacings 5 and 10, 5 and 15, and 10 and 20 bp. Plots similar to figure 3A are
@@ -2146,10 +1910,127 @@ ggsave('../plots/p_subpool3_spa_vchr5_int_10_20.pdf',
        p_subpool3_spa_vchr5_int_10_20, 
        height = 1.25, width = 4.4, units = 'in')
 
+#Figure 4-----------------------------------------------------------------------
 
-#Figure 4 and Supplemental Figures 7 and 8--------------------------------------
+#Figure 4B
 
-#Figure 4A
+#tileplot of all backgrounds and spacings, take average expression per distance
+#per background across spacings and plot 3 bp moving average to summarize
+#periodicities above plots
+
+twosite_4_avespace_moveavg3_dist_distal <- twosite_norm %>%
+  mutate(distal_dist = dist + spacing + 8) %>%
+  mutate(ave_ratio_norm = ave_med_ratio_norm_4) %>%
+  select(background, spacing, distal_dist, ave_ratio_norm) %>%
+  group_by(background, distal_dist) %>%
+  summarize(ave_ratio_norm = mean(ave_ratio_norm)) %>%
+  group_by(background) %>%
+  arrange(distal_dist, .by_group = TRUE) %>%
+  moveavg_dist3()
+
+p_twosite_ave3 <- twosite_4_avespace_moveavg3_dist_distal %>%
+  ggplot(aes(distal_dist, ave_ratio_norm)) +
+  facet_grid(background ~ ., scales = 'free') +
+  geom_point(color = 'gray50', alpha = 0.75, size = 0.5) +
+  geom_line(aes(distal_dist, ave_3), size = 0.5) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                  breaks = c(seq(from = 60, to = 200, by = 10))) +
+  ylab('Average expression across spacings (a.u.)') +
+  theme(strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_twosite_ave3.pdf', p_twosite_ave3,
+       width = 5.6, height = 1.25, units = 'in')
+
+#plot according to distal CRE distance
+
+twosite_4_moveavg3_dist_distal <- twosite_norm %>%
+  mutate(distal_dist = dist + spacing + 8) %>%
+  mutate(ave_ratio_norm = ave_med_ratio_norm_4) %>%
+  select(background, spacing, distal_dist, ave_ratio_norm) %>%
+  group_by(background, spacing) %>%
+  arrange(distal_dist, .by_group = TRUE) %>%
+  moveavg_dist3()
+
+p_twosite_tile_back41 <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == 41) %>%
+  ggplot(aes(x = distal_dist, y = spacing, fill = ave_ratio_norm)) +
+  facet_grid(background ~ .) +
+  geom_tile() +
+  scale_fill_gradientn(name = 'Average normalized\nexpression (a.u.)',
+                       colors = cbPalette_cont_blue) +
+  guides(fill = guide_colorbar(frame.colour = 'black', 
+                               ticks.colour = 'black')) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                  breaks = c(seq(from = 60, to = 200, by = 10))) +
+  ylab("Spacing between CREs (bp)") +
+  theme(strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_twosite_tile_back52 <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == 52) %>%
+  ggplot(aes(x = distal_dist, y = spacing, fill = ave_ratio_norm)) +
+  facet_grid(background ~ .) +
+  geom_tile() +
+  scale_fill_gradientn(name = 'Average normalized\nexpression (a.u.)',
+                       colors = cbPalette_cont_blue) +
+  guides(fill = guide_colorbar(frame.colour = 'black', 
+                               ticks.colour = 'black')) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                  breaks = c(seq(from = 60, to = 200, by = 10))) +
+  ylab("Spacing between CREs (bp)") +
+  theme(strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_twosite_tile_back55 <- twosite_4_moveavg3_dist_distal %>%
+  filter(background == 55) %>%
+  ggplot(aes(x = distal_dist, y = spacing, fill = ave_ratio_norm)) +
+  facet_grid(background ~ .) +
+  geom_tile() +
+  scale_fill_gradientn(name = 'Average normalized\nexpression (a.u.)',
+                       colors = cbPalette_cont_blue) +
+  guides(fill = guide_colorbar(frame.colour = 'black', 
+                               ticks.colour = 'black')) +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
+                  breaks = c(seq(from = 60, to = 200, by = 10))) +
+  ylab("Spacing between CREs (bp)") +
+  theme(strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_twosite_tile_back41.pdf', p_twosite_tile_back41,
+       width = 7, height = 1.75, units = 'in')
+
+ggsave('../plots/p_twosite_tile_back52.pdf', p_twosite_tile_back52,
+       width = 7, height = 1.75, units = 'in')
+
+ggsave('../plots/p_twosite_tile_back55.pdf', p_twosite_tile_back55,
+       width = 7, height = 1.75, units = 'in')
+
+#Figure 4C
+
+#Look at mean expression across spacings and backgrounds
+
+ave_exp_spacings <- twosite_norm %>%
+  group_by(background, spacing) %>%
+  summarize(ave_ratio_norm = mean(ave_med_ratio_norm_4))
+
+p_twosite_spacing_medexp <- ave_exp_spacings %>%
+  ggplot(aes(spacing, ave_ratio_norm, color = as.factor(background))) +
+  geom_point(size = 1) +
+  scale_x_continuous(breaks = c(1:13), name = 'CRE spacing (bp)') +
+  ylab('Average expression\nacross distances (a.u.)') +
+  scale_color_manual(values = background_cbPalette,
+                     name = 'Background') +
+  theme(strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_twosite_spacing_medexp.pdf', 
+       p_twosite_spacing_medexp, height = 1.75, width = 4, units = 'in')
+
+
+#Figure 5, Supplemental Figure 4B and 5-----------------------------------------
+
+#Figure 5A
 
 p_s5_num_cons_num_weak_back55 <- s5_gen_epi %>%
   filter(background == '55') %>%
@@ -2195,7 +2076,7 @@ back55_cons_1_weak_5_gen <- s5_gen_epi %>%
 
 back55_cons_1_weak_5_gen/back55_cons_1_weak_1_gen
 
-#Supplemental Figure 7
+#Supplemental Figure 4B
 
 p_s5_num_cons_num_weak_back41 <- s5_gen_epi %>%
   filter(background == 41) %>%
@@ -2241,38 +2122,12 @@ p_s5_num_cons_num_weak_back52 <- s5_gen_epi %>%
 ggsave('../plots/p_s5_num_cons_num_weak_back52.pdf', 
        p_s5_num_cons_num_weak_back52, width = 4.5, height = 3.75, units = 'in')
 
-#Supplemental Figure 8
-
-p_s5_num_cons_num_weak_back55_conc <- s5_epi_back_norm_conc %>%
-  filter(background == '55') %>%
-  mutate(conc = factor(conc, 
-                       levels = c(2, 0, -1, -2, -3, -4, -5, -7))) %>%
-  ggplot(aes(as.factor(consensus), ave_ratio_norm)) +
-  facet_grid(conc ~ .) +
-  geom_boxplot(aes(fill = as.factor(weak)), outlier.size = 0.75, size = 0.3, 
-               outlier.shape = 21, outlier.alpha = 1, 
-               position = position_dodge(0.75)) +
-  scale_y_log10() + 
-  panel_border(colour = 'black') +
-  annotation_logticks(sides = 'l') +
-  scale_fill_manual(name = 'number of\nweak CREs', 
-                    values = cbPalette7_grad_light) +
-  theme(axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white"),
-        legend.position = 'top') +
-  ylab('Average normalized expression (a.u.)') +
-  xlab('Number of consensus CREs') +
-  figurefont_theme
-
-ggsave('../plots/p_s5_num_cons_num_weak_back55_conc.pdf', 
-       p_s5_num_cons_num_weak_back55_conc, width = 4.5, height = 8.25, 
-       units = 'in')
-
-
-#Prepare df for fit-------------------------------------------------------------
+#Prepare df for lm fits
 
 #change order of site types to fit consensus and weak CRE expression relative to
 #no site
+
+set.seed(1234)
 
 subpool5_ncw <- s5_gen_epi %>%
   mutate(site1 = gsub('nosite', 'anosite', site1)) %>%
@@ -2303,9 +2158,246 @@ subpool5_ncw_test_gen <- subpool5_gen[s5_smp, ]
 subpool5_ncw_train_gen <- subpool5_gen[-s5_smp, ]
 
 
-#Variance explained episomal----------------------------------------------------
+#Figure 5C
 
-#Determine vriance explained per feature
+#Fit log-linear model to the different locations of CRE (site 1-6) and to the 
+#different backgrounds, allowing weights per weak and consensus CRE per site
+
+ind_site_ind_back <- function(df) {
+  model <- lm(ave_ratio ~ background + site1 + site2 + site3 + site4 + site5 + site6, 
+              data = df)
+}
+
+#Attach model predictions to original df
+
+pred_resid <- function(df1, x) {
+  df2 <- df1 %>%
+    add_predictions(x)
+  df3 <- df2 %>%
+    add_residuals(x)
+  return(df3)
+  print('processed pred_resid(df1, df2) in order of (data, model)')
+}
+
+#Make model weights output plottable
+
+ind_site_ind_back_weights <- function(df) {
+  df_conf <-confint_tidy(df)
+  df_tidy <- tidy(df)
+  df_comb <- cbind(df_tidy, df_conf)
+  sites <- df_comb %>%
+    filter(str_detect(term, '^site')) %>%
+    mutate(term = gsub('consensus', '_consensus', term)) %>%
+    mutate(term = gsub('weak', '_weak', term)) %>%
+    separate(term, into = c('variable', 'type'), sep = "_")
+  background <- df_comb %>%
+    filter(str_detect(term, '^background')) %>%
+    mutate(term = gsub('background', 'background_', term)) %>%
+    separate(term, into = c('variable', 'type'), sep = '_')
+  weights <- rbind(sites, background)
+  return(weights)
+}
+
+#train independent site independent background model
+
+ind_site_ind_back_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  ind_site_ind_back()
+
+#test independent site independent background model
+
+ind_site_ind_back_epi_test_p_r <- pred_resid(filter(subpool5_ncw_test_epi, 
+                                                    MPRA == 'episomal'), 
+                                              ind_site_ind_back_epi)
+
+#make model fits graphs
+
+ind_site_ind_back_weights_epi <- ind_site_ind_back_weights(ind_site_ind_back_epi)
+
+ind_site_ind_back_anova_epi <- tidy(anova(ind_site_ind_back_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq)
+
+#Plot
+
+background_viridis <- c('#440154FF', '#33638DFF', '#29AF7FFF')
+
+p_ind_site_ind_back_epi <- ind_site_ind_back_epi_test_p_r %>%
+  mutate(background = factor(background, levels = c('52', '55', '41')))  %>%
+  ggplot(aes(ave_ratio, pred, color = background)) +
+  geom_point(alpha = 0.25, size = 0.8, show.legend = FALSE) +
+  scale_color_manual(values = background_viridis) +
+  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) + 
+  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) +
+  annotation_logticks(sides = 'bl') +
+  figurefont_theme
+
+rss <- summarize(ind_site_ind_back_epi_test_p_r, sum((resid)^2))
+
+tss <- summarize(ind_site_ind_back_epi_test_p_r, sum((ave_ratio - mean(ave_ratio))^2))
+
+1-rss/tss
+
+p_ind_site_ind_back_weights_epi <- ind_site_ind_back_weights_epi %>%
+  mutate(type = factor(type, 
+                       levels = c('52', '55', 'consensus', 'weak'))) %>%
+  ggplot() + 
+  geom_pointrange(aes(variable, estimate, ymin = conf.low, ymax = conf.high,
+                    fill = type), fatten = 2, shape = 21, stroke = 0.5, size = 1) +
+  geom_hline(yintercept = 0, size = 0.25) +
+  scale_x_discrete(position = 'bottom') + 
+  scale_fill_viridis(discrete = TRUE) + 
+  theme(axis.ticks.x = element_blank(), legend.position = 'top',
+        axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.title.x = element_blank()) +
+  ylab('Weight') +
+  figurefont_theme
+
+p_ind_site_ind_back_anova_epi <- ind_site_ind_back_anova_epi %>%
+  ggplot(aes(term, per_sumsq)) + 
+  geom_bar(stat = 'identity') + 
+  ylab('Proportion of\nvariance explained') +
+  scale_y_continuous(limits = c(0, 0.26), 
+                     breaks = seq(from = 0, to = 0.25, by = 0.05)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
+  figurefont_theme
+
+ggsave('../plots/p_ind_site_ind_back_epi.png', p_ind_site_ind_back_epi, 
+       width = 2.3, height = 2.2, units = 'in')
+
+ggsave('../plots/p_ind_site_ind_back_weights_epi.pdf', 
+       p_ind_site_ind_back_weights_epi,
+       width = 2.75, height = 2.6, units = 'in')
+
+ggsave('../plots/p_ind_site_ind_back_anova_epi.pdf', 
+       p_ind_site_ind_back_anova_epi,
+       width = 2.5, height = 2.4)
+
+#Fit log-linear model to genomic data, join model predictions to df and 
+#determine the proportion of variance explained
+
+ind_site_ind_back_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  ind_site_ind_back()
+
+ind_site_ind_back_gen_test_p_r <- pred_resid(filter(subpool5_ncw_test_gen, MPRA == 'genomic'), 
+                                        ind_site_ind_back_gen)
+
+ind_site_ind_back_weights_gen <- ind_site_ind_back_weights(ind_site_ind_back_gen)
+
+ind_site_ind_back_anova_gen <- tidy(anova(ind_site_ind_back_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq)
+
+#Plot
+
+p_ind_site_ind_back_gen <-  ind_site_ind_back_gen_test_p_r %>%
+  mutate(background = factor(background, levels = c('52', '55', '41')))  %>%
+  ggplot(aes(ave_ratio, pred, color = background)) +
+  geom_point(alpha = 0.25, size = 0.8, show.legend = FALSE) +
+  scale_color_manual(values = background_viridis) +
+  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2.1, 2)) + 
+  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2.1, 2)) +
+  annotation_logticks(sides = 'bl') +
+  figurefont_theme
+
+rss <- summarize(ind_site_ind_back_gen_test_p_r, sum((resid)^2))
+
+tss <- summarize(ind_site_ind_back_gen_test_p_r, sum((ave_ratio - mean(ave_ratio))^2))
+
+1-rss/tss
+
+p_ind_site_ind_back_weights_gen <- ind_site_ind_back_weights_gen %>%
+  mutate(type = factor(type, 
+                       levels = c('52', '55', 'consensus', 'weak'))) %>%
+  ggplot() + 
+  geom_pointrange(aes(variable, estimate, ymin = conf.low, ymax = conf.high,
+                      fill = type), fatten = 2, shape = 21, stroke = 0.5, size = 1) +
+  geom_hline(yintercept = 0, size = 0.25) +
+  scale_x_discrete(position = 'bottom') + 
+  scale_fill_viridis(discrete = TRUE) + 
+  theme(axis.ticks.x = element_blank(), legend.position = 'top',
+        axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.title.x = element_blank()) +
+  ylab('Weight') +
+  figurefont_theme
+
+p_ind_site_ind_back_anova_gen <- ind_site_ind_back_anova_gen %>%
+  ggplot(aes(term, per_sumsq)) + 
+  geom_bar(stat = 'identity') + 
+  ylab('Proportion of\nvariance explained') +
+  scale_y_continuous(limits = c(0, 0.26), 
+                     breaks = seq(from = 0, to = 0.25, by = 0.05)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
+  figurefont_theme
+
+ggsave('../plots/p_ind_site_ind_back_gen.png', p_ind_site_ind_back_gen, 
+       width = 2.3, height = 2.2, units = 'in')
+
+ggsave('../plots/p_ind_site_ind_back_weights_gen.pdf', 
+       p_ind_site_ind_back_weights_gen,
+       width = 2.75, height = 2.6, units = 'in')
+
+ggsave('../plots/p_ind_site_ind_back_anova_gen.pdf', 
+       p_ind_site_ind_back_anova_gen,
+       width = 2.5, height = 2.4)
+
+
+#Supplemental Figure 5A
+
+#site number and bg (independent)
+
+site_ind_back = function(df) {
+  model <- lm(ave_ratio ~ background + consensus + weak, data = df)
+}
+
+site_ind_back_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  site_ind_back()
+
+site_ind_back_p_r_epi <- pred_resid(filter(subpool5_ncw_test_epi, 
+                                           MPRA == 'episomal'), 
+                                        site_ind_back_epi)
+
+#Plot
+
+lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
+
+p_site_ind_back_epi <- ggplot(site_ind_back_p_r_epi, 
+                                  aes(ave_ratio, pred, 
+                                      color = as.factor(consensus))) +
+  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+  scale_color_manual(values = lessthan1_2color) +
+  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) + 
+  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) +
+  annotation_logticks(sides = 'bl') +
+  figurefont_theme
+
+rss <- summarize(site_ind_back_p_r_epi, sum((resid)^2))
+
+tss <- summarize(site_ind_back_p_r_epi, sum((ave_ratio - mean(ave_ratio))^2))
+
+1-rss/tss
+
+ggsave('../plots/p_site_ind_back_epi.png', p_site_ind_back_epi, 
+       width = 2.3, height = 2.2, units = 'in')
+
+
+#Supplemental figure 5B
+
+#Variance explained episomal
+
+#Determine variance explained per feature
 
 model_back <- function(df) {
   model <- lm(ave_ratio ~ background, data = df)
@@ -2462,7 +2554,7 @@ ggsave('../plots/p_var_variance_epi.pdf',
        width = 2.75, height = 1.5)
 
 
-#Variance explained genomic-----------------------------------------------------
+#Variance explained genomic
 
 #Determine vriance explained per feature
 
@@ -2584,41 +2676,39 @@ ggsave('../plots/p_var_variance_gen.pdf',
        width = 2.75, height = 1.5)
 
 
-#Linear model independent site backgrounds--------------------------------------
+#Supplemental Figure 5D, 5E and background analyses-----------------------------
 
-#Figure 4B
+#Supplemental Figure 5D
 
-#Fit log-linear model to the different locations of CRE (site 1-6) and to the 
-#different backgrounds, allowing weights per weak and consensus CRE per site
+#Fitting model to new backgrounds
 
-ind_site_ind_back <- function(df) {
-  model <- lm(ave_ratio ~ background + site1 + site2 + site3 + site4 + site5 + site6, 
-              data = df)
-}
+set.seed(1234)
 
-#Attach model predictions to original df
+sixsite_newback_norm_sub <- removed_bgs_sixsite_newback_norm %>%
+  mutate(site1 = gsub('nosite', 'anosite', site1)) %>%
+  mutate(site2 = gsub('nosite', 'anosite', site2)) %>%
+  mutate(site3 = gsub('nosite', 'anosite', site3)) %>%
+  mutate(site4 = gsub('nosite', 'anosite', site4)) %>%
+  mutate(site5 = gsub('nosite', 'anosite', site5)) %>%
+  mutate(site6 = gsub('nosite', 'anosite', site6)) %>%
+  mutate(background = as.character(background)) %>%
+  mutate(ave_med_ratio_4 = log10(ave_med_ratio_4))
 
-pred_resid <- function(df1, x) {
-  df2 <- df1 %>%
-    add_predictions(x)
-  df3 <- df2 %>%
-    add_residuals(x)
-  return(df3)
-  print('processed pred_resid(df1, df2) in order of (data, model)')
-}
+sixsite_smp_size <- floor(0.8 * nrow(sixsite_newback_norm_sub))
 
-#Make model weights output plottable
+sixsite_smp <- sample(seq_len(nrow(sixsite_newback_norm_sub)), 
+                      size = sixsite_smp_size)
 
-ind_site_ind_back_weights <- function(df) {
-  df_conf <-confint_tidy(df)
-  df_tidy <- tidy(df)
-  df_comb <- cbind(df_tidy, df_conf)
-  sites <- df_comb %>%
+sixsite_test_epi <- sixsite_newback_norm_sub[sixsite_smp, ]
+sixsite_train_epi <- sixsite_newback_norm_sub[-sixsite_smp, ]
+
+new_sixsite_weights <- function(df) {
+  df <- tidy(df)
+  sites <- df %>%
     filter(str_detect(term, '^site')) %>%
     mutate(term = gsub('consensus', '_consensus', term)) %>%
-    mutate(term = gsub('weak', '_weak', term)) %>%
     separate(term, into = c('variable', 'type'), sep = "_")
-  background <- df_comb %>%
+  background <- df %>%
     filter(str_detect(term, '^background')) %>%
     mutate(term = gsub('background', 'background_', term)) %>%
     separate(term, into = c('variable', 'type'), sep = '_')
@@ -2626,368 +2716,65 @@ ind_site_ind_back_weights <- function(df) {
   return(weights)
 }
 
-#train independent site independent background model
-
-ind_site_ind_back_epi <- subpool5_ncw_train_epi %>%
-  filter(MPRA == 'episomal') %>%
-  ind_site_ind_back()
-
-#test independent site independent background model
-
-ind_site_ind_back_epi_test_p_r <- pred_resid(filter(subpool5_ncw_test_epi, 
-                                                    MPRA == 'episomal'), 
-                                              ind_site_ind_back_epi)
-
-#make model fits graphs
-
-ind_site_ind_back_weights_epi <- ind_site_ind_back_weights(ind_site_ind_back_epi)
-
-ind_site_ind_back_anova_epi <- tidy(anova(ind_site_ind_back_epi)) %>%
-  mutate(term = factor(term, levels = term)) %>%
-  mutate(total_sumsq = sum(sumsq)) %>%
-  mutate(per_sumsq = sumsq/total_sumsq)
-
-#Plot
-
-lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
-
-background_viridis <- c('#440154FF', '#33638DFF', '#29AF7FFF')
-
-p_ind_site_ind_back_epi <- ind_site_ind_back_epi_test_p_r %>%
-  mutate(background = factor(background, levels = c('52', '55', '41')))  %>%
-  ggplot(aes(ave_ratio, pred, color = background)) +
-  geom_point(alpha = 0.25, size = 0.8, show.legend = FALSE) +
-  scale_color_manual(values = background_viridis) +
-  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) + 
-  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) +
-  annotation_logticks(sides = 'bl') +
-  figurefont_theme
-
-rss <- summarize(ind_site_ind_back_epi_test_p_r, sum((resid)^2))
-
-tss <- summarize(ind_site_ind_back_epi_test_p_r, sum((ave_ratio - mean(ave_ratio))^2))
-
-1-rss/tss
-
-p_ind_site_ind_back_weights_epi <- ind_site_ind_back_weights_epi %>%
-  mutate(type = factor(type, 
-                       levels = c('52', '55', 'consensus', 'weak'))) %>%
-  ggplot() + 
-  geom_pointrange(aes(variable, estimate, ymin = conf.low, ymax = conf.high,
-                    fill = type), fatten = 2, shape = 21, stroke = 0.5, size = 1) +
-  geom_hline(yintercept = 0, size = 0.25) +
-  scale_x_discrete(position = 'bottom') + 
-  scale_fill_viridis(discrete = TRUE) + 
-  theme(axis.ticks.x = element_blank(), legend.position = 'top',
-        axis.text.x = element_text(angle = 45, hjust = 1), 
-        axis.title.x = element_blank()) +
-  ylab('Weight') +
-  figurefont_theme
-
-p_ind_site_ind_back_anova_epi <- ind_site_ind_back_anova_epi %>%
-  ggplot(aes(term, per_sumsq)) + 
-  geom_bar(stat = 'identity') + 
-  ylab('Proportion of\nvariance explained') +
-  scale_y_continuous(limits = c(0, 0.26), 
-                     breaks = seq(from = 0, to = 0.25, by = 0.05)) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-        axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
-  figurefont_theme
-
-ggsave('../plots/p_ind_site_ind_back_epi.png', p_ind_site_ind_back_epi, 
-       width = 2.3, height = 2.2, units = 'in')
-
-ggsave('../plots/p_ind_site_ind_back_weights_epi.pdf', 
-       p_ind_site_ind_back_weights_epi,
-       width = 2.75, height = 2.6, units = 'in')
-
-ggsave('../plots/p_ind_site_ind_back_anova_epi.pdf', 
-       p_ind_site_ind_back_anova_epi,
-       width = 2.5, height = 2.4)
-
-#Fit log-linear model to genomic data, join model predictions to df and 
+#Fit log-linear model to episomal data, join model predictions to df and 
 #determine the proportion of variance explained
 
-ind_site_ind_back_gen <- subpool5_ncw_train_gen %>%
-  filter(MPRA == 'genomic') %>%
-  ind_site_ind_back()
+ind_site_ind_back_new <- function(df) {
+  model <- lm(ave_med_ratio_4 ~ background + site1 + site2 + site3 + site4 + site5 + site6, 
+              data = df)
+}
 
-ind_site_ind_back_gen_test_p_r <- pred_resid(filter(subpool5_ncw_test_gen, MPRA == 'genomic'), 
-                                        ind_site_ind_back_gen)
+ind_site_ind_back_epi_new <- sixsite_train_epi %>%
+  ind_site_ind_back_new()
 
-ind_site_ind_back_weights_gen <- ind_site_ind_back_weights(ind_site_ind_back_gen)
+ind_site_ind_back_p_r_epi_new <- pred_resid(sixsite_test_epi, 
+                                            ind_site_ind_back_epi_new)
 
-ind_site_ind_back_anova_gen <- tidy(anova(ind_site_ind_back_gen)) %>%
+ind_site_ind_back_weights_epi_new <- new_sixsite_weights(ind_site_ind_back_epi_new)
+
+ind_site_ind_back_anova_epi_new <- tidy(anova(ind_site_ind_back_epi_new)) %>%
   mutate(term = factor(term, levels = term)) %>%
   mutate(total_sumsq = sum(sumsq)) %>%
   mutate(per_sumsq = sumsq/total_sumsq)
 
 #Plot
 
-p_ind_site_ind_back_gen <-  ind_site_ind_back_gen_test_p_r %>%
-  mutate(background = factor(background, levels = c('52', '55', '41')))  %>%
-  ggplot(aes(ave_ratio, pred, color = background)) +
-  geom_point(alpha = 0.25, size = 0.8, show.legend = FALSE) +
-  scale_color_manual(values = background_viridis) +
+lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
+
+p_ind_site_ind_back_epi_new <- ggplot(ind_site_ind_back_p_r_epi_new, 
+                                      aes(ave_med_ratio_4, pred, 
+                                          color = as.factor(consensus))) +
+  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+  scale_color_manual(values = lessthan1_2color) +
   scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2.1, 2)) + 
+                     limits = c(-1.6, 1.8)) + 
   scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2.1, 2)) +
+                     limits = c(-1.6, 1.8)) +
   annotation_logticks(sides = 'bl') +
   figurefont_theme
 
-rss <- summarize(ind_site_ind_back_gen_test_p_r, sum((resid)^2))
+rss <- summarize(ind_site_ind_back_p_r_epi_new, sum((resid)^2))
 
-tss <- summarize(ind_site_ind_back_gen_test_p_r, sum((ave_ratio - mean(ave_ratio))^2))
+tss <- summarize(ind_site_ind_back_p_r_epi_new, sum((ave_med_ratio_4 - mean(ave_med_ratio_4))^2))
 
 1-rss/tss
 
-p_ind_site_ind_back_weights_gen <- ind_site_ind_back_weights_gen %>%
-  mutate(type = factor(type, 
-                       levels = c('52', '55', 'consensus', 'weak'))) %>%
-  ggplot() + 
-  geom_pointrange(aes(variable, estimate, ymin = conf.low, ymax = conf.high,
-                      fill = type), fatten = 2, shape = 21, stroke = 0.5, size = 1) +
-  geom_hline(yintercept = 0, size = 0.25) +
-  scale_x_discrete(position = 'bottom') + 
-  scale_fill_viridis(discrete = TRUE) + 
-  theme(axis.ticks.x = element_blank(), legend.position = 'top',
-        axis.text.x = element_text(angle = 45, hjust = 1), 
-        axis.title.x = element_blank()) +
-  ylab('Weight') +
-  figurefont_theme
-
-p_ind_site_ind_back_anova_gen <- ind_site_ind_back_anova_gen %>%
+p_ind_site_ind_back_anova_epi_new <- ind_site_ind_back_anova_epi_new %>%
   ggplot(aes(term, per_sumsq)) + 
   geom_bar(stat = 'identity') + 
   ylab('Proportion of\nvariance explained') +
-  scale_y_continuous(limits = c(0, 0.26), 
-                     breaks = seq(from = 0, to = 0.25, by = 0.05)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
         axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
   figurefont_theme
 
-ggsave('../plots/p_ind_site_ind_back_gen.png', p_ind_site_ind_back_gen, 
+ggsave('../plots/p_ind_site_ind_back_epi_new.png', p_ind_site_ind_back_epi_new, 
        width = 2.3, height = 2.2, units = 'in')
 
-ggsave('../plots/p_ind_site_ind_back_weights_gen.pdf', 
-       p_ind_site_ind_back_weights_gen,
-       width = 2.75, height = 2.6, units = 'in')
-
-ggsave('../plots/p_ind_site_ind_back_anova_gen.pdf', 
-       p_ind_site_ind_back_anova_gen,
+ggsave('../plots/p_ind_site_ind_back_anova_epi_new.pdf', 
+       p_ind_site_ind_back_anova_epi_new,
        width = 2.5, height = 2.4)
 
-
-#plot other models--------------------------------------------------------------
-
-#site number and bg (independent)
-
-site_ind_back = function(df) {
-  model <- lm(ave_ratio ~ background + consensus + weak, data = df)
-}
-
-site_ind_back_epi <- subpool5_ncw_train_epi %>%
-  filter(MPRA == 'episomal') %>%
-  site_ind_back()
-
-site_ind_back_p_r_epi <- pred_resid(filter(subpool5_ncw_test_epi, 
-                                           MPRA == 'episomal'), 
-                                        site_ind_back_epi)
-
-#Plot
-
-lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
-
-p_site_ind_back_epi <- ggplot(site_ind_back_p_r_epi, 
-                                  aes(ave_ratio, pred, 
-                                      color = as.factor(consensus))) +
-  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
-  scale_color_manual(values = lessthan1_2color) +
-  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) + 
-  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) +
-  annotation_logticks(sides = 'bl') +
-  figurefont_theme
-
-rss <- summarize(site_ind_back_p_r_epi, sum((resid)^2))
-
-tss <- summarize(site_ind_back_p_r_epi, sum((ave_ratio - mean(ave_ratio))^2))
-
-1-rss/tss
-
-ggsave('../plots/p_site_ind_back_epi.png', p_site_ind_back_epi, 
-       width = 2.3, height = 2.2, units = 'in')
-
-
-#combinatorial effects
-
-dep_site_ind_back = function(df) {
-  model <- lm(ave_ratio ~ background * (site1 + site2 + site3 + site4 + site5 + site6), data = df)
-}
-
-dep_site_ind_back_epi <- subpool5_ncw_train_epi %>%
-  filter(MPRA == 'episomal') %>%
-  dep_site_ind_back()
-
-dep_site_dep_back_p_r_epi <- pred_resid(filter(subpool5_ncw_test_epi, 
-                                           MPRA == 'episomal'), 
-                                        dep_site_ind_back_epi)
-
-test <- tidy(dep_site_ind_back_epi)
-
-#Plot
-
-lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
-
-p_site_ind_back_epi <- ggplot(dep_site_dep_back_p_r_epi, 
-                              aes(ave_ratio, pred, 
-                                  color = as.factor(consensus))) +
-  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
-  scale_color_manual(values = lessthan1_2color) +
-  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) + 
-  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) +
-  annotation_logticks(sides = 'bl') +
-  figurefont_theme
-
-rss <- summarize(dep_site_dep_back_p_r_epi, sum((resid)^2))
-
-tss <- summarize(dep_site_dep_back_p_r_epi, sum((ave_ratio - mean(ave_ratio))^2))
-
-1-rss/tss
-
-ggsave('../plots/p_site_ind_back_epi.png', p_site_ind_back_epi, 
-       width = 2.3, height = 2.2, units = 'in')
-
-
-#Figure 5-----------------------------------------------------------------------
-
-#Make linear regression predicting episomal expression from genomic expression
-#using variants containing only consensus CREs. Use this regression to plot 
-#correlation line and determine residuals to relationship
-
-s5_cons_log10 <- s5_gen_epi %>%
-  var_log10() %>%
-  filter(site_combo == 'consensus')
-
-cons_int_epi_lm <- lm(ave_ratio_22_norm ~ ave_med_ratio_norm, 
-                      data = s5_cons_log10)
-
-#Add model predictions and residuals to consensus only (R2 value) and to all 
-#variants in library
-
-pred_resid <- function(df1, x) {
-  df2 <- df1 %>%
-    add_predictions(x)
-  df3 <- df2 %>%
-    add_residuals(x)
-  return(df3)
-  print('processed pred_resid(df1, df2) in order of (data, model)')
-}
-
-s5_gen_epi_cons_lm <- pred_resid(s5_cons_log10, cons_int_epi_lm)
-
-round(cor(s5_gen_epi_cons_lm$ave_ratio_22,
-          s5_gen_epi_cons_lm$pred,
-          use = "pairwise.complete.obs", 
-          method = "pearson")^2, 2)
-
-s5_gen_epi_all_lm <- pred_resid(var_log10(s5_gen_epi), cons_int_epi_lm)
-
-#Figure 5A, plot genomic vs. episomal expression and linear regression as
-#reference. Not plotting variants wihtout any CRE (backgrounds) as they do not
-#fall into CRE categories, the three points don't seem biased in expression
-#around line though.
-
-p_s5_int_trans_site_combo <- s5_gen_epi_all_lm %>%
-  filter(site_combo != 'none') %>%
-  mutate(site_combo = factor(site_combo, 
-                             levels = c('consensus', 'weak', 'mixed'))) %>%
-  ggplot(aes(ave_med_ratio_norm, ave_ratio_22_norm)) +
-  facet_grid(. ~ site_combo) +
-  geom_point(alpha = 0.15, size = 0.5) +
-  geom_line(aes(ave_med_ratio_norm, pred), color = 'red', size = 0.5) +
-  annotation_logticks() +
-  scale_y_continuous(breaks = seq(from = 0, to = 2, by =1)) +
-  xlab('Average normalized log10 genomic expression (a.u.)') +
-  ylab('Average normalized log10\nepisomal expression (a.u.)') +
-  panel_border(colour = 'black') +
-  theme(legend.position = 'right', axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_s5_int_trans_site_combo.pdf', p_s5_int_trans_site_combo,
-       width = 4, height = 2.25, units = 'in')
-
-#determine percent below line in mixed
-
-mixed <- s5_gen_epi_all_lm %>%
-  filter(site_combo == 'mixed')
-
-m <- count(mixed)
-n <- count(filter(mixed, resid < 0))
-n/m
-
-#Figure 5B
-
-#Plot residual of each combination of CREs per variant to linear relationship 
-#between MPRA expression of variants with consensus CREs only. Linear 
-#relationship indicated with a red reference line. Negative residuals indicate 
-#higher relative expression of variant in the genomic MPRA and positive
-#indicates higher relative expression in episomal MPRA
-
-p_s5_gen_epi_site_combo_resid <- s5_gen_epi_all_lm %>%
-  ggplot(aes(as.factor(consensus), resid, fill = as.factor(weak))) +
-  geom_boxplot(outlier.size = 1, size = 0.3, 
-               outlier.shape = 21, outlier.alpha = 1, 
-               position = position_dodge(0.75)) +
-  scale_fill_manual(name = 'number of\nweak CREs', 
-                    values = cbPalette7_grad_light) +
-  xlab("consensus CREs") +
-  ylab("residual") +
-  geom_hline(yintercept = 0, linetype = 2, size = 0.5, color = 'red') +
-  theme(legend.position = 'top', axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_s5_gen_epi_site_combo_resid.pdf', 
-       p_s5_gen_epi_site_combo_resid, width = 3.75, height = 3, units = 'in')
-
-
-#anova
-
-aov_s5_gen_epi_all_lm <- aov(resid ~ as.factor(consensus) * as.factor(weak), 
-                         data = s5_gen_epi_all_lm)
-
-test <- s5_gen_epi_all_lm %>%
-  add_residuals(aov_s5_gen_epi_all_lm)
-
-write_csv(tidy(aov_s5_gen_epi_all_lm),
-          '../tables/aov_s5_gen_epi_all_lm.csv')
-
-plot(aov_s5_gen_epi_lm, 1)
-
-library(car)
-
-levene_s5_gen_epi_all_lm <- leveneTest(resid ~ as.factor(consensus) * as.factor(weak), 
-                                       data = s5_gen_epi_lm)
-
-write_csv(tidy(levene_s5_gen_epi_all_lm),
-           '../tables/levene_s5_gen_epi_all_lm.csv')
-
-qq_aov_s5_gen_epi_all_lm <- plot(aov_s5_gen_epi_all_lm, 2)
-
-aov_s5_gen_epi_all_lm_resid <- residuals(object =  aov_s5_gen_epi_all_lm)
-
-#fails normality - too large?
-
-
-#New data sixsite---------------------------------------------------------------
+#Supplemental Figure 5E
 
 #Determine relationship between total GC and CG content of regulatory elements
 #and expression. Perform analysis on variants with high expression and no
@@ -2998,7 +2785,7 @@ aov_s5_gen_epi_all_lm_resid <- residuals(object =  aov_s5_gen_epi_all_lm)
 sixsite_gc_cg <- removed_bgs_sixsite_newback_norm %>%
   mutate(most_common_kpnI = str_c('C', most_common)) %>%
   mutate(most_common_200 = str_c('CTCGAGGCTAGCGAGCTCAGGTACC', most_common, 
-                                'ACGCGTGCTCTACGACTATGCTCTT')) %>%
+                                 'ACGCGTGCTCTACGACTATGCTCTT')) %>%
   mutate(cg = str_count(most_common_kpnI, pattern = 'CG')) %>%
   mutate(c = str_count(most_common_200, pattern = 'C')) %>%
   mutate(g = str_count(most_common_200, pattern = 'G')) %>%
@@ -3046,6 +2833,7 @@ p_back_cpg_consensus <- sixsite_gc_cg %>%
 ggsave('../plots/p_back_cpg_consensus.png', p_back_cpg_consensus, 
        width = 5.5, height = 1.5, units = 'in')
 
+#Extra analyses
 
 #Count 3 bp flanking motif around sites
 
@@ -3066,13 +2854,6 @@ sixsite_newback_motif <- removed_bgs_sixsite_newback_norm %>%
   mutate(site1_5 = str_sub(most_common, 125, 127)) %>%
   mutate(site1_3 = str_sub(most_common, 136, 138))
 
-test <- sixsite_newback_motif %>%
-  filter(site6 == 'consensus' & site5 == 'consensus') %>%
-  ggplot(aes(site5_3, site5_5, fill = ave_med_ratio_4)) +
-  facet_grid(consensus ~ .) +
-  geom_tile() +
-  scale_fill_viridis()
-
 #Look at local GC content around each site (4 bp on either side)
 
 sixsite_newback_norm_localgc <- removed_bgs_sixsite_newback_norm %>%
@@ -3092,14 +2873,6 @@ sixsite_newback_norm_localgc <- removed_bgs_sixsite_newback_norm %>%
   mutate(site2_gc = (str_count(site2_window, 'C') + str_count(site2_window, 'G'))/16)%>%
   mutate(site1_gc = (str_count(site1_window, 'C') + str_count(site1_window, 'G'))/16)
 
-#interactions between high GC sites and neighbors?
-
-test <- sixsite_newback_norm_localgc %>%
-  filter(consensus == 3 & site6 == 'consensus' & site3 == 'consensus' & site2 == 'consensus') %>%
-  ggplot(aes(site2_gc, site3_gc, fill = ave_med_ratio_4)) +
-  geom_tile() +
-  scale_fill_viridis()
-
 #Local GC content plots and anovas
 
 library(export)
@@ -3107,8 +2880,8 @@ library(export)
 #site 6
 
 aov_site6 <- tidy(aov(ave_med_ratio_norm_4 ~ as.factor(site6_gc), 
-                 data = filter(sixsite_newback_norm_localgc, 
-                               consensus == 6))) %>%
+                      data = filter(sixsite_newback_norm_localgc, 
+                                    consensus == 6))) %>%
   mutate(term = gsub('as\\.factor\\(site6\\_gc\\)', 'GC content', term))
 
 p_site6_localgc <- sixsite_newback_norm_localgc %>%
@@ -3236,377 +3009,210 @@ table2csv(aov_site1, '../tables/aov_site1.csv', digits = 16)
 ggsave('../plots/p_site1_localgc.pdf', p_site1_localgc, width = 2.5, height = 2,
        units = 'in')
 
+#Figure 6, Supplemental Figure 6, and Supplemental Table 2----------------------
 
-#Fitting model to new backgrounds
+#Make linear regression predicting episomal expression from genomic expression
+#using variants containing only consensus CREs. Use this regression to plot 
+#correlation line and determine residuals to relationship
 
-set.seed(1234)
+s5_cons_log10 <- s5_gen_epi %>%
+  var_log10() %>%
+  filter(site_combo == 'consensus')
 
-sixsite_newback_norm_sub <- removed_bgs_sixsite_newback_norm %>%
-  mutate(site1 = gsub('nosite', 'anosite', site1)) %>%
-  mutate(site2 = gsub('nosite', 'anosite', site2)) %>%
-  mutate(site3 = gsub('nosite', 'anosite', site3)) %>%
-  mutate(site4 = gsub('nosite', 'anosite', site4)) %>%
-  mutate(site5 = gsub('nosite', 'anosite', site5)) %>%
-  mutate(site6 = gsub('nosite', 'anosite', site6)) %>%
-  mutate(background = as.character(background)) %>%
-  mutate(ave_med_ratio_4 = log10(ave_med_ratio_4))
+cons_int_epi_lm <- lm(ave_ratio_22_norm ~ ave_med_ratio_norm, 
+                      data = s5_cons_log10)
 
-sixsite_smp_size <- floor(0.8 * nrow(sixsite_newback_norm_sub))
+#Add model predictions and residuals to consensus only (R2 value) and to all 
+#variants in library
 
-sixsite_smp <- sample(seq_len(nrow(sixsite_newback_norm_sub)), 
-                 size = sixsite_smp_size)
-
-sixsite_test_epi <- sixsite_newback_norm_sub[sixsite_smp, ]
-sixsite_train_epi <- sixsite_newback_norm_sub[-sixsite_smp, ]
-
-new_sixsite_weights <- function(df) {
-  df <- tidy(df)
-  sites <- df %>%
-    filter(str_detect(term, '^site')) %>%
-    mutate(term = gsub('consensus', '_consensus', term)) %>%
-    separate(term, into = c('variable', 'type'), sep = "_")
-  background <- df %>%
-    filter(str_detect(term, '^background')) %>%
-    mutate(term = gsub('background', 'background_', term)) %>%
-    separate(term, into = c('variable', 'type'), sep = '_')
-  weights <- rbind(sites, background)
-  return(weights)
+pred_resid <- function(df1, x) {
+  df2 <- df1 %>%
+    add_predictions(x)
+  df3 <- df2 %>%
+    add_residuals(x)
+  return(df3)
+  print('processed pred_resid(df1, df2) in order of (data, model)')
 }
 
-#Fit log-linear model to episomal data, join model predictions to df and 
-#determine the proportion of variance explained
+s5_gen_epi_cons_lm <- pred_resid(s5_cons_log10, cons_int_epi_lm)
 
-ind_site_ind_back_new <- function(df) {
-  model <- lm(ave_med_ratio_4 ~ background + site1 + site2 + site3 + site4 + site5 + site6, 
-              data = df)
+round(cor(s5_gen_epi_cons_lm$ave_ratio_22,
+          s5_gen_epi_cons_lm$pred,
+          use = "pairwise.complete.obs", 
+          method = "pearson")^2, 2)
+
+s5_gen_epi_all_lm <- pred_resid(var_log10(s5_gen_epi), cons_int_epi_lm)
+
+#Figure 6A, plot genomic vs. episomal expression and linear regression as
+#reference. Not plotting variants wihtout any CRE (backgrounds) as they do not
+#fall into CRE categories, the three points don't seem biased in expression
+#around line though.
+
+p_s5_int_trans_site_combo <- s5_gen_epi_all_lm %>%
+  filter(site_combo != 'none') %>%
+  mutate(site_combo = factor(site_combo, 
+                             levels = c('consensus', 'weak', 'mixed'))) %>%
+  ggplot(aes(ave_med_ratio_norm, ave_ratio_22_norm)) +
+  facet_grid(. ~ site_combo) +
+  geom_point(alpha = 0.15, size = 0.5) +
+  geom_line(aes(ave_med_ratio_norm, pred), color = 'red', size = 0.5) +
+  annotation_logticks() +
+  scale_y_continuous(breaks = seq(from = 0, to = 2, by =1)) +
+  xlab('Average normalized log10 genomic expression (a.u.)') +
+  ylab('Average normalized log10\nepisomal expression (a.u.)') +
+  panel_border(colour = 'black') +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_s5_int_trans_site_combo.pdf', p_s5_int_trans_site_combo,
+       width = 4, height = 2.25, units = 'in')
+
+#determine percent below line in mixed
+
+mixed <- s5_gen_epi_all_lm %>%
+  filter(site_combo == 'mixed')
+
+m <- count(mixed)
+n <- count(filter(mixed, resid < 0))
+n/m
+
+#Figure 6B
+
+#Plot residual of each combination of CREs per variant to linear relationship 
+#between MPRA expression of variants with consensus CREs only. Linear 
+#relationship indicated with a red reference line. Negative residuals indicate 
+#higher relative expression of variant in the genomic MPRA and positive
+#indicates higher relative expression in episomal MPRA
+
+p_s5_gen_epi_site_combo_resid <- s5_gen_epi_all_lm %>%
+  ggplot(aes(as.factor(consensus), resid, fill = as.factor(weak))) +
+  geom_boxplot(outlier.size = 1, size = 0.3, 
+               outlier.shape = 21, outlier.alpha = 1, 
+               position = position_dodge(0.75)) +
+  scale_fill_manual(name = 'number of\nweak CREs', 
+                    values = cbPalette7_grad_light) +
+  xlab("consensus CREs") +
+  ylab("residual") +
+  geom_hline(yintercept = 0, linetype = 2, size = 0.5, color = 'red') +
+  theme(legend.position = 'top', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_s5_gen_epi_site_combo_resid.pdf', 
+       p_s5_gen_epi_site_combo_resid, width = 3.75, height = 3, units = 'in')
+
+
+#anova for Supplemental Table 2
+
+aov_s5_gen_epi_all_lm <- aov(resid ~ as.factor(consensus) * as.factor(weak), 
+                         data = s5_gen_epi_all_lm)
+
+test <- s5_gen_epi_all_lm %>%
+  add_residuals(aov_s5_gen_epi_all_lm)
+
+write_csv(tidy(aov_s5_gen_epi_all_lm),
+          '../tables/aov_s5_gen_epi_all_lm.csv')
+
+plot(aov_s5_gen_epi_all_lm, 1)
+
+library(car)
+
+levene_s5_gen_epi_all_lm <- leveneTest(resid ~ as.factor(consensus) * as.factor(weak), 
+                                       data = s5_gen_epi_all_lm)
+
+write_csv(tidy(levene_s5_gen_epi_all_lm),
+           '../tables/levene_s5_gen_epi_all_lm.csv')
+
+qq_aov_s5_gen_epi_all_lm <- plot(aov_s5_gen_epi_all_lm, 2)
+
+aov_s5_gen_epi_all_lm_resid <- residuals(object =  aov_s5_gen_epi_all_lm)
+
+#Supplemental Figure 6
+
+#Make linear regression predicting episomal expression from genomic expression
+#using variants containing only consensus CREs. Use this regression to plot 
+#correlation line and determine residuals to relationship
+
+abline_lm <- lm(ave_ratio_22_norm ~ ave_med_ratio_norm, s5_gen_epi)
+
+#Add model predictions and residuals to consensus only (R2 value) and to all 
+#variants in library
+
+pred_resid <- function(df1, x) {
+  df2 <- df1 %>%
+    add_predictions(x)
+  df3 <- df2 %>%
+    add_residuals(x)
+  return(df3)
+  print('processed pred_resid(df1, df2) in order of (data, model)')
 }
 
-ind_site_ind_back_epi_new <- sixsite_train_epi %>%
-  ind_site_ind_back_new()
+s5_gen_epi_lm <- pred_resid(s5_gen_epi, abline_lm)
 
-ind_site_ind_back_p_r_epi_new <- pred_resid(sixsite_test_epi, 
-                                        ind_site_ind_back_epi_new)
+round(cor(s5_gen_epi_lm$ave_ratio_22_norm,
+          s5_gen_epi_lm$pred,
+          use = "pairwise.complete.obs", 
+          method = "pearson")^2, 3)
 
-ind_site_ind_back_weights_epi_new <- new_sixsite_weights(ind_site_ind_back_epi_new)
+#Supplemental Fig. 6A
 
-ind_site_ind_back_anova_epi_new <- tidy(anova(ind_site_ind_back_epi_new)) %>%
-  mutate(term = factor(term, levels = term)) %>%
-  mutate(total_sumsq = sum(sumsq)) %>%
-  mutate(per_sumsq = sumsq/total_sumsq)
+#Plot genomic vs. episomal expression and linear regression as reference. Not 
+#plotting variants wihtout any CRE (backgrounds) as they do not fall into CRE 
+#categories, the three points don't seem biased in expression around line.
 
-#Plot
-
-lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
-
-p_ind_site_ind_back_epi_new <- ggplot(ind_site_ind_back_p_r_epi_new, 
-                                  aes(ave_med_ratio_4, pred, 
-                                      color = as.factor(consensus))) +
-  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
-  scale_color_manual(values = lessthan1_2color) +
-  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-1.6, 1.8)) + 
-  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-1.6, 1.8)) +
-  annotation_logticks(sides = 'bl') +
+p_s5_int_trans_site_combo <- s5_gen_epi_lm %>%
+  filter(site_combo != 'none') %>%
+  ggplot(aes(ave_med_ratio_norm, ave_ratio_22_norm)) +
+  geom_point(alpha = 0.1, size = 0.5)  +
+  geom_line(aes(ave_med_ratio_norm, pred), color = 'red') +
+  xlab('Average normalized\ngenomic expression (a.u.)') +
+  ylab('Average normalized\nepisomal expression (a.u.)') +
+  theme(legend.position = 'right',
+        strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
-rss <- summarize(ind_site_ind_back_p_r_epi_new, sum((resid)^2))
-
-tss <- summarize(ind_site_ind_back_p_r_epi_new, sum((ave_med_ratio_4 - mean(ave_med_ratio_4))^2))
-
-1-rss/tss
-
-p_ind_site_ind_back_weights_epi_new <- ind_site_ind_back_weights_epi_new %>%
-  ggplot(aes(variable, estimate, fill = type)) + 
-  geom_bar(stat = 'identity', position = 'dodge', color = 'gray60', 
-           size = 0.3) + 
-  geom_hline(yintercept = 0, size = 0.25) +
-  scale_x_discrete(position = 'bottom') + 
-  scale_fill_viridis(discrete = TRUE) + 
-  theme(axis.ticks.x = element_blank(), legend.position = 'top',
-        axis.text.x = element_text(angle = 45, hjust = 1), 
-        axis.title.x = element_blank()) +
-  ylab('Weight') +
-  figurefont_theme
-
-p_ind_site_ind_back_anova_epi_new <- ind_site_ind_back_anova_epi_new %>%
-  ggplot(aes(term, per_sumsq)) + 
-  geom_bar(stat = 'identity') + 
-  ylab('Proportion of\nvariance explained') +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-        axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
-  figurefont_theme
-
-ggsave('../plots/p_ind_site_ind_back_epi_new.png', p_ind_site_ind_back_epi_new, 
+ggsave('../plots/p_s5_gen_epi_abline_linear.png', p_s5_int_trans_site_combo,
        width = 2.3, height = 2.2, units = 'in')
 
-ggsave('../plots/p_ind_site_ind_back_weights_epi_new.pdf', 
-       p_ind_site_ind_back_weights_epi_new,
-       width = 2.75, height = 2.6, units = 'in')
+#Supplemental Figure 6B
 
-ggsave('../plots/p_ind_site_ind_back_anova_epi_new.pdf', 
-       p_ind_site_ind_back_anova_epi_new,
-       width = 2.5, height = 2.4)
+#Plot residual of each combination of CREs per variant to linear relationship 
+#between MPRA expression of variants with consensus CREs only. Linear 
+#relationship indicated with a red reference line. Negative residuals indicate 
+#higher relative expression of variant in the genomic MPRA and positive
+#indicates higher relative expression in episomal MPRA
 
-test <- removed_bgs_sixsite_newback_norm %>%
-  select(background) %>%
-  unique()
-
-
-#New data twosite---------------------------------------------------------------
-
-#Look at mean expression across spacings and backgrounds
-
-ave_exp_spacings <- twosite_norm %>%
-  group_by(background, spacing) %>%
-  summarize(ave_ratio_norm = mean(ave_med_ratio_norm_4))
-
-p_twosite_spacing_medexp <- ave_exp_spacings %>%
-  ggplot(aes(spacing, ave_ratio_norm, color = as.factor(background))) +
-  geom_point(size = 1) +
-  scale_x_continuous(breaks = c(1:13), name = 'CRE spacing (bp)') +
-  ylab('Average expression\nacross distances (a.u.)') +
-  scale_color_manual(values = background_cbPalette,
-                     name = 'Background') +
-  theme(strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_twosite_spacing_medexp.pdf', 
-       p_twosite_spacing_medexp, height = 1.75, width = 4, units = 'in')
-  
-#Determine 3 bp moving average for plotting
-
-twosite_4_moveavg3_dist <- twosite_norm %>%
-  mutate(ave_ratio_norm = ave_med_ratio_norm_4) %>%
-  select(background, spacing, dist, ave_ratio_norm) %>%
-  group_by(background, spacing) %>%
-  arrange(dist, .by_group = TRUE) %>%
-  moveavg_dist3()
-
-#Plot figure 3 with new data
-
-p_twosite_back41_space5 <- twosite_4_moveavg3_dist %>%
-  filter(background == 41 & dist < 124 & spacing == 5) %>%
-  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
-  geom_line(aes(y = ave_3), color = 'gray20', size = 0.4) +
-  geom_point(alpha = 0.5, size = 1, color = 'gray20') +
-  ylab('Average normalized expression (a.u.)') + 
-  panel_border(colour = 'black') +
-  geom_vline(xintercept = c(78, 88), color = 'gray20', linetype = 2, 
-             alpha = 0.5) +
-  background_grid(major = 'x', minor = 'none') +
-  scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 66, to = 126, by = 10)) +
-  scale_y_continuous(limits = c(1, 21)) +
-  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+p_s5_gen_epi_site_combo_resid <- s5_gen_epi_lm %>%
+  filter(site_combo != 'none') %>%
+  ggplot(aes(as.factor(consensus), resid, fill = as.factor(weak))) +
+  geom_boxplot(outlier.size = 0.5, size = 0.3, 
+               outlier.shape = 21, outlier.alpha = 1, 
+               position = position_dodge(0.75)) +
+  scale_fill_manual(name = 'number of\nweak CREs', 
+                    values = cbPalette7_grad_light) +
+  xlab("consensus CREs") +
+  ylab("residual") +
+  geom_hline(yintercept = 0, linetype = 2, size = 0.5, color = 'red') +
+  theme(legend.position = 'top', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
-p_twosite_back41_space10 <- twosite_4_moveavg3_dist %>%
-  filter(background == 41 & dist < 124 & spacing == 10) %>%
-  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
-  geom_line(aes(y = ave_3), color = 'dodgerblue2', size = 0.4) +
-  geom_point(alpha = 1, color = 'white') +
-  geom_point(alpha = 0.5, color = 'dodgerblue2', size = 1) +
-  ylab('Average normalized expression (a.u.)') + 
-  panel_border(colour = 'black') +
-  geom_vline(xintercept = c(83, 92), color = 'dodgerblue2', linetype = 2, 
-             alpha = 0.5) +
-  background_grid(major = 'x', minor = 'none') +
-  scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 66, to = 126, by = 10)) +
-  scale_y_continuous(limits = c(1, 21)) +
-  theme(legend.position = 'right', axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_twosite_back41_space5.pdf', 
-       p_twosite_back41_space5, height = 1.5, width = 4, units = 'in')
-
-ggsave('../plots/p_twosite_back41_space10.pdf', 
-       p_twosite_back41_space10, height = 1.5, width = 4, units = 'in')
+ggsave('../plots/p_s5_gen_epi_site_combo_resid_abline_linear.pdf', 
+       p_s5_gen_epi_site_combo_resid, width = 3.75, height = 3, units = 'in')
 
 
-#plot according to distal CRE distance
+aov_s5_gen_epi_lm <- aov(resid ~ as.factor(consensus) * as.factor(weak), 
+                         data = s5_gen_epi_lm)
 
-twosite_4_moveavg3_dist_distal <- twosite_norm %>%
-  mutate(distal_dist = dist + spacing + 8) %>%
-  mutate(ave_ratio_norm = ave_med_ratio_norm_4) %>%
-  select(background, spacing, distal_dist, ave_ratio_norm) %>%
-  group_by(background, spacing) %>%
-  arrange(distal_dist, .by_group = TRUE) %>%
-  moveavg_dist3()
+plot(aov_s5_gen_epi_lm, 1)
 
-p_twosite_back41_dist_distal_space5 <- twosite_4_moveavg3_dist_distal %>%
-  filter(background == '41' & spacing == 5 & distal_dist < 132) %>%
-  ggplot(aes(distal_dist, ave_ratio_norm)) +
-  geom_point(alpha = 0.5, color = 'gray20', size = 1) +
-  geom_line(aes(y = ave_3), color = 'gray20', size = 0.4) +
-  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
-                     breaks = c(seq(from = 80, to = 130, by = 10))) +
-  scale_y_continuous(limits = c(1, 21)) +
-  ylab("Average normalized expression (a.u.)") +
-  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
-  geom_vline(xintercept = c(101, 111), color = 'red', linetype = 2, 
-             alpha = 0.75) +
-  panel_border(colour = 'black') +
-  theme(axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
+library(car)
 
-dumbdata <- tibble(distal_dist = 79, ave_ratio_norm = 5)
+leveneTest(resid ~ as.factor(consensus) * as.factor(weak), 
+           data = s5_gen_epi_lm)
 
-p_twosite_back41_dist_distal_space10 <- twosite_4_moveavg3_dist_distal %>%
-  filter(background == '41' & spacing == 10 & distal_dist < 132) %>%
-  ggplot(aes(distal_dist, ave_ratio_norm)) +
-  geom_point(alpha = 0.5, color = 'dodgerblue2', size = 1) +
-  geom_point(data = dumbdata, alpha = 0, color = 'white') +
-  geom_line(aes(y = ave_3), color = 'dodgerblue2', size = 0.4) +
-  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
-                  breaks = c(seq(from = 80, to = 130, by = 10))) +
-  scale_y_continuous(limits = c(1, 21)) +
-  ylab("Average normalized expression (a.u.)") +
-  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
-  geom_vline(xintercept = c(101, 111), color = 'red', linetype = 2, 
-             alpha = 0.75) +
-  panel_border(colour = 'black') +
-  theme(axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-p_twosite_back41_dist_distal_trunc <- twosite_4_moveavg3_dist_distal %>%
-  filter(background == '41' & distal_dist < 150) %>%
-  filter(spacing == 1 | spacing == 2 | spacing == 4 | spacing == 7 | spacing == 10 | spacing == 13) %>%
-  ggplot(aes(distal_dist, ave_ratio_norm)) +
-  facet_grid(spacing ~ .) +
-  geom_point(size = 1, alpha = 0.5) +
-  geom_line(aes(distal_dist, ave_3), size = 0.5) +
-  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
-                     breaks = c(seq(from = 80, to = 140, by = 10))) +
-  ylab("Average normalized expression (a.u.)") +
-  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
-  geom_vline(xintercept = c(101, 111), color = 'red', linetype = 2, 
-             alpha = 0.75) +
-  panel_border(colour = 'black') +
-  theme(axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-p_twosite_back41_dist_distal_trunc <- twosite_4_moveavg3_dist_distal %>%
-  filter(background == '41' & distal_dist < 150) %>%
-  ggplot(aes(distal_dist, ave_ratio_norm, color = as.factor(spacing))) +
-  geom_point(size = 1, alpha = 0.5) +
-  geom_line(aes(distal_dist, ave_3, color = as.factor(spacing)), size = 0.75) +
-  geom_line(data = filter(twosite_4_moveavg3_dist_distal, spacing == 13 & background == 41 & distal_dist < 150),
-            aes(distal_dist, ave_3), color = '#FDE725FF', size = 0.75) +
-  scale_color_viridis(discrete = TRUE) +
-  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
-                  breaks = c(seq(from = 80, to = 140, by = 10))) +
-  ylab("Average normalized expression (a.u.)") +
-  background_grid(major = 'x', minor = 'none', colour.major = 'grey70') +
-  geom_vline(xintercept = c(91, 101, 111), color = 'red', linetype = 2, 
-             alpha = 0.75) +
-  panel_border(colour = 'black') +
-  theme(axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_twosite_back41_dist_distal_space5.pdf', 
-       p_twosite_back41_dist_distal_space5,
-       height = 1.5, width = 4, units = 'in')
-
-ggsave('../plots/p_twosite_back41_dist_distal_space10.pdf', 
-       p_twosite_back41_dist_distal_space10,
-       height = 1.5, width = 4, units = 'in')
-
-ggsave('../plots/p_twosite_back41_dist_distal_trunc.pdf', 
-       p_twosite_back41_dist_distal_trunc,
-       height = 5, width = 3.5, units = 'in')
-
-
-#tileplot of all backgrounds and spacings, take average expression per distance
-#per background across spacings and plot 3 bp moving average to summarize
-#periodicities above plots
-
-twosite_4_avespace_moveavg3_dist_distal <- twosite_norm %>%
-  mutate(distal_dist = dist + spacing + 8) %>%
-  mutate(ave_ratio_norm = ave_med_ratio_norm_4) %>%
-  select(background, spacing, distal_dist, ave_ratio_norm) %>%
-  group_by(background, distal_dist) %>%
-  summarize(ave_ratio_norm = mean(ave_ratio_norm)) %>%
-  group_by(background) %>%
-  arrange(distal_dist, .by_group = TRUE) %>%
-  moveavg_dist3()
-
-p_twosite_ave3 <- twosite_4_avespace_moveavg3_dist_distal %>%
-  ggplot(aes(distal_dist, ave_ratio_norm)) +
-  facet_grid(background ~ ., scales = 'free') +
-  geom_point(color = 'gray50', alpha = 0.75, size = 0.5) +
-  geom_line(aes(distal_dist, ave_3), size = 0.5) +
-  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
-                  breaks = c(seq(from = 60, to = 200, by = 10))) +
-  ylab('Average expression across spacings (a.u.)') +
-  theme(strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_twosite_ave3.pdf', p_twosite_ave3,
-       width = 5.6, height = 1.25, units = 'in')
-
-p_twosite_tile_back41 <- twosite_4_moveavg3_dist_distal %>%
-  filter(background == 41) %>%
-  ggplot(aes(x = distal_dist, y = spacing, fill = ave_ratio_norm)) +
-  facet_grid(background ~ .) +
-  geom_tile() +
-  scale_fill_gradientn(name = 'Average normalized\nexpression (a.u.)',
-                       colors = cbPalette_cont_blue) +
-  guides(fill = guide_colorbar(frame.colour = 'black', 
-                                ticks.colour = 'black')) +
-  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
-                  breaks = c(seq(from = 60, to = 200, by = 10))) +
-  ylab("Spacing between CREs (bp)") +
-  theme(strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-p_twosite_tile_back52 <- twosite_4_moveavg3_dist_distal %>%
-  filter(background == 52) %>%
-  ggplot(aes(x = distal_dist, y = spacing, fill = ave_ratio_norm)) +
-  facet_grid(background ~ .) +
-  geom_tile() +
-  scale_fill_gradientn(name = 'Average normalized\nexpression (a.u.)',
-                       colors = cbPalette_cont_blue) +
-  guides(fill = guide_colorbar(frame.colour = 'black', 
-                               ticks.colour = 'black')) +
-  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
-                  breaks = c(seq(from = 60, to = 200, by = 10))) +
-  ylab("Spacing between CREs (bp)") +
-  theme(strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-p_twosite_tile_back55 <- twosite_4_moveavg3_dist_distal %>%
-  filter(background == 55) %>%
-  ggplot(aes(x = distal_dist, y = spacing, fill = ave_ratio_norm)) +
-  facet_grid(background ~ .) +
-  geom_tile() +
-  scale_fill_gradientn(name = 'Average normalized\nexpression (a.u.)',
-                       colors = cbPalette_cont_blue) +
-  guides(fill = guide_colorbar(frame.colour = 'black', 
-                               ticks.colour = 'black')) +
-  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)",
-                  breaks = c(seq(from = 60, to = 200, by = 10))) +
-  ylab("Spacing between CREs (bp)") +
-  theme(strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_twosite_tile_back41.pdf', p_twosite_tile_back41,
-       width = 7, height = 1.75, units = 'in')
-
-ggsave('../plots/p_twosite_tile_back52.pdf', p_twosite_tile_back52,
-       width = 7, height = 1.75, units = 'in')
-
-ggsave('../plots/p_twosite_tile_back55.pdf', p_twosite_tile_back55,
-       width = 7, height = 1.75, units = 'in')
-
-
+#We get no homogeneity of variance
 
 #Reviewer-specific plots barcode effects----------------------------------------
 
@@ -3658,10 +3264,6 @@ bc_assoc_count <- tibble(reads_to_nonmap = c('0', '1', '2', '3', '>3'),
                                      nrow(bc_assoc_count_4)/nrow(epi_bc_percent))) %>%
   mutate(percent = percent*100)
 
-test <- bc_assoc_count %>%
-  filter(reads_to_nonmap != '>3') %>%
-  summarize(sum(percent))
-
 p_bc_assoc_count <- bc_assoc_count %>%
   mutate(reads_to_nonmap = factor(reads_to_nonmap, 
                                   levels = c('0', '1', '2', '3', '>3'))) %>%
@@ -3685,8 +3287,6 @@ p_bc_percent_exp <- epi_bc_percent %>%
 ggsave('../plots/p_bc_percent_exp.png', 
        p_bc_percent_exp, height = 1.75, width = 2.5, units = 'in')
 
-
-
 #reviewer-specific plots, hill plots--------------------------------------------
 
 #subtract expression at 0 conc per each variant to make fitting easier
@@ -3707,7 +3307,7 @@ trans_back_0_norm_conc <- epi_back_norm_pc_spGl4 %>%
 
 library(minpack.lm)
 
-sem_m_model_nlslm <- function(df) {
+m_m_model_nlslm <- function(df) {
   m_m_nlslm <- nlsLM(
     ave_ratio_norm ~ (max_ave_ratio_norm * conc^n)/(conc_half_max^n + conc^n),
     data = df, 
@@ -3963,94 +3563,6 @@ ggsave('../plots/p_s5_cons_ec50.pdf', p_s5_cons_ec50,
        width = 6.5, height = 1.75, units = 'in')
 
 
-
-#reviewer-spcific plots, MPRA comparison linear---------------------------------
-
-#Make linear regression predicting episomal expression from genomic expression
-#using variants containing only consensus CREs. Use this regression to plot 
-#correlation line and determine residuals to relationship
-
-abline_lm <- lm(ave_ratio_22_norm ~ ave_med_ratio_norm, s5_gen_epi)
-
-#Add model predictions and residuals to consensus only (R2 value) and to all 
-#variants in library
-
-pred_resid <- function(df1, x) {
-  df2 <- df1 %>%
-    add_predictions(x)
-  df3 <- df2 %>%
-    add_residuals(x)
-  return(df3)
-  print('processed pred_resid(df1, df2) in order of (data, model)')
-}
-
-s5_gen_epi_lm <- pred_resid(s5_gen_epi, abline_lm)
-
-round(cor(s5_gen_epi_lm$ave_ratio_22_norm,
-          s5_gen_epi_lm$pred,
-          use = "pairwise.complete.obs", 
-          method = "pearson")^2, 3)
-
-#Figure 5A, plot genomic vs. episomal expression and linear regression as
-#reference. Not plotting variants wihtout any CRE (backgrounds) as they do not
-#fall into CRE categories, the three points don't seem biased in expression
-#around line though.
-
-p_s5_int_trans_site_combo <- s5_gen_epi_lm %>%
-  filter(site_combo != 'none') %>%
-  ggplot(aes(ave_med_ratio_norm, ave_ratio_22_norm)) +
-  geom_point(alpha = 0.1, size = 0.5)  +
-  geom_line(aes(ave_med_ratio_norm, pred), color = 'red') +
-  xlab('Average normalized\ngenomic expression (a.u.)') +
-  ylab('Average normalized\nepisomal expression (a.u.)') +
-  theme(legend.position = 'right',
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_s5_gen_epi_abline_linear.png', p_s5_int_trans_site_combo,
-       width = 2.3, height = 2.2, units = 'in')
-
-
-#Figure 5B
-
-#Plot residual of each combination of CREs per variant to linear relationship 
-#between MPRA expression of variants with consensus CREs only. Linear 
-#relationship indicated with a red reference line. Negative residuals indicate 
-#higher relative expression of variant in the genomic MPRA and positive
-#indicates higher relative expression in episomal MPRA
-
-p_s5_gen_epi_site_combo_resid <- s5_gen_epi_lm %>%
-  filter(site_combo != 'none') %>%
-  ggplot(aes(as.factor(consensus), resid, fill = as.factor(weak))) +
-  geom_boxplot(outlier.size = 0.5, size = 0.3, 
-               outlier.shape = 21, outlier.alpha = 1, 
-               position = position_dodge(0.75)) +
-  scale_fill_manual(name = 'number of\nweak CREs', 
-                    values = cbPalette7_grad_light) +
-  xlab("consensus CREs") +
-  ylab("residual") +
-  geom_hline(yintercept = 0, linetype = 2, size = 0.5, color = 'red') +
-  theme(legend.position = 'top', axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_s5_gen_epi_site_combo_resid_abline_linear.pdf', 
-       p_s5_gen_epi_site_combo_resid, width = 3.75, height = 3, units = 'in')
-
-
-aov_s5_gen_epi_lm <- aov(resid ~ as.factor(consensus) * as.factor(weak), 
-                      data = s5_gen_epi_lm)
-
-plot(aov_s5_gen_epi_lm, 1)
-
-library(car)
-
-leveneTest(resid ~ as.factor(consensus) * as.factor(weak), 
-          data = s5_gen_epi_lm)
-
-#We get no homogeneity of variance
-
-
 #Reviewer-specific plots feed forward attempt-----------------------------------
 
 #using caret
@@ -4074,22 +3586,33 @@ importance <- varImp(model, scale = FALSE)
 #caret doesn't play nicely with categorical variables.....
 
 
-
 #Extras-------------------------------------------------------------------------
+
+#Determining total unique sequences analyzed in paper
+
+#Single CRE assay only looked at half of the designed library (with sequence 
+#flanks)
+
+s2_flanks <- s2_epi_rep_0_25 %>%
+  filter(site == 'consensusflank') %>%
+  filter(conc == 0)
+
+most_common <- function(df) {
+  df <- df %>%
+    select(most_common)
+}
 
 count_seq <- function(dfepi, dfgen, df25, dfnew) {
   dfepi <- most_common(dfepi)
   dfgen <- most_common(dfgen)
   df25 <- most_common(df25)
   dfnew <- most_common(dfnew)
-  total <- rbind(dfepi, dfgen, df25, dfnew) %>%
-    unique()
+  total <- rbind(dfepi, dfgen, df25, dfnew)
   return(total)
   }
 
-test <- count_seq(med_rep_0_22_A_B, gen_rep_1_2, s2_epi_rep_0_25, med_rep_followup)
+test <- count_seq(med_rep_0_22_A_B, gen_rep_1_2, s2_flanks, med_rep_followup)
 
-
-
+#Remove 20 from test for controls not analyzed in paper
 
 

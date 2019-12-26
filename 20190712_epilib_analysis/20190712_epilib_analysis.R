@@ -327,7 +327,7 @@ p_oldback_scramble <- scramble_oldback_norm %>%
   geom_hline(yintercept = 1, color = 'red')
 
 #output BC dfs of scrambled background expressions and background alone 
-#expressions for t.test analysis of signigicant differences
+#expressions for t.test analysis of significant differences
 
 bc_scramble_sep <- function(df) {
   df <- df %>%
@@ -431,11 +431,9 @@ backgrounds_old <- rbind(backgrounds_0A_old, backgrounds_0B_old,
 
 #this part was written by Kim
 
-library(dplyr)
 library(tidyr)
 library(purrr)
 
-options(stringsAsFactors = F)
 options(scipen = 10000)
 
 # assign category to make t-test easier
