@@ -1098,7 +1098,7 @@ s5_epi_back_norm_conc <- med_rep_0_22_A_B %>%
   var_conc_exp() %>%
   subpool5()
 
-#Figure 2----------------------------------------------------------------------
+#Figure 2A-D--------------------------------------------------------------------
 
 #Figure 2A
 
@@ -1423,6 +1423,133 @@ wilcox.test(ave_ratio_norm ~ range, data = rbind_gen_52)
 wilcox.test(ave_ratio_norm ~ range, data = rbind_gen_55)
 
 
+#Figure 2C
+
+#fit 3 bp moving window function with episomal values for background 41
+
+s3_tidy_moveavg3_MPRA_41 <- s3_gen_epi_rbind41 %>%
+  select(background, spacing, dist, MPRA, ave_ratio_norm) %>%
+  group_by(background, spacing, MPRA) %>%
+  arrange(dist, .by_group = TRUE) %>%
+  moveavg_dist3()
+
+p_subpool3_spa_4_vchr9_5_10 <- s3_tidy_moveavg3_MPRA_41 %>%
+  filter(MPRA == 'episomal' & background == 41 & dist < 124 & (spacing == 5 | spacing == 10)) %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.65) +
+  geom_point(alpha = 0.5, size = 1) +
+  scale_color_manual(values = c('gray20', 'dodgerblue2'), name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  geom_vline(xintercept = c(78, 88), color = 'gray20', linetype = 2, 
+             alpha = 0.5) +
+  geom_vline(xintercept = c(83, 92), color = 'dodgerblue2', linetype = 2, 
+             alpha = 0.5) +
+  scale_y_continuous(limits = c(1, 15)) +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_reverse("Distance to minimal promoter from proximal CRE (bp)", 
+                  breaks = seq(from = 66, to = 126, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+p_subpool3_spa_4_vchr9_5_15 <- s3_tidy_moveavg3_MPRA_41 %>%
+  filter(MPRA == 'episomal' & background == 41 & dist < 124 & (spacing == 5 | spacing == 15)) %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.65) +
+  geom_point(alpha = 0.5, size = 1) +
+  scale_color_manual(values = c('gray20', 'orangered3'), 
+                     name = 'spacing (bp)') +
+  scale_fill_manual(values = c('gray20', 'orangered3'), 
+                    name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  geom_vline(xintercept = c(78, 88), color = 'gray20', linetype = 2, 
+             alpha = 0.5) +
+  scale_y_continuous(limits = c(1, 15)) +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_reverse("Distance to minimal promoter from proximal CRE (bp)", 
+                  breaks = seq(from = 66, to = 126, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+#10 and 20 bp spacing do not have a data point at 66 bp CRE Distance, which 
+#makes plotting similar-sized graphs difficult, add "data" at 66 with alpha = 1
+
+dumbdata <- tibble(dist = 66, ave_ratio_norm = 0.5)
+
+p_subpool3_spa_4_vchr9_10_20 <- s3_tidy_moveavg3_MPRA_41 %>%
+  filter(MPRA == 'episomal' & background == 41 & dist < 124 & (spacing == 10 | spacing == 20)) %>%
+  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.65) +
+  geom_point(data = dumbdata, alpha = 1, color = 'white') +
+  geom_point(alpha = 0.5, size = 1) +
+  scale_color_manual(values = c('dodgerblue2', 'sandybrown'),
+                     name = 'spacing (bp)') +
+  scale_fill_manual(values = c('dodgerblue2', 'sandybrown'),
+                    name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  geom_vline(xintercept = c(83, 92), color = 'dodgerblue2', linetype = 2, 
+             alpha = 0.5) +
+  scale_y_continuous(limits = c(1, 15)) +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_reverse("Distance to minimal promoter from proximal CRE (bp)", 
+                  breaks = seq(from = 66, to = 126, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_subpool3_med_spa_4_vchr9_5_10.pdf', 
+       p_subpool3_spa_4_vchr9_5_10, height = 1.35, width = 4.8, units = 'in')
+
+ggsave('../plots/p_subpool3_med_spa_4_vchr9_5_15.pdf', 
+       p_subpool3_spa_4_vchr9_5_15, height = 1.35, width = 4.8, units = 'in')
+
+ggsave('../plots/p_subpool3_med_spa_4_vchr9_10_20.pdf', 
+       p_subpool3_spa_4_vchr9_10_20, height = 1.35, width = 4.8, units = 'in')
+
+
+#Figure 2D
+
+#Plot all on one plot based on distance from distal CRE
+
+twosite_4_moveavg3_dist_distal_MPRA <- s3_gen_epi_rbind41 %>%
+  mutate(distal_dist = dist + spacing + 8) %>%
+  select(background, spacing, distal_dist, MPRA, ave_ratio_norm) %>%
+  group_by(background, spacing, MPRA) %>%
+  arrange(distal_dist, .by_group = TRUE) %>%
+  moveavg_dist3()
+
+p_subpool3_spa_4_vchr9_dist_distal <- twosite_4_moveavg3_dist_distal_MPRA %>%
+  filter(MPRA == 'episomal' & background == 41 & distal_dist < 137 & spacing != 0 & spacing != 70) %>%
+  ggplot(aes(x = distal_dist, y = ave_ratio_norm, color = as.factor(spacing))) +
+  geom_line(aes(y = ave_3), size = 0.65) +
+  geom_point(alpha = 0.5, size = 1) +
+  scale_color_manual(values = c('gray20', 'dodgerblue2', 
+                                'orangered3', 'sandybrown'),
+                     name = 'spacing (bp)') +
+  scale_fill_manual(values = c('gray20', 'dodgerblue2', 
+                               'orangered3', 'sandybrown'),
+                    name = 'spacing (bp)') +
+  ylab('Average normalized expression (a.u.)') + 
+  panel_border(colour = 'black') +
+  geom_vline(xintercept = c(91, 101, 111), color = 'black', linetype = 2, 
+             alpha = 0.5) +
+  scale_y_continuous(limits = c(1, 15)) +
+  background_grid(major = 'x', minor = 'none') +
+  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)", 
+                  breaks = seq(from = 66, to = 140, by = 10)) +
+  theme(legend.position = 'right', axis.ticks.x = element_blank(),
+        strip.background = element_rect(colour="black", fill="white")) +
+  figurefont_theme
+
+ggsave('../plots/p_subpool3_spa_4_vchr9_dist_distal.pdf', 
+       p_subpool3_spa_4_vchr9_dist_distal, height = 1.35, width = 5.3, 
+       units = 'in')
+
+
 #Supplemental Figure 2A---------------------------------------------------------
 
 #Import background-normalized expression table following first MPRA performed.
@@ -1473,7 +1600,7 @@ p_subpool2_dist_0_25 <- s2_untidy_moveavg3 %>%
   scale_color_manual(values = c('gray20', 'firebrick3'), 
                      name = 'forskolin (µM)') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 66, to = 206, by = 20)) +
+                  breaks = seq(from = 66, to = 206, by = 20)) +
   theme(legend.position = 'top',
         strip.background = element_rect(colour="black", fill="white")) +
   panel_border(colour = 'black') + 
@@ -1485,20 +1612,15 @@ p_subpool2_dist_0_25 <- s2_untidy_moveavg3 %>%
 ggsave('../plots/subpool2_dist_0_25.pdf', p_subpool2_dist_0_25, units = 'in',
        width = 6.3, height = 1.85)
 
-#Supplemental figure 2B---------------------------------------------------------
+
+#Supplemental Figure 2B-C-------------------------------------------------------
+
+#Supplemental Figure 2B
 
 #Plot average background-normalized expression per MPRA, CRE Spacing, and CRE
 #background acros CRE Distances. 
 
-#fit 3 bp moving window function
-
-s3_tidy_moveavg3_MPRA <- s3_gen_epi_rbind41 %>%
-  select(background, spacing, dist, MPRA, ave_ratio_norm) %>%
-  group_by(background, spacing, MPRA) %>%
-  arrange(dist, .by_group = TRUE) %>%
-  moveavg_dist3()
-
-p_space_dist_gen_epi <- s3_tidy_moveavg3_MPRA %>%
+p_space_dist_gen_epi <- s3_tidy_moveavg3_MPRA_41 %>%
   ggplot(aes(x = dist, y = ave_ratio_norm, color = MPRA)) + 
   geom_point(alpha = 0.5, size = 0.25) +
   geom_line(data = filter(s3_tidy_moveavg3_MPRA, 
@@ -1512,7 +1634,7 @@ p_space_dist_gen_epi <- s3_tidy_moveavg3_MPRA %>%
                   colour.minor = 'grey95') +
   scale_y_continuous(limits = c(0.3, 47)) +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 70, to = 190, by = 20)) +
+                  breaks = seq(from = 70, to = 190, by = 20)) +
   figurefont_theme +
   theme(legend.position = 'top',
         strip.background = element_rect(colour="black", fill="white"))
@@ -1520,126 +1642,8 @@ p_space_dist_gen_epi <- s3_tidy_moveavg3_MPRA %>%
 ggsave('../plots/space_dist_gen_epi.pdf', p_space_dist_gen_epi, units = 'in',
        width = 6.4, height = 5)
 
-#Figure 3 and Supplemental Figure 3---------------------------------------------
 
-#Figure 3A
-
-p_subpool3_spa_4_vchr9_5_10 <- s3_tidy_moveavg3_MPRA %>%
-  filter(MPRA == 'episomal' & background == 41 & dist < 124 & (spacing == 5 | spacing == 10)) %>%
-  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
-  geom_line(aes(y = ave_3), size = 0.65) +
-  geom_point(alpha = 0.5, size = 1) +
-  scale_color_manual(values = c('gray20', 'dodgerblue2'), name = 'spacing (bp)') +
-  ylab('Average normalized expression (a.u.)') + 
-  panel_border(colour = 'black') +
-  geom_vline(xintercept = c(78, 88), color = 'gray20', linetype = 2, 
-             alpha = 0.5) +
-  geom_vline(xintercept = c(83, 92), color = 'dodgerblue2', linetype = 2, 
-             alpha = 0.5) +
-  scale_y_continuous(limits = c(1, 15)) +
-  background_grid(major = 'x', minor = 'none') +
-  scale_x_reverse("Distance to minimal promoter from proximal CRE (bp)", 
-                     breaks = seq(from = 66, to = 126, by = 10)) +
-  theme(legend.position = 'right', axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-p_subpool3_spa_4_vchr9_5_15 <- s3_tidy_moveavg3_MPRA %>%
-  filter(MPRA == 'episomal' & background == 41 & dist < 124 & (spacing == 5 | spacing == 15)) %>%
-  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
-  geom_line(aes(y = ave_3), size = 0.65) +
-  geom_point(alpha = 0.5, size = 1) +
-  scale_color_manual(values = c('gray20', 'orangered3'), 
-                     name = 'spacing (bp)') +
-  scale_fill_manual(values = c('gray20', 'orangered3'), 
-                    name = 'spacing (bp)') +
-  ylab('Average normalized expression (a.u.)') + 
-  panel_border(colour = 'black') +
-  geom_vline(xintercept = c(78, 88), color = 'gray20', linetype = 2, 
-             alpha = 0.5) +
-  scale_y_continuous(limits = c(1, 15)) +
-  background_grid(major = 'x', minor = 'none') +
-  scale_x_reverse("Distance to minimal promoter from proximal CRE (bp)", 
-                  breaks = seq(from = 66, to = 126, by = 10)) +
-  theme(legend.position = 'right', axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-#10 and 20 bp spacing do not have a data point at 66 bp CRE Distance, which 
-#makes plotting similar-sized graphs difficult, add "data" at 66 with alpha = 1
-
-dumbdata <- tibble(dist = 66, ave_ratio_norm = 0.5)
-
-p_subpool3_spa_4_vchr9_10_20 <- s3_tidy_moveavg3_MPRA %>%
-  filter(MPRA == 'episomal' & background == 41 & dist < 124 & (spacing == 10 | spacing == 20)) %>%
-  ggplot(aes(x = dist, y = ave_ratio_norm, color = as.factor(spacing))) +
-  geom_line(aes(y = ave_3), size = 0.65) +
-  geom_point(data = dumbdata, alpha = 1, color = 'white') +
-  geom_point(alpha = 0.5, size = 1) +
-  scale_color_manual(values = c('dodgerblue2', 'sandybrown'),
-                     name = 'spacing (bp)') +
-  scale_fill_manual(values = c('dodgerblue2', 'sandybrown'),
-                    name = 'spacing (bp)') +
-  ylab('Average normalized expression (a.u.)') + 
-  panel_border(colour = 'black') +
-  geom_vline(xintercept = c(83, 92), color = 'dodgerblue2', linetype = 2, 
-             alpha = 0.5) +
-  scale_y_continuous(limits = c(1, 15)) +
-  background_grid(major = 'x', minor = 'none') +
-  scale_x_reverse("Distance to minimal promoter from proximal CRE (bp)", 
-                  breaks = seq(from = 66, to = 126, by = 10)) +
-  theme(legend.position = 'right', axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_subpool3_med_spa_4_vchr9_5_10.pdf', 
-       p_subpool3_spa_4_vchr9_5_10, height = 1.35, width = 4.8, units = 'in')
-
-ggsave('../plots/p_subpool3_med_spa_4_vchr9_5_15.pdf', 
-       p_subpool3_spa_4_vchr9_5_15, height = 1.35, width = 4.8, units = 'in')
-
-ggsave('../plots/p_subpool3_med_spa_4_vchr9_10_20.pdf', 
-       p_subpool3_spa_4_vchr9_10_20, height = 1.35, width = 4.8, units = 'in')
-
-#Figure 3B
-
-#Plot all on one plot based on distance from distal CRE
-
-twosite_4_moveavg3_dist_distal_MPRA <- s3_gen_epi_rbind41 %>%
-  mutate(distal_dist = dist + spacing + 8) %>%
-  select(background, spacing, distal_dist, MPRA, ave_ratio_norm) %>%
-  group_by(background, spacing, MPRA) %>%
-  arrange(distal_dist, .by_group = TRUE) %>%
-  moveavg_dist3()
-
-p_subpool3_spa_4_vchr9_dist_distal <- twosite_4_moveavg3_dist_distal_MPRA %>%
-  filter(MPRA == 'episomal' & background == 41 & distal_dist < 137 & spacing != 0 & spacing != 70) %>%
-  ggplot(aes(x = distal_dist, y = ave_ratio_norm, color = as.factor(spacing))) +
-  geom_line(aes(y = ave_3), size = 0.65) +
-  geom_point(alpha = 0.5, size = 1) +
-  scale_color_manual(values = c('gray20', 'dodgerblue2', 
-                                'orangered3', 'sandybrown'),
-                     name = 'spacing (bp)') +
-  scale_fill_manual(values = c('gray20', 'dodgerblue2', 
-                               'orangered3', 'sandybrown'),
-                    name = 'spacing (bp)') +
-  ylab('Average normalized expression (a.u.)') + 
-  panel_border(colour = 'black') +
-  geom_vline(xintercept = c(91, 101, 111), color = 'black', linetype = 2, 
-             alpha = 0.5) +
-  scale_y_continuous(limits = c(1, 15)) +
-  background_grid(major = 'x', minor = 'none') +
-  scale_x_reverse("Distance to minimal promoter from distal CRE (bp)", 
-                  breaks = seq(from = 66, to = 140, by = 10)) +
-  theme(legend.position = 'right', axis.ticks.x = element_blank(),
-        strip.background = element_rect(colour="black", fill="white")) +
-  figurefont_theme
-
-ggsave('../plots/p_subpool3_spa_4_vchr9_dist_distal.pdf', 
-       p_subpool3_spa_4_vchr9_dist_distal, height = 1.35, width = 5.3, 
-       units = 'in')
-
-#Supplemental Figure 3
+#Supplemental Figure 2C
 
 #Overlay of CRE expression profiles following CRE Distance and between the CRE 
 #Spacings 5 and 10, 5 and 15, and 10 and 20 bp. Plots similar to figure 3A are
@@ -1664,7 +1668,7 @@ p_subpool3_spa_spgl4_trans_5_10 <- s3_tidy_moveavg3_MPRA %>%
   background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
                   colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 64, to = 194, by = 20)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1703,7 +1707,7 @@ p_subpool3_spa_spgl4_trans_10_20 <- s3_tidy_moveavg3_MPRA %>%
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(1, 7)) +
   background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
-                colour.minor = 'grey95') +
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
                   breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
@@ -1734,7 +1738,7 @@ p_subpool3_spa_spgl4_int_5_10 <- s3_tidy_moveavg3_MPRA %>%
   background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
                   colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 64, to = 194, by = 20)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1801,7 +1805,7 @@ p_subpool3_spa_vchr5_trans_5_10 <- s3_tidy_moveavg3_MPRA %>%
   background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
                   colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 64, to = 194, by = 20)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1868,7 +1872,7 @@ p_subpool3_spa_vchr5_int_5_10 <- s3_tidy_moveavg3_MPRA %>%
   background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
                   colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 64, to = 194, by = 20)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1922,9 +1926,10 @@ ggsave('../plots/p_subpool3_spa_vchr5_int_10_20.pdf',
        p_subpool3_spa_vchr5_int_10_20, 
        height = 1.15, width = 4.4, units = 'in')
 
-#Figure 4-----------------------------------------------------------------------
 
-#Figure 4B
+#Figure 2F-G--------------------------------------------------------------------
+
+#Figure 2F
 
 #tileplot of all backgrounds and spacings, take average expression per distance
 #per background across spacings and plot 3 bp moving average to summarize
@@ -2018,7 +2023,7 @@ ggsave('../plots/p_twosite_tile_back52.pdf', p_twosite_tile_back52,
 ggsave('../plots/p_twosite_tile_back55.pdf', p_twosite_tile_back55,
        width = 7, height = 1.75, units = 'in')
 
-#Figure 4C
+#Figure 2G
 
 #Look at mean expression across spacings and backgrounds
 
@@ -2040,9 +2045,9 @@ ggsave('../plots/p_twosite_spacing_medexp.pdf',
        p_twosite_spacing_medexp, height = 1.75, width = 4, units = 'in')
 
 
-#Figure 5, Supplemental Figure 4B and 5A and B----------------------------------
+#Figure 3, Supplemental Figure 3------------------------------------------------
 
-#Figure 5A
+#Figure 3A
 
 p_s5_num_cons_num_weak_back55 <- s5_gen_epi %>%
   filter(background == '55') %>%
@@ -2088,7 +2093,7 @@ back55_cons_1_weak_5_gen <- s5_gen_epi %>%
 
 back55_cons_1_weak_5_gen/back55_cons_1_weak_1_gen
 
-#Supplemental Figure 4B
+#Supplemental Figure 3B
 
 p_s5_num_cons_num_weak_back41 <- s5_gen_epi %>%
   filter(background == 41) %>%
@@ -2134,7 +2139,8 @@ p_s5_num_cons_num_weak_back52 <- s5_gen_epi %>%
 ggsave('../plots/p_s5_num_cons_num_weak_back52.pdf', 
        p_s5_num_cons_num_weak_back52, width = 4.5, height = 3.75, units = 'in')
 
-#Prepare df for lm fits
+
+#Prepare df for lm fits in 3B, C, and E
 
 #change order of site types to fit consensus and weak CRE expression relative to
 #no site
@@ -2170,242 +2176,7 @@ subpool5_ncw_test_gen <- subpool5_gen[s5_smp, ]
 subpool5_ncw_train_gen <- subpool5_gen[-s5_smp, ]
 
 
-#Figure 5C
-
-#Fit log-linear model to the different locations of CRE (site 1-6) and to the 
-#different backgrounds, allowing weights per weak and consensus CRE per site
-
-ind_site_ind_back <- function(df) {
-  model <- lm(ave_ratio ~ background + site1 + site2 + site3 + site4 + site5 + site6, 
-              data = df)
-}
-
-#Attach model predictions to original df
-
-pred_resid <- function(df1, x) {
-  df2 <- df1 %>%
-    add_predictions(x)
-  df3 <- df2 %>%
-    add_residuals(x)
-  return(df3)
-  print('processed pred_resid(df1, df2) in order of (data, model)')
-}
-
-#Make model weights output plottable
-
-ind_site_ind_back_weights <- function(df) {
-  df_conf <-confint_tidy(df)
-  df_tidy <- tidy(df)
-  df_comb <- cbind(df_tidy, df_conf)
-  sites <- df_comb %>%
-    filter(str_detect(term, '^site')) %>%
-    mutate(term = gsub('consensus', '_consensus', term)) %>%
-    mutate(term = gsub('weak', '_weak', term)) %>%
-    separate(term, into = c('variable', 'type'), sep = "_")
-  background <- df_comb %>%
-    filter(str_detect(term, '^background')) %>%
-    mutate(term = gsub('background', 'background_', term)) %>%
-    separate(term, into = c('variable', 'type'), sep = '_')
-  weights <- rbind(sites, background)
-  return(weights)
-}
-
-#train independent site independent background model
-
-ind_site_ind_back_epi <- subpool5_ncw_train_epi %>%
-  filter(MPRA == 'episomal') %>%
-  ind_site_ind_back()
-
-#test independent site independent background model
-
-ind_site_ind_back_epi_test_p_r <- pred_resid(filter(subpool5_ncw_test_epi, 
-                                                    MPRA == 'episomal'), 
-                                              ind_site_ind_back_epi)
-
-#make model fits graphs
-
-ind_site_ind_back_weights_epi <- ind_site_ind_back_weights(ind_site_ind_back_epi)
-
-ind_site_ind_back_anova_epi <- tidy(anova(ind_site_ind_back_epi)) %>%
-  mutate(term = factor(term, levels = term)) %>%
-  mutate(total_sumsq = sum(sumsq)) %>%
-  mutate(per_sumsq = sumsq/total_sumsq)
-
-#Plot
-
-background_viridis <- c('#440154FF', '#33638DFF', '#29AF7FFF')
-
-p_ind_site_ind_back_epi <- ind_site_ind_back_epi_test_p_r %>%
-  mutate(background = factor(background, levels = c('52', '55', '41')))  %>%
-  ggplot(aes(ave_ratio, pred, color = background)) +
-  geom_point(alpha = 0.25, size = 0.8, show.legend = FALSE) +
-  scale_color_manual(values = background_viridis) +
-  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) + 
-  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) +
-  annotation_logticks(sides = 'bl') +
-  figurefont_theme
-
-rss <- summarize(ind_site_ind_back_epi_test_p_r, sum((resid)^2))
-
-tss <- summarize(ind_site_ind_back_epi_test_p_r, sum((ave_ratio - mean(ave_ratio))^2))
-
-1-rss/tss
-
-p_ind_site_ind_back_weights_epi <- ind_site_ind_back_weights_epi %>%
-  mutate(type = factor(type, 
-                       levels = c('52', '55', 'consensus', 'weak'))) %>%
-  ggplot() + 
-  geom_pointrange(aes(variable, estimate, ymin = conf.low, ymax = conf.high,
-                    fill = type), fatten = 2, shape = 21, stroke = 0.5, size = 1) +
-  geom_hline(yintercept = 0, size = 0.25) +
-  scale_x_discrete(position = 'bottom') + 
-  scale_fill_viridis(discrete = TRUE) + 
-  theme(axis.ticks.x = element_blank(), legend.position = 'top',
-        axis.text.x = element_text(angle = 45, hjust = 1), 
-        axis.title.x = element_blank()) +
-  ylab('Weight') +
-  figurefont_theme
-
-p_ind_site_ind_back_anova_epi <- ind_site_ind_back_anova_epi %>%
-  ggplot(aes(term, per_sumsq)) + 
-  geom_bar(stat = 'identity') + 
-  ylab('Proportion of\nvariance explained') +
-  scale_y_continuous(limits = c(0, 0.26), 
-                     breaks = seq(from = 0, to = 0.25, by = 0.05)) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-        axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
-  figurefont_theme
-
-ggsave('../plots/p_ind_site_ind_back_epi.png', p_ind_site_ind_back_epi, 
-       width = 2.3, height = 2.2, units = 'in')
-
-ggsave('../plots/p_ind_site_ind_back_weights_epi.pdf', 
-       p_ind_site_ind_back_weights_epi,
-       width = 2.5, height = 2.5, units = 'in')
-
-ggsave('../plots/p_ind_site_ind_back_anova_epi.pdf', 
-       p_ind_site_ind_back_anova_epi,
-       width = 2.5, height = 2.4)
-
-#Fit log-linear model to genomic data, join model predictions to df and 
-#determine the proportion of variance explained
-
-ind_site_ind_back_gen <- subpool5_ncw_train_gen %>%
-  filter(MPRA == 'genomic') %>%
-  ind_site_ind_back()
-
-ind_site_ind_back_gen_test_p_r <- pred_resid(filter(subpool5_ncw_test_gen, MPRA == 'genomic'), 
-                                        ind_site_ind_back_gen)
-
-ind_site_ind_back_weights_gen <- ind_site_ind_back_weights(ind_site_ind_back_gen)
-
-ind_site_ind_back_anova_gen <- tidy(anova(ind_site_ind_back_gen)) %>%
-  mutate(term = factor(term, levels = term)) %>%
-  mutate(total_sumsq = sum(sumsq)) %>%
-  mutate(per_sumsq = sumsq/total_sumsq)
-
-#Plot
-
-p_ind_site_ind_back_gen <-  ind_site_ind_back_gen_test_p_r %>%
-  mutate(background = factor(background, levels = c('52', '55', '41')))  %>%
-  ggplot(aes(ave_ratio, pred, color = background)) +
-  geom_point(alpha = 0.25, size = 0.8, show.legend = FALSE) +
-  scale_color_manual(values = background_viridis) +
-  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2.1, 2)) + 
-  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2.1, 2)) +
-  annotation_logticks(sides = 'bl') +
-  figurefont_theme
-
-rss <- summarize(ind_site_ind_back_gen_test_p_r, sum((resid)^2))
-
-tss <- summarize(ind_site_ind_back_gen_test_p_r, sum((ave_ratio - mean(ave_ratio))^2))
-
-1-rss/tss
-
-p_ind_site_ind_back_weights_gen <- ind_site_ind_back_weights_gen %>%
-  mutate(type = factor(type, 
-                       levels = c('52', '55', 'consensus', 'weak'))) %>%
-  ggplot() + 
-  geom_pointrange(aes(variable, estimate, ymin = conf.low, ymax = conf.high,
-                      fill = type), fatten = 2, shape = 21, stroke = 0.5, size = 1) +
-  geom_hline(yintercept = 0, size = 0.25) +
-  scale_x_discrete(position = 'bottom') + 
-  scale_fill_viridis(discrete = TRUE) + 
-  theme(axis.ticks.x = element_blank(), legend.position = 'top',
-        axis.text.x = element_text(angle = 45, hjust = 1), 
-        axis.title.x = element_blank()) +
-  ylab('Weight') +
-  figurefont_theme
-
-p_ind_site_ind_back_anova_gen <- ind_site_ind_back_anova_gen %>%
-  ggplot(aes(term, per_sumsq)) + 
-  geom_bar(stat = 'identity') + 
-  ylab('Proportion of\nvariance explained') +
-  scale_y_continuous(limits = c(0, 0.26), 
-                     breaks = seq(from = 0, to = 0.25, by = 0.05)) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-        axis.ticks.x = element_blank(), axis.title.x = element_blank()) +
-  figurefont_theme
-
-ggsave('../plots/p_ind_site_ind_back_gen.png', p_ind_site_ind_back_gen, 
-       width = 2.3, height = 2.2, units = 'in')
-
-ggsave('../plots/p_ind_site_ind_back_weights_gen.pdf', 
-       p_ind_site_ind_back_weights_gen,
-       width = 2.5, height = 2.5, units = 'in')
-
-ggsave('../plots/p_ind_site_ind_back_anova_gen.pdf', 
-       p_ind_site_ind_back_anova_gen,
-       width = 2.5, height = 2.4)
-
-
-#Supplemental Figure 5A
-
-#site number and bg (independent)
-
-site_ind_back = function(df) {
-  model <- lm(ave_ratio ~ background + consensus + weak, data = df)
-}
-
-site_ind_back_epi <- subpool5_ncw_train_epi %>%
-  filter(MPRA == 'episomal') %>%
-  site_ind_back()
-
-site_ind_back_p_r_epi <- pred_resid(filter(subpool5_ncw_test_epi, 
-                                           MPRA == 'episomal'), 
-                                        site_ind_back_epi)
-
-#Plot
-
-lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
-
-p_site_ind_back_epi <- ggplot(site_ind_back_p_r_epi, 
-                                  aes(ave_ratio, pred, 
-                                      color = as.factor(consensus))) +
-  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
-  scale_color_manual(values = lessthan1_2color) +
-  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) + 
-  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
-                     limits = c(-2, 2)) +
-  annotation_logticks(sides = 'bl') +
-  figurefont_theme
-
-rss <- summarize(site_ind_back_p_r_epi, sum((resid)^2))
-
-tss <- summarize(site_ind_back_p_r_epi, sum((ave_ratio - mean(ave_ratio))^2))
-
-1-rss/tss
-
-ggsave('../plots/p_site_ind_back_epi.png', p_site_ind_back_epi, 
-       width = 2.3, height = 2.2, units = 'in')
-
-
-#Supplemental figure 5B
+#Figure 3B
 
 #Variance explained episomal
 
@@ -2688,9 +2459,217 @@ ggsave('../plots/p_var_variance_gen.pdf',
        width = 2.4, height = 1.4)
 
 
-#Supplemental Figure 5D, 5E and background analyses-----------------------------
+#Figure 3C
 
-#Supplemental Figure 5D
+#site number and bg (independent)
+
+site_ind_back = function(df) {
+  model <- lm(ave_ratio ~ background + consensus + weak, data = df)
+}
+
+#Attach model predictions to original df
+
+pred_resid <- function(df1, x) {
+  df2 <- df1 %>%
+    add_predictions(x)
+  df3 <- df2 %>%
+    add_residuals(x)
+  return(df3)
+  print('processed pred_resid(df1, df2) in order of (data, model)')
+}
+
+site_ind_back_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  site_ind_back()
+
+site_ind_back_p_r_epi <- pred_resid(filter(subpool5_ncw_test_epi, 
+                                           MPRA == 'episomal'), 
+                                    site_ind_back_epi)
+
+#Plot
+
+lessthan1_2color <- c('red', 'black', 'black', 'black', 'black', 'black', 'black')
+
+p_site_ind_back_epi <- ggplot(site_ind_back_p_r_epi, 
+                              aes(ave_ratio, pred, 
+                                  color = as.factor(consensus))) +
+  geom_point(alpha = 0.1, size = 0.75, show.legend = FALSE) +
+  scale_color_manual(values = lessthan1_2color) +
+  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) + 
+  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) +
+  annotation_logticks(sides = 'bl') +
+  figurefont_theme
+
+rss <- summarize(site_ind_back_p_r_epi, sum((resid)^2))
+
+tss <- summarize(site_ind_back_p_r_epi, sum((ave_ratio - mean(ave_ratio))^2))
+
+1-rss/tss
+
+ggsave('../plots/p_site_ind_back_epi.png', p_site_ind_back_epi, 
+       width = 2.3, height = 2.2, units = 'in')
+
+
+#Figure 3E
+
+#Fit log-linear model to the different locations of CRE (site 1-6) and to the 
+#different backgrounds, allowing weights per weak and consensus CRE per site
+
+ind_site_ind_back <- function(df) {
+  model <- lm(ave_ratio ~ background + site1 + site2 + site3 + site4 + site5 + site6, 
+              data = df)
+}
+
+#Make model weights output plottable
+
+ind_site_ind_back_weights <- function(df) {
+  df_conf <-confint_tidy(df)
+  df_tidy <- tidy(df)
+  df_comb <- cbind(df_tidy, df_conf)
+  sites <- df_comb %>%
+    filter(str_detect(term, '^site')) %>%
+    mutate(term = gsub('consensus', '_consensus', term)) %>%
+    mutate(term = gsub('weak', '_weak', term)) %>%
+    separate(term, into = c('variable', 'type'), sep = "_")
+  background <- df_comb %>%
+    filter(str_detect(term, '^background')) %>%
+    mutate(term = gsub('background', 'background_', term)) %>%
+    separate(term, into = c('variable', 'type'), sep = '_')
+  weights <- rbind(sites, background)
+  return(weights)
+}
+
+#train independent site independent background model
+
+ind_site_ind_back_epi <- subpool5_ncw_train_epi %>%
+  filter(MPRA == 'episomal') %>%
+  ind_site_ind_back()
+
+#test independent site independent background model
+
+ind_site_ind_back_epi_test_p_r <- pred_resid(filter(subpool5_ncw_test_epi, 
+                                                    MPRA == 'episomal'), 
+                                              ind_site_ind_back_epi)
+
+#make model fits graphs
+
+ind_site_ind_back_weights_epi <- ind_site_ind_back_weights(ind_site_ind_back_epi)
+
+ind_site_ind_back_anova_epi <- tidy(anova(ind_site_ind_back_epi)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq)
+
+#Plot
+
+background_viridis <- c('#440154FF', '#33638DFF', '#29AF7FFF')
+
+p_ind_site_ind_back_epi <- ind_site_ind_back_epi_test_p_r %>%
+  mutate(background = factor(background, levels = c('52', '55', '41')))  %>%
+  ggplot(aes(ave_ratio, pred, color = background)) +
+  geom_point(alpha = 0.25, size = 0.8, show.legend = FALSE) +
+  scale_color_manual(values = background_viridis) +
+  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) + 
+  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2, 2)) +
+  annotation_logticks(sides = 'bl') +
+  figurefont_theme
+
+rss <- summarize(ind_site_ind_back_epi_test_p_r, sum((resid)^2))
+
+tss <- summarize(ind_site_ind_back_epi_test_p_r, sum((ave_ratio - mean(ave_ratio))^2))
+
+1-rss/tss
+
+p_ind_site_ind_back_weights_epi <- ind_site_ind_back_weights_epi %>%
+  mutate(type = factor(type, 
+                       levels = c('52', '55', 'consensus', 'weak'))) %>%
+  ggplot() + 
+  geom_pointrange(aes(variable, estimate, ymin = conf.low, ymax = conf.high,
+                    fill = type), fatten = 2, shape = 21, stroke = 0.5, size = 1) +
+  geom_hline(yintercept = 0, size = 0.25) +
+  scale_x_discrete(position = 'bottom') + 
+  scale_fill_viridis(discrete = TRUE) + 
+  theme(axis.ticks.x = element_blank(), legend.position = 'top',
+        axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.title.x = element_blank()) +
+  ylab('Weight') +
+  figurefont_theme
+
+ggsave('../plots/p_ind_site_ind_back_epi.png', p_ind_site_ind_back_epi, 
+       width = 2.3, height = 2.2, units = 'in')
+
+ggsave('../plots/p_ind_site_ind_back_weights_epi.pdf', 
+       p_ind_site_ind_back_weights_epi,
+       width = 2.5, height = 2.5, units = 'in')
+
+
+#Fit log-linear model to genomic data, join model predictions to df and 
+#determine the proportion of variance explained
+
+ind_site_ind_back_gen <- subpool5_ncw_train_gen %>%
+  filter(MPRA == 'genomic') %>%
+  ind_site_ind_back()
+
+ind_site_ind_back_gen_test_p_r <- pred_resid(filter(subpool5_ncw_test_gen, MPRA == 'genomic'), 
+                                        ind_site_ind_back_gen)
+
+ind_site_ind_back_weights_gen <- ind_site_ind_back_weights(ind_site_ind_back_gen)
+
+ind_site_ind_back_anova_gen <- tidy(anova(ind_site_ind_back_gen)) %>%
+  mutate(term = factor(term, levels = term)) %>%
+  mutate(total_sumsq = sum(sumsq)) %>%
+  mutate(per_sumsq = sumsq/total_sumsq)
+
+#Plot
+
+p_ind_site_ind_back_gen <-  ind_site_ind_back_gen_test_p_r %>%
+  mutate(background = factor(background, levels = c('52', '55', '41')))  %>%
+  ggplot(aes(ave_ratio, pred, color = background)) +
+  geom_point(alpha = 0.25, size = 0.8, show.legend = FALSE) +
+  scale_color_manual(values = background_viridis) +
+  scale_x_continuous(name = 'Average log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2.1, 2)) + 
+  scale_y_continuous(name = 'Predicted log10 expression (a.u.)', breaks = c(-2:2),
+                     limits = c(-2.1, 2)) +
+  annotation_logticks(sides = 'bl') +
+  figurefont_theme
+
+rss <- summarize(ind_site_ind_back_gen_test_p_r, sum((resid)^2))
+
+tss <- summarize(ind_site_ind_back_gen_test_p_r, sum((ave_ratio - mean(ave_ratio))^2))
+
+1-rss/tss
+
+p_ind_site_ind_back_weights_gen <- ind_site_ind_back_weights_gen %>%
+  mutate(type = factor(type, 
+                       levels = c('52', '55', 'consensus', 'weak'))) %>%
+  ggplot() + 
+  geom_pointrange(aes(variable, estimate, ymin = conf.low, ymax = conf.high,
+                      fill = type), fatten = 2, shape = 21, stroke = 0.5, size = 1) +
+  geom_hline(yintercept = 0, size = 0.25) +
+  scale_x_discrete(position = 'bottom') + 
+  scale_fill_viridis(discrete = TRUE) + 
+  theme(axis.ticks.x = element_blank(), legend.position = 'top',
+        axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.title.x = element_blank()) +
+  ylab('Weight') +
+  figurefont_theme
+
+ggsave('../plots/p_ind_site_ind_back_gen.png', p_ind_site_ind_back_gen, 
+       width = 2.3, height = 2.2, units = 'in')
+
+ggsave('../plots/p_ind_site_ind_back_weights_gen.pdf', 
+       p_ind_site_ind_back_weights_gen,
+       width = 2.5, height = 2.5, units = 'in')
+
+
+#Supplemental Figure 4 and extra background analyses----------------------------
+
+#Supplemental Figure 4B
 
 #Fitting model to new backgrounds
 
@@ -2786,7 +2765,7 @@ ggsave('../plots/p_ind_site_ind_back_anova_epi_new.pdf',
        p_ind_site_ind_back_anova_epi_new,
        width = 2.5, height = 2.4)
 
-#Supplemental Figure 5E
+#Supplemental Figure 4C
 
 #Determine relationship between total GC and CG content of regulatory elements
 #and expression. Perform analysis on variants with high expression and no
@@ -3021,7 +3000,10 @@ table2csv(aov_site1, '../tables/aov_site1.csv', digits = 16)
 ggsave('../plots/p_site1_localgc.pdf', p_site1_localgc, width = 2.5, height = 2,
        units = 'in')
 
-#Figure 6, Supplemental Figure 6, and Supplemental Table 2----------------------
+
+#Figure 4 and Supplemental Table 2----------------------------------------------
+
+#Figure 4A
 
 #Make linear regression predicting episomal expression from genomic expression
 #using variants containing only consensus CREs. Use this regression to plot 
@@ -3055,10 +3037,10 @@ round(cor(s5_gen_epi_cons_lm$ave_ratio_22,
 
 s5_gen_epi_all_lm <- pred_resid(var_log10(s5_gen_epi), cons_int_epi_lm)
 
-#Figure 6A, plot genomic vs. episomal expression and linear regression as
-#reference. Not plotting variants wihtout any CRE (backgrounds) as they do not
-#fall into CRE categories, the three points don't seem biased in expression
-#around line though.
+#Plot genomic vs. episomal expression and linear regression as reference. Not 
+#plotting variants wihtout any CRE (backgrounds) as they do not fall into CRE 
+#categories, the three points don't seem biased in expression around line though
+#. Also removed weak only variants to consolidate figure spacing in revisions.
 
 p_s5_int_trans_site_combo <- s5_gen_epi_all_lm %>%
   filter(site_combo != 'none') %>%
@@ -3089,7 +3071,7 @@ m <- count(mixed)
 n <- count(filter(mixed, resid < 0))
 n/m
 
-#Figure 6B
+#Figure 4B
 
 #Plot residual of each combination of CREs per variant to linear relationship 
 #between MPRA expression of variants with consensus CREs only. Linear 
@@ -3140,25 +3122,14 @@ qq_aov_s5_gen_epi_all_lm <- plot(aov_s5_gen_epi_all_lm, 2)
 
 aov_s5_gen_epi_all_lm_resid <- residuals(object =  aov_s5_gen_epi_all_lm)
 
-#Supplemental Figure 6
+
+#Figure 4C and D
 
 #Make linear regression predicting episomal expression from genomic expression
 #using variants containing only consensus CREs. Use this regression to plot 
 #correlation line and determine residuals to relationship
 
 abline_lm <- lm(ave_ratio_22_norm ~ ave_med_ratio_norm, s5_gen_epi)
-
-#Add model predictions and residuals to consensus only (R2 value) and to all 
-#variants in library
-
-pred_resid <- function(df1, x) {
-  df2 <- df1 %>%
-    add_predictions(x)
-  df3 <- df2 %>%
-    add_residuals(x)
-  return(df3)
-  print('processed pred_resid(df1, df2) in order of (data, model)')
-}
 
 s5_gen_epi_lm <- pred_resid(s5_gen_epi, abline_lm)
 
@@ -3167,7 +3138,7 @@ round(cor(s5_gen_epi_lm$ave_ratio_22_norm,
           use = "pairwise.complete.obs", 
           method = "pearson")^2, 3)
 
-#Supplemental Fig. 6A
+#Figure 4C
 
 #Plot genomic vs. episomal expression and linear regression as reference. Not 
 #plotting variants wihtout any CRE (backgrounds) as they do not fall into CRE 
@@ -3187,7 +3158,8 @@ p_s5_int_trans_site_combo <- s5_gen_epi_lm %>%
 ggsave('../plots/p_s5_gen_epi_abline_linear.png', p_s5_int_trans_site_combo,
        width = 2.3, height = 2.2, units = 'in')
 
-#Supplemental Figure 6B
+
+#Figure 4D
 
 #Plot residual of each combination of CREs per variant to linear relationship 
 #between MPRA expression of variants with consensus CREs only. Linear 
@@ -3226,7 +3198,8 @@ leveneTest(resid ~ as.factor(consensus) * as.factor(weak),
 
 #We get no homogeneity of variance
 
-#Reviewer-specific plots barcode effects----------------------------------------
+
+#Reviewer-specific plots, barcode effects---------------------------------------
 
 #looking at barcode effects based on % match to perfect variant
 
@@ -3298,6 +3271,7 @@ p_bc_percent_exp <- epi_bc_percent %>%
 
 ggsave('../plots/p_bc_percent_exp.png', 
        p_bc_percent_exp, height = 1.75, width = 2.5, units = 'in')
+
 
 #reviewer-specific plots, hill plots--------------------------------------------
 
@@ -3575,7 +3549,7 @@ ggsave('../plots/p_s5_cons_ec50.pdf', p_s5_cons_ec50,
        width = 6.5, height = 1.75, units = 'in')
 
 
-#Reviewer-specific plots feed forward attempt-----------------------------------
+#Reviewer-specific plots, feed forward attempt----------------------------------
 
 #using caret
 
