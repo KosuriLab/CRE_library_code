@@ -1129,7 +1129,7 @@ p_induction_spacing_10_back_55 <- s3_tidy_moveavg3 %>%
   figurefont_theme 
 
 ggsave('../plots/p_induction_spacing_10_back_55.pdf', 
-       p_induction_spacing_10_back_55, width = 5.5, height = 1.75, 
+       p_induction_spacing_10_back_55, width = 5.2, height = 1.75, 
        units = 'in')
 
 #Figure 2B
@@ -1467,14 +1467,14 @@ s2_untidy_moveavg3 <- s2_epi_rep_0_25 %>%
 p_subpool2_dist_0_25 <- s2_untidy_moveavg3 %>%
   filter(site == 'consensusflank') %>%
   ggplot(aes(dist, ave_ratio_norm, color = as.factor(conc))) + 
-  facet_grid(background ~ .) + 
+  facet_grid(~ background) + 
   geom_line(aes(y = ave_3), size = 0.4) +
-  geom_point(alpha = 0.5, size = 1.2) +
+  geom_point(alpha = 0.5, size = 0.25) +
   scale_color_manual(values = c('gray20', 'firebrick3'), 
                      name = 'forskolin (µM)') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
                      breaks = seq(from = 66, to = 206, by = 20)) +
-  theme(legend.position = 'right',
+  theme(legend.position = 'top',
         strip.background = element_rect(colour="black", fill="white")) +
   panel_border(colour = 'black') + 
   ylab('Average normalized expression (a.u.)') +
@@ -1483,7 +1483,7 @@ p_subpool2_dist_0_25 <- s2_untidy_moveavg3 %>%
   figurefont_theme
 
 ggsave('../plots/subpool2_dist_0_25.pdf', p_subpool2_dist_0_25, units = 'in',
-       width = 5, height = 2.66)
+       width = 6.3, height = 1.85)
 
 #Supplemental figure 2B---------------------------------------------------------
 
@@ -1636,7 +1636,7 @@ p_subpool3_spa_4_vchr9_dist_distal <- twosite_4_moveavg3_dist_distal_MPRA %>%
   figurefont_theme
 
 ggsave('../plots/p_subpool3_spa_4_vchr9_dist_distal.pdf', 
-       p_subpool3_spa_4_vchr9_dist_distal, height = 1.35, width = 4.8, 
+       p_subpool3_spa_4_vchr9_dist_distal, height = 1.35, width = 5.3, 
        units = 'in')
 
 #Supplemental Figure 3
@@ -1661,9 +1661,10 @@ p_subpool3_spa_spgl4_trans_5_10 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(1, 7)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 64, to = 194, by = 10)) +
+                     breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1680,9 +1681,10 @@ p_subpool3_spa_spgl4_trans_5_15 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(1, 7)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                  breaks = seq(from = 64, to = 194, by = 10)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1700,24 +1702,25 @@ p_subpool3_spa_spgl4_trans_10_20 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(1, 7)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                  breaks = seq(from = 64, to = 194, by = 10)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
 ggsave('../plots/p_subpool3_spa_spgl4_trans_5_10.pdf', 
        p_subpool3_spa_spgl4_trans_5_10, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 ggsave('../plots/p_subpool3_spa_spgl4_trans_5_15.pdf', 
        p_subpool3_spa_spgl4_trans_5_15, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 ggsave('../plots/p_subpool3_spa_spgl4_trans_10_20.pdf', 
        p_subpool3_spa_spgl4_trans_10_20, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 p_subpool3_spa_spgl4_int_5_10 <- s3_tidy_moveavg3_MPRA %>%
   filter(background == 55 & (spacing == 5 | spacing == 10) & MPRA == 'genomic') %>%
@@ -1728,9 +1731,10 @@ p_subpool3_spa_spgl4_int_5_10 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(0.4, 11)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 64, to = 194, by = 10)) +
+                     breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1745,9 +1749,10 @@ p_subpool3_spa_spgl4_int_5_15 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(0.4, 11)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                  breaks = seq(from = 64, to = 194, by = 10)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1763,24 +1768,25 @@ p_subpool3_spa_spgl4_int_10_20 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(0.4, 11)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                  breaks = seq(from = 64, to = 194, by = 10)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
 ggsave('../plots/p_subpool3_spa_spgl4_int_5_10.pdf', 
        p_subpool3_spa_spgl4_int_5_10, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 ggsave('../plots/p_subpool3_spa_spgl4_int_5_15.pdf', 
        p_subpool3_spa_spgl4_int_5_15, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 ggsave('../plots/p_subpool3_spa_spgl4_int_10_20.pdf', 
        p_subpool3_spa_spgl4_int_10_20, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 
 p_subpool3_spa_vchr5_trans_5_10 <- s3_tidy_moveavg3_MPRA %>%
@@ -1792,9 +1798,10 @@ p_subpool3_spa_vchr5_trans_5_10 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(1, 32)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 64, to = 194, by = 10)) +
+                     breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1809,9 +1816,10 @@ p_subpool3_spa_vchr5_trans_5_15 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(1, 32)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                  breaks = seq(from = 64, to = 194, by = 10)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1827,24 +1835,25 @@ p_subpool3_spa_vchr5_trans_10_20 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(1, 32)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                  breaks = seq(from = 64, to = 194, by = 10)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
 ggsave('../plots/p_subpool3_spa_vchr5_trans_5_10.pdf', 
        p_subpool3_spa_vchr5_trans_5_10, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 ggsave('../plots/p_subpool3_spa_vchr5_trans_5_15.pdf', 
        p_subpool3_spa_vchr5_trans_5_15, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 ggsave('../plots/p_subpool3_spa_vchr5_trans_10_20.pdf', 
        p_subpool3_spa_vchr5_trans_10_20, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 
 p_subpool3_spa_vchr5_int_5_10 <- s3_tidy_moveavg3_MPRA %>%
@@ -1856,9 +1865,10 @@ p_subpool3_spa_vchr5_int_5_10 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(1, 35)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                     breaks = seq(from = 64, to = 194, by = 10)) +
+                     breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1873,9 +1883,10 @@ p_subpool3_spa_vchr5_int_5_15 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(1, 35)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                  breaks = seq(from = 64, to = 194, by = 10)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
@@ -1891,24 +1902,25 @@ p_subpool3_spa_vchr5_int_10_20 <- s3_tidy_moveavg3_MPRA %>%
   ylab('Average normalized expression (a.u.)') + 
   panel_border(colour = 'black') +
   scale_y_continuous(limits = c(1, 35)) +
-  background_grid(major = 'x', minor = 'none') +
+  background_grid(major = 'x', minor = 'x', colour.major = 'grey90',
+                  colour.minor = 'grey95') +
   scale_x_reverse("Distance to minimal promoter (bp)", 
-                  breaks = seq(from = 64, to = 194, by = 10)) +
+                  breaks = seq(from = 64, to = 194, by = 20)) +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
 ggsave('../plots/p_subpool3_spa_vchr5_int_5_10.pdf', 
        p_subpool3_spa_vchr5_int_5_10, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 ggsave('../plots/p_subpool3_spa_vchr5_int_5_15.pdf', 
        p_subpool3_spa_vchr5_int_5_15, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 ggsave('../plots/p_subpool3_spa_vchr5_int_10_20.pdf', 
        p_subpool3_spa_vchr5_int_10_20, 
-       height = 1.25, width = 4.4, units = 'in')
+       height = 1.15, width = 4.4, units = 'in')
 
 #Figure 4-----------------------------------------------------------------------
 
@@ -2028,7 +2040,7 @@ ggsave('../plots/p_twosite_spacing_medexp.pdf',
        p_twosite_spacing_medexp, height = 1.75, width = 4, units = 'in')
 
 
-#Figure 5, Supplemental Figure 4B and 5-----------------------------------------
+#Figure 5, Supplemental Figure 4B and 5A and B----------------------------------
 
 #Figure 5A
 
@@ -2271,7 +2283,7 @@ ggsave('../plots/p_ind_site_ind_back_epi.png', p_ind_site_ind_back_epi,
 
 ggsave('../plots/p_ind_site_ind_back_weights_epi.pdf', 
        p_ind_site_ind_back_weights_epi,
-       width = 2.75, height = 2.6, units = 'in')
+       width = 2.5, height = 2.5, units = 'in')
 
 ggsave('../plots/p_ind_site_ind_back_anova_epi.pdf', 
        p_ind_site_ind_back_anova_epi,
@@ -2344,7 +2356,7 @@ ggsave('../plots/p_ind_site_ind_back_gen.png', p_ind_site_ind_back_gen,
 
 ggsave('../plots/p_ind_site_ind_back_weights_gen.pdf', 
        p_ind_site_ind_back_weights_gen,
-       width = 2.75, height = 2.6, units = 'in')
+       width = 2.5, height = 2.5, units = 'in')
 
 ggsave('../plots/p_ind_site_ind_back_anova_gen.pdf', 
        p_ind_site_ind_back_anova_gen,
@@ -2551,7 +2563,7 @@ p_var_variance_epi <- var_variance_epi %>%
 
 ggsave('../plots/p_var_variance_epi.pdf', 
        p_var_variance_epi,
-       width = 2.75, height = 1.5)
+       width = 2.4, height = 1.4)
 
 
 #Variance explained genomic
@@ -2673,7 +2685,7 @@ p_var_variance_gen <- var_variance_gen %>%
 
 ggsave('../plots/p_var_variance_gen.pdf', 
        p_var_variance_gen,
-       width = 2.75, height = 1.5)
+       width = 2.4, height = 1.4)
 
 
 #Supplemental Figure 5D, 5E and background analyses-----------------------------
@@ -3053,20 +3065,20 @@ p_s5_int_trans_site_combo <- s5_gen_epi_all_lm %>%
   mutate(site_combo = factor(site_combo, 
                              levels = c('consensus', 'weak', 'mixed'))) %>%
   ggplot(aes(ave_med_ratio_norm, ave_ratio_22_norm)) +
-  facet_grid(. ~ site_combo) +
+  facet_grid(site_combo ~ .) +
   geom_point(alpha = 0.15, size = 0.5) +
   geom_line(aes(ave_med_ratio_norm, pred), color = 'red', size = 0.5) +
   annotation_logticks() +
   scale_y_continuous(breaks = seq(from = 0, to = 2, by =1)) +
-  xlab('Average normalized log10 genomic expression (a.u.)') +
-  ylab('Average normalized log10\nepisomal expression (a.u.)') +
+  xlab('Average normalized log10\ngenomic expression (a.u.)') +
+  ylab('Average normalized log10 episomal expression (a.u.)') +
   panel_border(colour = 'black') +
   theme(legend.position = 'right', axis.ticks.x = element_blank(),
         strip.background = element_rect(colour="black", fill="white")) +
   figurefont_theme
 
 ggsave('../plots/p_s5_int_trans_site_combo.pdf', p_s5_int_trans_site_combo,
-       width = 4, height = 2.25, units = 'in')
+       height = 5, width = 2.3, units = 'in')
 
 #determine percent below line in mixed
 
@@ -3609,10 +3621,10 @@ count_seq <- function(dfepi, dfgen, df25, dfnew) {
   dfnew <- most_common(dfnew)
   total <- rbind(dfepi, dfgen, df25, dfnew)
   return(total)
-  }
+}
 
-test <- count_seq(med_rep_0_22_A_B, gen_rep_1_2, s2_flanks, med_rep_followup)
+test <- count_seq(med_rep_0_22_A_B, gen_rep_1_2, s2_flanks, med_rep_followup) %>%
+  unique()
 
-#Remove 20 from test for controls not analyzed in paper
 
 
