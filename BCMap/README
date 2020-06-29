@@ -22,7 +22,10 @@ For the follow-up library BC mapping, CREB_barcode_mapping.py can be used with t
 bbmerge_assembled_followup.txt cre_Acontent_lib_no_twositeoffset.csv csv 150 25 start 20 24 CREB_barcode_mapping_notwositeoffset.txt
 
 BC-mapping outputs from all runs are too large to be uploaded onto github and can be generated using sequencing data from 
-the Gene Expression Omnibus, in addition BC-mapping outputs are also uploaded onto the Gene Expression Omnibus
+the Gene Expression Omnibus at https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE137922. Releveant files contain the name "merged barcode mapping reads".
+
+In addition BC-mapping outputs is also uploaded as GSE137922_uniqueSP2345.txt.gz and GSE137922_barcode_statistics_followup.txt.gz. These can be used 
+directly to analyze MPRA data rather than barcode-mapping library members before-hand.
 
 
 
