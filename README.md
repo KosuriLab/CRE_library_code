@@ -1,9 +1,9 @@
 # CRE_library_code
 Combined and finalized code and data required for figure generation used in the paper:
 
-"Multiplexed dissection of a model human transcription factor binding site architecture"
+"Dissection of c-AMP Response Element Architecture by Using Genomic and Episomal Massively Parallel Reporter Assays"
 
-This paper is currently not peer-reviewed and may change throughout this process.
+https://doi.org/10.1016/j.cels.2020.05.011
 
 Included in this project is code required to:
 
